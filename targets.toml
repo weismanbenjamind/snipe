@@ -1,0 +1,15 @@
+[targets.test]
+name = "test"
+method = "get"
+url = "https://some_url/to/an/endpoints"
+
+[targets.test.headers]
+content_type = "application/json"
+
+[target.test.auth]
+type = "bearer"
+token = "token"
+
+[target.payload]
+some_val = "val"
+some_bool = true
