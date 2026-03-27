@@ -1,19 +1,12 @@
 use serde::Deserialize;
-use thiserror::Error;
-use std::ptr::read;
-use std::{collections::HashMap};
+use std::{collections::HashMap, ffi::OsStr};
 use toml::Value;
 use std::fs::read_to_string;
 use std::path::Path;
-
-#[derive(Debug, Error)]
-enum TargetsError {
-    #[error("Failed to deserialize targets. Error: {0}")]
-    Dersialization(String)
-}
+use crate::errors::{MethodError, TargetsError};
 
 #[derive(Debug, Deserialize)]
-struct Targets {
+pub struct Targets {
     targets: HashMap<String, Target>
 }
 
@@ -25,7 +18,7 @@ impl Targets {
     }
 
     pub fn from_toml(toml_str: &str) -> Result<Self, TargetsError> {
-        toml::from_str(toml_str).map_err(|e| TargetsError::Dersialization(e.to_string()))
+        toml::from_str(toml_str).map_err(|err| TargetsError::deserialization_from_err(err))
     }
 }
 
@@ -37,15 +30,25 @@ fn validate_toml_path<P: AsRef<Path>>(path: P) -> Result<(), TargetsError> {
     if !path.is_file() {
         return Err(TargetsError::Dersialization(format!("Path {} is not a file.", path.display())))
     }
-    if !path.ends_with(".toml") {
-        return Err(TargetsError::Dersialization(format!("Expected toml file. Found path: {}", path.display())));
-    }
+    check_for_toml_extension(path)?;
 
     Ok(())
 }
 
 fn read_toml<P: AsRef<Path>>(path: P) -> Result<String, TargetsError> {
     read_to_string(path).map_err(|e| TargetsError::Dersialization(format!("Failed to read toml to string. Error: {}", e.to_string())))
+}
+
+fn check_for_toml_extension(path: &Path) -> Result<(), TargetsError> {
+    match path.extension() {
+        None => Err(TargetsError::Dersialization(format!("Expected toml file, found path {}", path.display()))),
+        Some(extension) => {
+            match extension == OsStr::new(".toml") {
+                true => Ok(()),
+                false => Err(TargetsError::Dersialization(format!("Expected toml file, found path {}", path.display())))
+            }
+        }
+    }
 }
 
 #[derive(Debug, Deserialize)]
@@ -65,12 +68,6 @@ enum Method {
     POST,
     PATCH,
     PUT
-}
-
-#[derive(Debug, Error)]
-enum MethodError {
-    #[error("Failed to parse string {0} into HTTP request method.")]
-    Dersialization(String)
 }
 
 impl TryFrom<String> for Method {
