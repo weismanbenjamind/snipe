@@ -1,52 +1,54 @@
-use reqwest::{Client, RequestBuilder, header};
+use reqwest::{Client, RequestBuilder, Response};
 use reqwest::header::{HeaderMap, HeaderValue, HeaderName};
 
-use crate::targets::{Method, Target, Auth, AuthScheme};
+use crate::targets::{Method, Target, Auth};
 use std::collections::HashMap;
-use crate::errors::ClientManagerError;
+use crate::errors::RequestManagerError;
 use std::str::FromStr;
 use log::warn;
 
-pub struct ClientManager {
+pub struct RequestManager {
     client: Client
 }
 
-impl ClientManager {
+impl RequestManager {
     pub fn new() -> Self {
         Self {
             client: Client::new()
         }
     }
 
-    pub fn send_request(&self, target: &Target) -> Result<(), ClientManagerError> {
-        let request = init_request(target, &self.client);
+    pub async fn send_request(&self, target: &Target) -> Result<Response, RequestManagerError> {
+        self.build_request(target)?.send().await.map_err(|e| RequestManagerError::SendRequestFailure(e.to_string()))
+    }
+
+    fn build_request(&self, target: &Target) -> Result<RequestBuilder, RequestManagerError> {
+        let mut request_builder = self.init_request_builder(target);
 
         if let Some(headers) = target.headers() {
             let headers = build_headers(headers)?;
-            request.headers(headers);
+            request_builder = request_builder.headers(headers);
         }
 
-        // TODO - Start here - match on the enum to do auth
         if let Some(auth) = target.auth() {
-            let auth = build_auth(auth)?;
-            
+            request_builder = build_auth(request_builder, auth);
         }
 
-        Ok(())
+        Ok(request_builder)
     }
+
+    fn init_request_builder(&self, target: &Target) -> RequestBuilder {
+        match target.method() {
+            Method::DELETE => self.client.delete(target.url()),
+            Method::GET => self.client.get(target.url()),
+            Method::PATCH => self.client.patch(target.url()),
+            Method::POST => self.client.post(target.url()),
+            Method::PUT => self.client.put(target.url())
+        }
+}
 }
 
-fn init_request(target: &Target, client: &Client) -> RequestBuilder {
-    match target.method() {
-        Method::DELETE => client.delete(target.url()),
-        Method::GET => client.get(target.url()),
-        Method::PATCH => client.patch(target.url()),
-        Method::POST => client.post(target.url()),
-        Method::PUT => client.put(target.url())
-    }
-}
-
-fn build_headers(headers: &HashMap<String, String>) -> Result<HeaderMap, ClientManagerError> {
+fn build_headers(headers: &HashMap<String, String>) -> Result<HeaderMap, RequestManagerError> {
     let mut header_map = HeaderMap::new();
     let mut header_name: HeaderName;
     let mut header_value: HeaderValue;
@@ -61,39 +63,17 @@ fn build_headers(headers: &HashMap<String, String>) -> Result<HeaderMap, ClientM
     Ok(header_map)
 }
 
-fn get_header_name(header_name: &str) -> Result<HeaderName, ClientManagerError> {
-    Ok(HeaderName::from_str(header_name).map_err(|err| ClientManagerError::RequestBuild(err.to_string()))?)
+fn get_header_name(header_name: &str) -> Result<HeaderName, RequestManagerError> {
+    Ok(HeaderName::from_str(header_name).map_err(|err| RequestManagerError::RequestBuild(err.to_string()))?)
 }
 
-fn build_auth(auth: &Auth) -> Result<HeaderMap, ClientManagerError> {
-    let auth_value = match auth.scheme() {
-        AuthScheme::Basic => format!("Basic {}", auth.credentials()),
-        AuthScheme::Bearer => format!("Bearer {}", auth.credentials())
-    };
-
-    let auth_value = get_header_value(&auth_value)?;
-    let mut header_map = HeaderMap::new();
-    header_map.insert(header::AUTHORIZATION, auth_value).unwrap();
-
-    Ok(header_map)
-
+fn get_header_value(header_value: &str) -> Result<HeaderValue, RequestManagerError> {
+    Ok(HeaderValue::from_str(header_value).map_err(|err| RequestManagerError::RequestBuild(err.to_string()))?)
 }
 
-fn get_auth_header_value(auth: &HashMap<String, String>) -> Result<HeaderValue, ClientManagerError> {
-    let auth_name = get_only_val(auth.keys())?;
-    let auth_value = get_only_val(auth.values())?;
-    Ok(get_header_value(&format!("{auth_name}: {auth_value}")))?
-}
-
-fn get_header_value(header_value: &str) -> Result<HeaderValue, ClientManagerError> {
-    Ok(HeaderValue::from_str(header_value).map_err(|err| ClientManagerError::RequestBuild(err.to_string()))?)
-}
-
-fn get_only_val<'a, I: Iterator<Item = &'a String>>(mut iterator: I) -> Result<&'a str, ClientManagerError> {
-    match (iterator.next(), iterator.next()) {
-        (Some(item), None) => Ok(item),
-        (Some(_), Some(_)) => Err(ClientManagerError::RequestBuild(String::from("Found multiple items in iterator."))),
-        (None, None) => Err(ClientManagerError::RequestBuild(String::from("Found no items in iterator."))),
-        (None, Some(_)) => Err(ClientManagerError::RequestBuild(String::from("Iterator in invalid state."))),
+fn build_auth(request_builder: RequestBuilder, auth: &Auth) -> RequestBuilder {
+    match auth {
+        Auth::Bearer(bearer_auth) => request_builder.bearer_auth(bearer_auth.token()),
+        Auth::Basic(basic_auth) => request_builder.basic_auth(basic_auth.username(), Some(basic_auth.password()))
     }
 }

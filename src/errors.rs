@@ -1,5 +1,6 @@
 use thiserror::Error;
 use std::error::Error as StdErr;
+use reqwest::StatusCode;
 
 #[derive(Debug, Error)]
 pub enum RunError {
@@ -26,7 +27,13 @@ impl TargetsError {
 }
 
 #[derive(Debug, Error)]
-pub enum ClientManagerError {
+pub enum RequestManagerError {
     #[error("Failed to build request. Error: (0)")]
-    RequestBuild(String)
+    RequestBuild(String),
+
+    #[error("Failed to send request. Error: {0}")]
+    SendRequestFailure(String),
+
+    #[error("Bad response for request. Status code: {0}, Error: {1}")]
+    BadResponse(StatusCode, String)
 }

@@ -5,7 +5,7 @@ use std::fs::read_to_string;
 use std::path::Path;
 use crate::errors::TargetsError;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Targets {
     targets: HashMap<String, Target>
 }
@@ -55,7 +55,7 @@ fn get_toml_extension_err(path: &Path) -> TargetsError {
     TargetsError::Dersialization(format!("Expected toml file, found {}", path.display()))
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct Target {
     name: String,
     url: String,
@@ -83,37 +83,74 @@ impl Target {
     }
 }
 
-#[derive(Debug, Deserialize)]
-pub struct Auth {
-    scheme: AuthScheme,
-    credentials: String
+#[derive(Debug, Deserialize, Clone)]
+struct RawAuth {
+    scheme: String,
+    token: Option<String>,
+    username: Option<String>,
+    password: Option<String>
 }
 
-impl Auth {
-    pub fn scheme(&self) -> AuthScheme {
-        self.scheme
-    }
-
-    pub fn credentials(&self) -> &str {
-        &self.credentials
-    }
+#[derive(Debug, Deserialize, Clone)]
+#[serde(tag = "scheme", try_from = "RawAuth")]
+pub enum Auth {
+    Bearer(BearerAuth),
+    Basic(BasicAuth),
 }
 
-#[derive(Debug, Deserialize, Clone, Copy)]
-#[serde(try_from = "String")]
-pub enum AuthScheme {
-    Bearer,
-    Basic
-}
-
-impl TryFrom<String> for AuthScheme {
+impl TryFrom<RawAuth> for Auth {
     type Error = TargetsError;
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        match value.to_lowercase().as_str() {
-            "bearer" => Ok(Self::Bearer),
-            "basic" => Ok(Self::Basic),
-            _ => Err(TargetsError::Dersialization(format!("Failed to parse string {value} into auth scheme."))),
+
+    fn try_from(value: RawAuth) -> Result<Self, Self::Error> {
+
+        match value.scheme.to_lowercase().as_str() {
+            "bearer" => {
+                let token = value.token.ok_or_else(|| get_missing_auth_field_err("token", "bearer"))?;
+                Ok(Self::Bearer(BearerAuth { token }))
+            },
+            "basic" => {
+                let username = value.username.ok_or_else(|| get_missing_basic_auth_field_error("username"))?;
+                let password = value.password.ok_or_else(|| get_missing_basic_auth_field_error("password"))?;
+                Ok(Self::Basic(BasicAuth { username, password }))
+            },
+            _ => Err(TargetsError::Dersialization(format!("Invalud auth scheme {}.", value.scheme)))
+
         }
+    }
+}
+
+fn get_missing_basic_auth_field_error(field_name: &str) -> TargetsError {
+    get_missing_auth_field_err(field_name, "basic")
+}
+
+fn get_missing_auth_field_err(field_name: &str, auth_type: &str) -> TargetsError {
+    TargetsError::Dersialization(format!("Must pass {field_name} field for {auth_type} auth."))
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct BearerAuth {
+    token: String
+}
+
+impl BearerAuth {
+    pub fn token(&self) -> &str {
+        &self.token
+    }
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct BasicAuth {
+    username: String,
+    password: String
+}
+
+impl BasicAuth {
+    pub fn username(&self) -> &str {
+        &self.username
+    }
+
+    pub fn password(&self) -> &str {
+        &self.password
     }
 }
 
