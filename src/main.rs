@@ -1,4 +1,4 @@
-use snipe::{RunError, SnipeArgs, run};
+use snipe::{SnipeArgs, run};
 use clap::Parser;
 use std::process::ExitCode;
 

@@ -26,7 +26,7 @@ impl TargetsError {
 }
 
 #[derive(Debug, Error)]
-pub enum MethodError {
-    #[error("Failed to parse string {0} into HTTP request method.")]
-    Dersialization(String)
+pub enum ClientManagerError {
+    #[error("Failed to build request. Error: (0)")]
+    RequestBuild(String)
 }

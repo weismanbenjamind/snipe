@@ -1,3 +1,4 @@
+mod client_manager;
 mod errors;
 mod inputs;
 mod run;

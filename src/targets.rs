@@ -3,7 +3,7 @@ use std::{collections::HashMap, ffi::OsStr};
 use toml::Value;
 use std::fs::read_to_string;
 use std::path::Path;
-use crate::errors::{MethodError, TargetsError};
+use crate::errors::TargetsError;
 
 #[derive(Debug, Deserialize)]
 pub struct Targets {
@@ -41,28 +41,85 @@ fn read_toml<P: AsRef<Path>>(path: P) -> Result<String, TargetsError> {
 
 fn check_for_toml_extension(path: &Path) -> Result<(), TargetsError> {
     match path.extension() {
-        None => Err(TargetsError::Dersialization(format!("Expected toml file, found path {}", path.display()))),
+        None => Err(get_toml_extension_err(path)),
         Some(extension) => {
-            match extension == OsStr::new(".toml") {
+            match extension == OsStr::new("toml") {
                 true => Ok(()),
-                false => Err(TargetsError::Dersialization(format!("Expected toml file, found path {}", path.display())))
+                false => Err(get_toml_extension_err(path))
             }
         }
     }
 }
 
-#[derive(Debug, Deserialize)]
-pub struct Target {
-    name: String,
-    method: Method,
-    headers: Option<HashMap<String, String>>,
-    auth: Option<HashMap<String, String>>,
-    payload: Option<HashMap<String, Value>>
+fn get_toml_extension_err(path: &Path) -> TargetsError {
+    TargetsError::Dersialization(format!("Expected toml file, found {}", path.display()))
 }
 
 #[derive(Debug, Deserialize)]
+pub struct Target {
+    name: String,
+    url: String,
+    method: Method,
+    headers: Option<HashMap<String, String>>,
+    auth: Option<Auth>,
+    payload: Option<HashMap<String, Value>>
+}
+
+impl Target {
+    pub fn method(&self) -> Method {
+        self.method
+    }
+
+    pub fn url(&self) -> &str {
+        &self.url
+    }
+
+    pub fn headers(&self) -> &Option<HashMap<String, String>> {
+        &self.headers
+    }
+
+    pub fn auth(&self) -> &Option<Auth> {
+        &self.auth
+    }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct Auth {
+    scheme: AuthScheme,
+    credentials: String
+}
+
+impl Auth {
+    pub fn scheme(&self) -> AuthScheme {
+        self.scheme
+    }
+
+    pub fn credentials(&self) -> &str {
+        &self.credentials
+    }
+}
+
+#[derive(Debug, Deserialize, Clone, Copy)]
 #[serde(try_from = "String")]
-enum Method {
+pub enum AuthScheme {
+    Bearer,
+    Basic
+}
+
+impl TryFrom<String> for AuthScheme {
+    type Error = TargetsError;
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        match value.to_lowercase().as_str() {
+            "bearer" => Ok(Self::Bearer),
+            "basic" => Ok(Self::Basic),
+            _ => Err(TargetsError::Dersialization(format!("Failed to parse string {value} into auth scheme."))),
+        }
+    }
+}
+
+#[derive(Debug, Deserialize, Clone, Copy)]
+#[serde(try_from = "String")]
+pub enum Method {
     GET,
     DELETE,
     POST,
@@ -71,7 +128,7 @@ enum Method {
 }
 
 impl TryFrom<String> for Method {
-    type Error = MethodError;
+    type Error = TargetsError;
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         match value.to_lowercase().as_str() {
@@ -80,7 +137,7 @@ impl TryFrom<String> for Method {
             "post" => Ok(Self::POST),
             "patch" => Ok(Self::PATCH),
             "put" => Ok(Self::PUT),
-            _ => Err(MethodError::Dersialization(value)),
+            _ => Err(TargetsError::Dersialization(format!("Failed to parse string {value} into HTTP request method."))),
         }
     }
 }
