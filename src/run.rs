@@ -1,6 +1,6 @@
 use log::info;
 
-use crate::RequestSender;
+use crate::request_sender::RequestSender;
 use crate::errors::RunError;
 use crate::inputs::SnipeArgs;
 use crate::targets::Targets;
