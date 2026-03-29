@@ -5,7 +5,7 @@ use log::warn;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{Response, StatusCode};
 use serde::Serialize;
-use serde_json;
+use serde_json::to_string_pretty;
 use std::collections::HashMap;
 
 #[derive(Debug, Serialize)]
@@ -53,8 +53,7 @@ impl ResponseWrapper {
     }
 
     pub fn to_json(&self) -> Result<String, ResponseWrapperError> {
-        serde_json::to_string_pretty(self)
-            .map_err(|e| ResponseWrapperError::Derserialize(e.to_string()))
+        to_string_pretty(self).map_err(|e| ResponseWrapperError::Derserialize(e.to_string()))
     }
 }
 

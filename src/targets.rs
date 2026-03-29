@@ -18,7 +18,7 @@ impl Targets {
     }
 
     pub fn from_toml(toml_str: &str) -> Result<Self, TargetsError> {
-        toml::from_str(toml_str).map_err(|err| TargetsError::deserialization_from_err(err))
+        toml::from_str(toml_str).map_err(TargetsError::deserialization_from_err)
     }
 
     pub fn get_target(&self, target: &str) -> Option<&Target> {
@@ -47,10 +47,7 @@ fn validate_toml_path<P: AsRef<Path>>(path: P) -> Result<(), TargetsError> {
 
 fn read_toml<P: AsRef<Path>>(path: P) -> Result<String, TargetsError> {
     read_to_string(path).map_err(|e| {
-        TargetsError::Dersialization(format!(
-            "Failed to read toml to string. Error: {}",
-            e.to_string()
-        ))
+        TargetsError::Dersialization(format!("Failed to read toml to string. Error: {e}",))
     })
 }
 
@@ -187,11 +184,11 @@ impl BasicAuth {
 #[derive(Debug, Deserialize, Clone, Copy)]
 #[serde(try_from = "String")]
 pub enum Method {
-    GET,
-    DELETE,
-    POST,
-    PATCH,
-    PUT,
+    Get,
+    Delete,
+    Post,
+    Patch,
+    Put,
 }
 
 impl TryFrom<String> for Method {
@@ -199,11 +196,11 @@ impl TryFrom<String> for Method {
 
     fn try_from(value: String) -> Result<Self, Self::Error> {
         match value.to_lowercase().as_str() {
-            "get" => Ok(Self::GET),
-            "delete" => Ok(Self::DELETE),
-            "post" => Ok(Self::POST),
-            "patch" => Ok(Self::PATCH),
-            "put" => Ok(Self::PUT),
+            "get" => Ok(Self::Get),
+            "delete" => Ok(Self::Delete),
+            "post" => Ok(Self::Post),
+            "patch" => Ok(Self::Patch),
+            "put" => Ok(Self::Put),
             _ => Err(TargetsError::Dersialization(format!(
                 "Failed to parse string {value} into HTTP request method."
             ))),

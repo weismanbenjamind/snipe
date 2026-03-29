@@ -52,11 +52,11 @@ impl RequestSender {
 
     fn init_request_builder(&self, target: &Target) -> RequestBuilder {
         match target.method() {
-            Method::DELETE => self.client.delete(target.url()),
-            Method::GET => self.client.get(target.url()),
-            Method::PATCH => self.client.patch(target.url()),
-            Method::POST => self.client.post(target.url()),
-            Method::PUT => self.client.put(target.url()),
+            Method::Delete => self.client.delete(target.url()),
+            Method::Get => self.client.get(target.url()),
+            Method::Patch => self.client.patch(target.url()),
+            Method::Post => self.client.post(target.url()),
+            Method::Put => self.client.put(target.url()),
         }
     }
 }
@@ -77,13 +77,13 @@ fn build_headers(headers: &HashMap<String, String>) -> Result<HeaderMap, Request
 }
 
 fn get_header_name(header_name: &str) -> Result<HeaderName, RequestSenderError> {
-    Ok(HeaderName::from_str(header_name)
-        .map_err(|err| RequestSenderError::RequestBuild(err.to_string()))?)
+    HeaderName::from_str(header_name)
+        .map_err(|err| RequestSenderError::RequestBuild(err.to_string()))
 }
 
 fn get_header_value(header_value: &str) -> Result<HeaderValue, RequestSenderError> {
-    Ok(HeaderValue::from_str(header_value)
-        .map_err(|err| RequestSenderError::RequestBuild(err.to_string()))?)
+    HeaderValue::from_str(header_value)
+        .map_err(|err| RequestSenderError::RequestBuild(err.to_string()))
 }
 
 fn build_auth(request_builder: RequestBuilder, auth: &Auth) -> RequestBuilder {
