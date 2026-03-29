@@ -7,6 +7,7 @@ url = "https://some_url/to/an/endpoints"
 content_type = "application/json"
 
 [targets.test.auth]
+# TODO - Allow for environment variable injection
 scheme = "bearer"
 token = "token"
 
