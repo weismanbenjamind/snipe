@@ -14,3 +14,8 @@ token = "token"
 [targets.test.payload]
 some_val = "val"
 some_bool = true
+
+[targets.google]
+name = "google"
+method = "get"
+url = "https://google.com"
