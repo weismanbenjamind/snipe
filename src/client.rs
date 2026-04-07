@@ -1,41 +1,39 @@
+use reqwest::Client as Client_;
+use reqwest::RequestBuilder;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
-use reqwest::{Client, RequestBuilder};
 
-use crate::errors::RequestSenderError;
-use crate::response_wrapper::ResponseWrapper;
+use crate::errors::ClientError;
+use crate::response_data::ResponseData;
 use crate::targets::{Auth, Method, Target};
 use log::warn;
 use std::collections::HashMap;
 use std::str::FromStr;
 
-pub struct RequestSender {
-    client: Client,
+pub struct Client {
+    client: Client_,
 }
 
-impl RequestSender {
-    pub fn new() -> Result<Self, RequestSenderError> {
-        let client = Client::builder()
+impl Client {
+    pub fn new() -> Result<Self, ClientError> {
+        let client = Client_::builder()
             .build()
-            .map_err(|e| RequestSenderError::ClientBuild(e.to_string()))?;
+            .map_err(|e| ClientError::ClientBuild(e.to_string()))?;
         Ok(Self { client })
     }
 
-    pub async fn send_request(
-        &self,
-        target: &Target,
-    ) -> Result<ResponseWrapper, RequestSenderError> {
+    pub async fn send_request(&self, target: &Target) -> Result<ResponseData, ClientError> {
         let response = self
             .build_request(target)?
             .send()
             .await
-            .map_err(|e| RequestSenderError::SendRequestFailure(e.to_string()))?;
+            .map_err(|e| ClientError::SendRequestFailure(e.to_string()))?;
 
-        ResponseWrapper::try_from_response(response)
+        ResponseData::try_from_response(response)
             .await
             .map_err(|e| e.into())
     }
 
-    fn build_request(&self, target: &Target) -> Result<RequestBuilder, RequestSenderError> {
+    fn build_request(&self, target: &Target) -> Result<RequestBuilder, ClientError> {
         let mut request_builder = self.init_request_builder(target);
 
         if let Some(headers) = target.headers() {
@@ -61,7 +59,7 @@ impl RequestSender {
     }
 }
 
-fn build_headers(headers: &HashMap<String, String>) -> Result<HeaderMap, RequestSenderError> {
+fn build_headers(headers: &HashMap<String, String>) -> Result<HeaderMap, ClientError> {
     let mut header_map = HeaderMap::new();
     let mut header_name: HeaderName;
     let mut header_value: HeaderValue;
@@ -76,14 +74,12 @@ fn build_headers(headers: &HashMap<String, String>) -> Result<HeaderMap, Request
     Ok(header_map)
 }
 
-fn get_header_name(header_name: &str) -> Result<HeaderName, RequestSenderError> {
-    HeaderName::from_str(header_name)
-        .map_err(|err| RequestSenderError::RequestBuild(err.to_string()))
+fn get_header_name(header_name: &str) -> Result<HeaderName, ClientError> {
+    HeaderName::from_str(header_name).map_err(|err| ClientError::RequestBuild(err.to_string()))
 }
 
-fn get_header_value(header_value: &str) -> Result<HeaderValue, RequestSenderError> {
-    HeaderValue::from_str(header_value)
-        .map_err(|err| RequestSenderError::RequestBuild(err.to_string()))
+fn get_header_value(header_value: &str) -> Result<HeaderValue, ClientError> {
+    HeaderValue::from_str(header_value).map_err(|err| ClientError::RequestBuild(err.to_string()))
 }
 
 fn build_auth(request_builder: RequestBuilder, auth: &Auth) -> RequestBuilder {

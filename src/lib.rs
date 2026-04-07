@@ -1,9 +1,11 @@
-mod errors;
-mod inputs;
-mod request_sender;
-mod response_wrapper;
-mod run;
-mod targets;
+pub mod client;
+pub mod errors;
+pub mod inputs;
+pub mod response_data;
+pub mod run;
+pub mod targets;
 
+pub use client::Client;
 pub use inputs::SnipeArgs;
+pub use response_data::ResponseData;
 pub use run::run;

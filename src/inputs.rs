@@ -1,8 +1,8 @@
 use std::path::PathBuf;
 
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 
-#[derive(Parser, Debug)]
+#[derive(Parser, Debug, Clone)]
 #[command(name = "Snipe", about = "Lightweight, fast, precise CLI HTTP client.")]
 pub struct SnipeArgs {
     #[arg(
@@ -15,6 +15,9 @@ pub struct SnipeArgs {
 
     #[arg(short, long, help = "Target HTTP request to send.")]
     target: String,
+
+    #[arg[short, long, default_value = "headers", help = "Response data to return."]]
+    grab: Grab,
 }
 
 impl SnipeArgs {
@@ -25,4 +28,19 @@ impl SnipeArgs {
     pub fn target(&self) -> &str {
         &self.target
     }
+
+    pub fn grab(&self) -> Grab {
+        self.grab
+    }
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+pub enum Grab {
+    Full,
+    StatusCode,
+    Headers,
+    Body,
+    StatusCodeAndHeaders,
+    StatusCodeAndBody,
+    HeadersAndBody,
 }

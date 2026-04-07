@@ -11,6 +11,10 @@ pub struct Targets {
 }
 
 impl Targets {
+    pub fn new(targets: HashMap<String, Target>) -> Self {
+        Self { targets }
+    }
+
     pub fn from_toml_file<P: AsRef<Path>>(path: P) -> Result<Self, TargetsError> {
         validate_toml_path(&path)?;
         let toml_str = read_toml(&path)?;
@@ -45,12 +49,6 @@ fn validate_toml_path<P: AsRef<Path>>(path: P) -> Result<(), TargetsError> {
     Ok(())
 }
 
-fn read_toml<P: AsRef<Path>>(path: P) -> Result<String, TargetsError> {
-    read_to_string(path).map_err(|e| {
-        TargetsError::Dersialization(format!("Failed to read toml to string. Error: {e}",))
-    })
-}
-
 fn check_for_toml_extension(path: &Path) -> Result<(), TargetsError> {
     match path.extension() {
         None => Err(get_toml_extension_err(path)),
@@ -65,6 +63,12 @@ fn get_toml_extension_err(path: &Path) -> TargetsError {
     TargetsError::Dersialization(format!("Expected toml file, found {}", path.display()))
 }
 
+fn read_toml<P: AsRef<Path>>(path: P) -> Result<String, TargetsError> {
+    read_to_string(path).map_err(|e| {
+        TargetsError::Dersialization(format!("Failed to read toml to string. Error: {e}",))
+    })
+}
+
 #[derive(Debug, Deserialize, Clone)]
 pub struct Target {
     name: String,
@@ -76,6 +80,24 @@ pub struct Target {
 }
 
 impl Target {
+    pub fn new(
+        name: &str,
+        url: &str,
+        method: Method,
+        headers: Option<HashMap<String, String>>,
+        auth: Option<Auth>,
+        payload: Option<HashMap<String, Value>>,
+    ) -> Self {
+        Self {
+            name: name.to_string(),
+            url: url.to_string(),
+            method,
+            headers,
+            auth,
+            payload,
+        }
+    }
+
     pub fn name(&self) -> &str {
         &self.name
     }
@@ -160,6 +182,12 @@ pub struct BearerAuth {
 }
 
 impl BearerAuth {
+    pub fn new(token: &str) -> Self {
+        Self {
+            token: token.to_string(),
+        }
+    }
+
     pub fn token(&self) -> &str {
         &self.token
     }
@@ -172,6 +200,13 @@ pub struct BasicAuth {
 }
 
 impl BasicAuth {
+    pub fn new(username: &str, password: &str) -> Self {
+        Self {
+            username: username.to_string(),
+            password: password.to_string(),
+        }
+    }
+
     pub fn username(&self) -> &str {
         &self.username
     }

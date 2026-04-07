@@ -14,14 +14,14 @@ impl From<TargetsError> for RunError {
     }
 }
 
-impl From<RequestSenderError> for RunError {
-    fn from(value: RequestSenderError) -> Self {
+impl From<ClientError> for RunError {
+    fn from(value: ClientError) -> Self {
         RunError::Failure(value.to_string())
     }
 }
 
-impl From<ResponseWrapperError> for RunError {
-    fn from(value: ResponseWrapperError) -> Self {
+impl From<ResponseDataError> for RunError {
+    fn from(value: ResponseDataError) -> Self {
         RunError::Failure(value.to_string())
     }
 }
@@ -39,7 +39,7 @@ impl TargetsError {
 }
 
 #[derive(Debug, Error)]
-pub enum RequestSenderError {
+pub enum ClientError {
     #[error("Failed to build client. Error: {0}.")]
     ClientBuild(String),
 
@@ -56,14 +56,14 @@ pub enum RequestSenderError {
     ResponseBuild(String),
 }
 
-impl From<ResponseWrapperError> for RequestSenderError {
-    fn from(value: ResponseWrapperError) -> Self {
+impl From<ResponseDataError> for ClientError {
+    fn from(value: ResponseDataError) -> Self {
         Self::ResponseBuild(value.to_string())
     }
 }
 
 #[derive(Debug, Error)]
-pub enum ResponseWrapperError {
+pub enum ResponseDataError {
     #[error("Failed to build response metadata. Error: {0}.")]
     Build(String),
 
