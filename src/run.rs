@@ -19,7 +19,7 @@ pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
     // TODO - Want to add a full vs. just body reprsentation
     // TODO - Might want to eprintln! if get bad response
     // TODO - allow for file output
-    println!("{}", response.to_json()?);
+    println!("{}", response.to_json_string(args.grab(), args.pretty())?);
     Ok(())
 }
 

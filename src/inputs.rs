@@ -16,8 +16,21 @@ pub struct SnipeArgs {
     #[arg(short, long, help = "Target HTTP request to send.")]
     target: String,
 
-    #[arg[short, long, default_value = "headers", help = "Response data to return."]]
+    #[arg(
+        short,
+        long,
+        default_value = "headers",
+        help = "Response data to return."
+    )]
     grab: Grab,
+
+    #[arg(
+        short,
+        long,
+        default_value = "false",
+        help = "If the output should be pretty printed."
+    )]
+    pretty: bool,
 }
 
 impl SnipeArgs {
@@ -31,6 +44,10 @@ impl SnipeArgs {
 
     pub fn grab(&self) -> Grab {
         self.grab
+    }
+
+    pub fn pretty(&self) -> bool {
+        self.pretty
     }
 }
 
