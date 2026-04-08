@@ -85,7 +85,7 @@ pub struct ResponseData {
 impl ResponseData {
     pub fn new(status_code: StatusCode, headers: HashMap<String, String>, body: String) -> Self {
         Self {
-            status_code: status_code,
+            status_code,
             headers,
             body,
         }
@@ -114,7 +114,7 @@ impl ResponseData {
         }
 
         Self {
-            status_code: status_code,
+            status_code,
             headers: headers_owned,
             body: body.into(),
         }
