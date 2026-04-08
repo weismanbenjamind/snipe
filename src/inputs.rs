@@ -16,19 +16,23 @@ pub struct SnipeArgs {
     #[arg(short, long, help = "Target HTTP request to send.")]
     target: String,
 
-    #[arg(
-        short,
-        long,
-        default_value = "headers",
-        help = "Response data to return."
-    )]
+    #[arg(short, long, default_value = "body", help = "Response data to return.")]
     grab: Grab,
 
     #[arg(
         short,
         long,
         default_value = "false",
-        help = "If the output should be pretty printed."
+        help = "If the output should be attempted to be parsed into a json string."
+    )]
+    json: bool,
+
+    #[arg(
+        short,
+        long,
+        default_value = "false",
+        requires = "json",
+        help = "If the output should be pretty printed. Only valid is the --json (-j) option is passed."
     )]
     pretty: bool,
 }

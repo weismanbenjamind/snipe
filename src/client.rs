@@ -10,15 +10,15 @@ use std::collections::HashMap;
 use std::str::FromStr;
 
 pub struct Client {
-    client: Client_,
+    client_: Client_,
 }
 
 impl Client {
     pub fn new() -> Result<Self, ClientError> {
-        let client = Client_::builder()
+        let client_ = Client_::builder()
             .build()
             .map_err(|e| ClientError::ClientBuild(e.to_string()))?;
-        Ok(Self { client })
+        Ok(Self { client_ })
     }
 
     pub async fn send_request(&self, target: &Target) -> Result<ResponseData, ClientError> {
@@ -50,11 +50,11 @@ impl Client {
 
     fn init_request_builder(&self, target: &Target) -> RequestBuilder {
         match target.method() {
-            Method::Delete => self.client.delete(target.url()),
-            Method::Get => self.client.get(target.url()),
-            Method::Patch => self.client.patch(target.url()),
-            Method::Post => self.client.post(target.url()),
-            Method::Put => self.client.put(target.url()),
+            Method::Delete => self.client_.delete(target.url()),
+            Method::Get => self.client_.get(target.url()),
+            Method::Patch => self.client_.patch(target.url()),
+            Method::Post => self.client_.post(target.url()),
+            Method::Put => self.client_.put(target.url()),
         }
     }
 }

@@ -15,18 +15,9 @@ pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
     info!("Sending request for target {}", target.name());
     let response = Client::new()?.send_request(target).await?;
 
-    // TODO - Might not want to force json representation - allow for different reprsentations. Forcing json might cause errors. Check convo with forge about this
-    // TODO - Want to add a full vs. just body reprsentation
-    // TODO - Might want to eprintln! if get bad response
+    // TODO - Add the json output option
+    // TODO - Figure out what do if get image or something? Will current base64 encoding handle it?
     // TODO - allow for file output
-    println!("{}", response.to_json_string(args.grab(), args.pretty())?);
+    println!("{}", response.to_http_string(args.grab()));
     Ok(())
 }
-
-// TODO - pick up here
-// fn get_output_string(response_wrapper: &ResponseData, grab: Grab) {
-//     match grab {
-//         Grab::StatusCode => format!("{}", response_wrapper.status_code()),
-//         Grab::Headers => to_string_pretty(response_wrapper.headers()),
-//     };
-// }
