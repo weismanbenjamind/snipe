@@ -18,6 +18,14 @@ pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
     // TODO - Add the json output option
     // TODO - Figure out what do if get image or something? Will current base64 encoding handle it?
     // TODO - allow for file output
-    println!("{}", response.to_http_string(args.grab()));
+    match args.json() {
+        true => {
+            let json_string = response
+                .to_json_string(args.grab(), args.pretty())
+                .map_err(|e| RunError::Failure(e.to_string()))?;
+            println!("{}", json_string)
+        }
+        false => println!("{}", response.to_http_string(args.grab())),
+    };
     Ok(())
 }

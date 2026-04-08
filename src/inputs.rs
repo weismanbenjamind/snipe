@@ -50,6 +50,10 @@ impl SnipeArgs {
         self.grab
     }
 
+    pub fn json(&self) -> bool {
+        self.json
+    }
+
     pub fn pretty(&self) -> bool {
         self.pretty
     }
