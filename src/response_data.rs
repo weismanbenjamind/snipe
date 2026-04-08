@@ -180,20 +180,21 @@ impl ResponseData {
 
     pub fn to_http_string(&self, grab: Grab) -> String {
         match grab {
-            Grab::StatusCode => self.status_code.to_string(),
+            Grab::Status => self.status_code.to_string(),
             Grab::Headers => headers_to_http_string(self.headers()),
             Grab::Body => self.body.clone(),
             Grab::StatusCodeAndHeaders => StatusCodeAndHeaders::from(self).to_http_string(),
             Grab::StatusCodeAndBody => StatusCodeAndBody::from(self).to_http_string(),
             Grab::HeadersAndBody => HeadersAndBody::from(self).to_http_string(),
             Grab::Full => self.to_full_http_string(),
+            Grab::StatusCode => format!("{}", self.status_code_u16()),
         }
     }
 
     pub fn to_json_string(&self, grab: Grab, pretty: bool) -> Result<String, ResponseDataError> {
         match grab {
             Grab::Full => to_json_string(&self.to_serializable(), pretty),
-            Grab::StatusCode => to_json_string(&self.status_code_to_map(), pretty),
+            Grab::Status => to_json_string(&self.status_code_to_map(), pretty),
             Grab::Headers => to_json_string(&self.headers_to_map(), pretty),
             Grab::Body => to_json_string(&self.body_to_map(), pretty),
             Grab::StatusCodeAndHeaders => {
@@ -203,6 +204,7 @@ impl ResponseData {
                 to_json_string(&StatusCodeAndBody::from(self).to_serializable(), pretty)
             }
             Grab::HeadersAndBody => to_json_string(&HeadersAndBody::from(self), pretty),
+            Grab::StatusCode => Ok(format!("{}", self.status_code_u16())),
         }
     }
 

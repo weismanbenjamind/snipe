@@ -18,6 +18,7 @@ pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
     // TODO - Add the json output option
     // TODO - Figure out what do if get image or something? Will current base64 encoding handle it?
     // TODO - allow for file output
+
     match args.json() {
         true => {
             let json_string = response

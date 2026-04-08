@@ -62,10 +62,11 @@ impl SnipeArgs {
 #[derive(Debug, Clone, Copy, ValueEnum)]
 pub enum Grab {
     Full,
-    StatusCode,
+    Status,
     Headers,
     Body,
     StatusCodeAndHeaders,
     StatusCodeAndBody,
     HeadersAndBody,
+    StatusCode,
 }
