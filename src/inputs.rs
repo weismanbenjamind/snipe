@@ -1,6 +1,5 @@
-use std::path::PathBuf;
-
 use clap::{Parser, ValueEnum};
+use std::path::PathBuf;
 
 #[derive(Parser, Debug, Clone)]
 #[command(name = "Snipe", about = "Lightweight, fast, precise CLI HTTP client.")]
@@ -35,6 +34,13 @@ pub struct SnipeArgs {
         help = "If the output should be pretty printed. Only valid is the --json (-j) option is passed."
     )]
     pretty: bool,
+
+    #[arg(
+        short,
+        long,
+        help = "Optional file that output should be written to. If passed contents will be written to this file and not stdout."
+    )]
+    output_file: Option<PathBuf>,
 }
 
 impl SnipeArgs {
@@ -56,6 +62,10 @@ impl SnipeArgs {
 
     pub fn pretty(&self) -> bool {
         self.pretty
+    }
+
+    pub fn output_file(&self) -> &Option<PathBuf> {
+        &self.output_file
     }
 }
 
