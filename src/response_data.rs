@@ -13,6 +13,10 @@ trait ToSerializable<'a> {
     fn to_serializable(&'a self) -> Self::Output;
 }
 
+trait ToHTTPString<'a> {
+    fn to_http_string(&'a self) -> String;
+}
+
 #[derive(Clone, Debug)]
 struct StatusCodeAndHeaders<'a> {
     status_code: StatusCode,
@@ -44,8 +48,8 @@ impl<'a> ToSerializable<'a> for StatusCodeAndHeaders<'a> {
     }
 }
 
-impl<'a> StatusCodeAndHeaders<'a> {
-    fn to_http_string(&self) -> String {
+impl<'a> ToHTTPString<'a> for StatusCodeAndHeaders<'a> {
+    fn to_http_string(&'a self) -> String {
         format!(
             "{}\n{}",
             self.status_code,
@@ -85,8 +89,8 @@ impl<'a> ToSerializable<'a> for StatusCodeAndBody<'a> {
     }
 }
 
-impl<'a> StatusCodeAndBody<'a> {
-    fn to_http_string(&self) -> String {
+impl<'a> ToHTTPString<'a> for StatusCodeAndBody<'a> {
+    fn to_http_string(&'a self) -> String {
         format!("{}\n\n{}", self.status_code, self.body)
     }
 }
@@ -106,8 +110,8 @@ impl<'a> From<&'a ResponseData> for HeadersAndBody<'a> {
     }
 }
 
-impl<'a> HeadersAndBody<'a> {
-    fn to_http_string(&self) -> String {
+impl<'a> ToHTTPString<'a> for HeadersAndBody<'a> {
+    fn to_http_string(&'a self) -> String {
         format!("{}\n\n{}", headers_to_http_string(self.headers), self.body)
     }
 }
