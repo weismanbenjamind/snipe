@@ -15,7 +15,6 @@ pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
     info!("Sending request for target {}", target.name());
     let response = Client::new()?.send_request(target).await?;
 
-    // TODO - Add the json output option
     // TODO - Figure out what do if get image or something? Will current base64 encoding handle it?
     // TODO - allow for file output
 
