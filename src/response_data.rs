@@ -183,7 +183,7 @@ impl ResponseData {
     }
 
     pub fn to_http_string(&self, grab: Grab) -> String {
-        match grab {
+        let output = match grab {
             Grab::Status => self.status_code.to_string(),
             Grab::Headers => headers_to_http_string(self.headers()),
             Grab::Body => self.body.clone(),
@@ -192,7 +192,9 @@ impl ResponseData {
             Grab::HeadersAndBody => HeadersAndBody::from(self).to_http_string(),
             Grab::Full => self.to_full_http_string(),
             Grab::StatusCode => format!("{}", self.status_code_u16()),
-        }
+        };
+
+        output.trim().to_string()
     }
 
     pub fn to_json_string(&self, grab: Grab, pretty: bool) -> Result<String, ResponseDataError> {
