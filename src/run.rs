@@ -1,13 +1,16 @@
-use log::info;
+use log::{debug, info};
 
 use crate::client::Client;
 use crate::errors::RunError;
 use crate::inputs::SnipeArgs;
 use crate::targets::Targets;
+use serde_json::to_string_pretty;
 use std::fs;
 use std::path::Path;
 
 pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
+    env_logger::init();
+
     let targets = Targets::from_toml_file(args.cfg_path())?;
 
     let target = targets
@@ -15,6 +18,10 @@ pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
         .ok_or_else(|| RunError::Failure(format!("Failed to find target {}", args.target())))?;
 
     info!("Sending request for target {}", target.name());
+    match to_string_pretty(target) {
+        Ok(json) => debug!("Parsed target as:\n{json}"),
+        Err(_) => debug!("Parsed target as:\n{:#?}", target),
+    }
     let response = Client::new()?.send_request(target).await?;
 
     let output_string = match args.json() {

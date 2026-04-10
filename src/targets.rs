@@ -1,11 +1,11 @@
 use crate::errors::TargetsError;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use std::fs::read_to_string;
 use std::path::Path;
 use std::{collections::HashMap, ffi::OsStr};
 use toml::Value;
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct Targets {
     targets: HashMap<String, Target>,
 }
@@ -69,7 +69,7 @@ fn read_toml<P: AsRef<Path>>(path: P) -> Result<String, TargetsError> {
     })
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct Target {
     name: String,
     url: String,
@@ -131,7 +131,7 @@ struct RawAuth {
     password: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, Serialize)]
 #[serde(tag = "scheme", try_from = "RawAuth")]
 pub enum Auth {
     Bearer(BearerAuth),
@@ -176,7 +176,7 @@ fn get_missing_auth_field_err(field_name: &str, auth_type: &str) -> TargetsError
     ))
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct BearerAuth {
     token: String,
 }
@@ -193,7 +193,7 @@ impl BearerAuth {
     }
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct BasicAuth {
     username: String,
     password: String,
@@ -216,7 +216,7 @@ impl BasicAuth {
     }
 }
 
-#[derive(Debug, Deserialize, Clone, Copy)]
+#[derive(Debug, Deserialize, Clone, Copy, Serialize)]
 #[serde(try_from = "String")]
 pub enum Method {
     Get,

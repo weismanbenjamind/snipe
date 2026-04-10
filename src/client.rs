@@ -9,16 +9,18 @@ use log::warn;
 use std::collections::HashMap;
 use std::str::FromStr;
 
+use log::debug;
+
 pub struct Client {
-    client_: Client_,
+    _client: Client_,
 }
 
 impl Client {
     pub fn new() -> Result<Self, ClientError> {
-        let client_ = Client_::builder()
+        let _client = Client_::builder()
             .build()
             .map_err(|e| ClientError::ClientBuild(e.to_string()))?;
-        Ok(Self { client_ })
+        Ok(Self { _client })
     }
 
     pub async fn send_request(&self, target: &Target) -> Result<ResponseData, ClientError> {
@@ -30,7 +32,7 @@ impl Client {
 
         ResponseData::try_from_response(response)
             .await
-            .map_err(|e| e.into())
+            .map_err(|e| ClientError::from(e))
     }
 
     fn build_request(&self, target: &Target) -> Result<RequestBuilder, ClientError> {
@@ -45,16 +47,22 @@ impl Client {
             request_builder = build_auth(request_builder, auth);
         }
 
+        if let Some(payload) = target.payload() {
+            request_builder = request_builder.json(payload);
+        }
+
+        debug!("Built request:\n{:#?}", request_builder);
+
         Ok(request_builder)
     }
 
     fn init_request_builder(&self, target: &Target) -> RequestBuilder {
         match target.method() {
-            Method::Delete => self.client_.delete(target.url()),
-            Method::Get => self.client_.get(target.url()),
-            Method::Patch => self.client_.patch(target.url()),
-            Method::Post => self.client_.post(target.url()),
-            Method::Put => self.client_.put(target.url()),
+            Method::Delete => self._client.delete(target.url()),
+            Method::Get => self._client.get(target.url()),
+            Method::Patch => self._client.patch(target.url()),
+            Method::Post => self._client.post(target.url()),
+            Method::Put => self._client.put(target.url()),
         }
     }
 }
