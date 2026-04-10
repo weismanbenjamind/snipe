@@ -32,7 +32,7 @@ impl Client {
 
         ResponseData::try_from_response(response)
             .await
-            .map_err(|e| ClientError::from(e))
+            .map_err(ClientError::from)
     }
 
     fn build_request(&self, target: &Target) -> Result<RequestBuilder, ClientError> {
