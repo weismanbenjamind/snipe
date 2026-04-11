@@ -169,10 +169,12 @@ impl TryFrom<RawAuth> for Auth {
     }
 }
 
+#[inline]
 fn get_missing_basic_auth_field_error(field_name: &str) -> TargetsError {
     get_missing_auth_field_err(field_name, "basic")
 }
 
+#[inline]
 fn get_missing_auth_field_err(field_name: &str, auth_type: &str) -> TargetsError {
     TargetsError::Dersialization(format!(
         "Must pass {field_name} field for {auth_type} auth."
