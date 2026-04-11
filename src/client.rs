@@ -9,8 +9,6 @@ use log::warn;
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use log::debug;
-
 pub struct Client {
     _client: Client_,
 }
@@ -50,8 +48,6 @@ impl Client {
         if let Some(payload) = target.payload() {
             request_builder = request_builder.json(payload);
         }
-
-        debug!("Built request:\n{:#?}", request_builder);
 
         Ok(request_builder)
     }

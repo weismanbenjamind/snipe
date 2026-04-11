@@ -1,4 +1,5 @@
 use crate::errors::TargetsError;
+use crate::var_replacement::replace_env_vars;
 use serde::{Deserialize, Serialize};
 use std::fs::read_to_string;
 use std::path::Path;
@@ -22,7 +23,9 @@ impl Targets {
     }
 
     pub fn from_toml(toml_str: &str) -> Result<Self, TargetsError> {
-        toml::from_str(toml_str).map_err(TargetsError::deserialization_from_err)
+        let toml_str =
+            replace_env_vars(toml_str).map_err(TargetsError::deserialization_from_err)?;
+        toml::from_str(&toml_str).map_err(TargetsError::deserialization_from_err)
     }
 
     pub fn get_target(&self, target: &str) -> Option<&Target> {

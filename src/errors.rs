@@ -27,6 +27,12 @@ impl From<ResponseDataError> for RunError {
 }
 
 #[derive(Debug, Error)]
+pub enum EnvVarReplaceError {
+    #[error("{0}")]
+    Base(String),
+}
+
+#[derive(Debug, Error)]
 pub enum TargetsError {
     #[error("Failed to deserialize targets. Error: {0}.")]
     Dersialization(String),

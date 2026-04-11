@@ -4,6 +4,7 @@ pub mod inputs;
 pub mod response_data;
 pub mod run;
 pub mod targets;
+mod var_replacement;
 
 pub use client::Client;
 pub use inputs::SnipeArgs;
