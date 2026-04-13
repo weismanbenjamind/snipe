@@ -66,9 +66,14 @@ struct StatusCodeAndBody<'a> {
 
 impl<'a> From<&'a ResponseData> for StatusCodeAndBody<'a> {
     fn from(value: &'a ResponseData) -> Self {
+        let body = value.body();
+        let body = match serde_json::from_str(body) {
+            Ok(as_json) => as_json,
+            Err(_) => body,
+        };
         Self {
             status_code: value.status_code(),
-            body: value.body(),
+            body,
         }
     }
 }
@@ -197,12 +202,15 @@ impl ResponseData {
         output.trim().to_string()
     }
 
+    // Note - printing body as part of a map/json may not work in a pretty fashion
+    // Because we are alwasy printing a map (e.g. body is a string).
+    // Body might actually have to be a serde_json::Value for a nice print
     pub fn to_json_string(&self, grab: Grab, pretty: bool) -> Result<String, ResponseDataError> {
         match grab {
             Grab::Full => to_json_string(&self.to_serializable(), pretty),
             Grab::Status => to_json_string(&self.status_code_to_map(), pretty),
             Grab::Headers => to_json_string(&self.headers_to_map(), pretty),
-            Grab::Body => to_json_string(&self.body_to_map(), pretty),
+            Grab::Body => self.body_to_json(pretty),
             Grab::StatusCodeAndHeaders => {
                 to_json_string(&StatusCodeAndHeaders::from(self).to_serializable(), pretty)
             }
@@ -226,10 +234,19 @@ impl ResponseData {
         map
     }
 
-    fn body_to_map(&self) -> HashMap<&'static str, &str> {
-        let mut map = HashMap::new();
-        map.insert("body", self.body());
-        map
+    fn body_to_json(&self, pretty: bool) -> Result<String, ResponseDataError> {
+        match serde_json::from_str::<serde_json::Value>(self.body()) {
+            Ok(as_json) => {
+                let mut map: HashMap<&'static str, serde_json::Value> = HashMap::new();
+                map.insert("body", as_json);
+                to_json_string(&map, pretty)
+            }
+            Err(_) => {
+                let mut map: HashMap<&'static str, &str> = HashMap::new();
+                map.insert("body", self.body());
+                to_json_string(&map, pretty)
+            }
+        }
     }
 }
 
