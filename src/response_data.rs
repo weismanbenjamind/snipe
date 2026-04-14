@@ -6,12 +6,8 @@ use log::warn;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{Response, StatusCode};
 use serde::Serialize;
+use serde_json::json;
 use std::collections::HashMap;
-
-trait ToSerializable<'a> {
-    type Output: Serialize;
-    fn to_serializable(&'a self) -> Self::Output;
-}
 
 trait ToHTTPString<'a> {
     fn to_http_string(&'a self) -> String;
@@ -28,22 +24,6 @@ impl<'a> From<&'a ResponseData> for StatusCodeAndHeaders<'a> {
         Self {
             status_code: value.status_code,
             headers: value.headers(),
-        }
-    }
-}
-
-#[derive(Clone, Debug, Serialize)]
-struct StatusCodeAndHeadersSerializable<'a> {
-    status_code: u16,
-    headers: &'a HashMap<String, String>,
-}
-
-impl<'a> ToSerializable<'a> for StatusCodeAndHeaders<'a> {
-    type Output = StatusCodeAndHeadersSerializable<'a>;
-    fn to_serializable(&'a self) -> Self::Output {
-        StatusCodeAndHeadersSerializable {
-            status_code: self.status_code.as_u16(),
-            headers: self.headers,
         }
     }
 }
@@ -66,30 +46,9 @@ struct StatusCodeAndBody<'a> {
 
 impl<'a> From<&'a ResponseData> for StatusCodeAndBody<'a> {
     fn from(value: &'a ResponseData) -> Self {
-        let body = value.body();
-        let body = match serde_json::from_str(body) {
-            Ok(as_json) => as_json,
-            Err(_) => body,
-        };
         Self {
             status_code: value.status_code(),
-            body,
-        }
-    }
-}
-
-#[derive(Clone, Debug, Serialize)]
-struct StatusCodeAndBodySerializable<'a> {
-    status_code: u16,
-    body: &'a str,
-}
-
-impl<'a> ToSerializable<'a> for StatusCodeAndBody<'a> {
-    type Output = StatusCodeAndBodySerializable<'a>;
-    fn to_serializable(&'a self) -> Self::Output {
-        StatusCodeAndBodySerializable {
-            status_code: self.status_code.as_u16(),
-            body: self.body,
+            body: value.body(),
         }
     }
 }
@@ -145,6 +104,10 @@ impl ResponseData {
         self.status_code.as_u16()
     }
 
+    pub fn status_code_string(&self) -> String {
+        self.status_code_u16().to_string()
+    }
+
     pub fn headers(&self) -> &HashMap<String, String> {
         &self.headers
     }
@@ -187,6 +150,7 @@ impl ResponseData {
         )
     }
 
+    // TODO - Dont convert to structs here just use methods
     pub fn to_http_string(&self, grab: Grab) -> String {
         let output = match grab {
             Grab::Status => self.status_code.to_string(),
@@ -196,7 +160,7 @@ impl ResponseData {
             Grab::StatusCodeAndBody => StatusCodeAndBody::from(self).to_http_string(),
             Grab::HeadersAndBody => HeadersAndBody::from(self).to_http_string(),
             Grab::Full => self.to_full_http_string(),
-            Grab::StatusCode => format!("{}", self.status_code_u16()),
+            Grab::StatusCode => self.status_code_string(),
         };
 
         output.trim().to_string()
@@ -207,65 +171,110 @@ impl ResponseData {
     // Body might actually have to be a serde_json::Value for a nice print
     pub fn to_json_string(&self, grab: Grab, pretty: bool) -> Result<String, ResponseDataError> {
         match grab {
-            Grab::Full => to_json_string(&self.to_serializable(), pretty),
-            Grab::Status => to_json_string(&self.status_code_to_map(), pretty),
-            Grab::Headers => to_json_string(&self.headers_to_map(), pretty),
+            Grab::Status => self.status_code_to_json(pretty),
+            Grab::Headers => self.headers_to_json(pretty),
             Grab::Body => self.body_to_json(pretty),
-            Grab::StatusCodeAndHeaders => {
-                to_json_string(&StatusCodeAndHeaders::from(self).to_serializable(), pretty)
-            }
-            Grab::StatusCodeAndBody => {
-                to_json_string(&StatusCodeAndBody::from(self).to_serializable(), pretty)
-            }
-            Grab::HeadersAndBody => to_json_string(&HeadersAndBody::from(self), pretty),
-            Grab::StatusCode => Ok(format!("{}", self.status_code_u16())),
+            Grab::StatusCodeAndHeaders => self.status_code_and_headers_as_json(pretty),
+            Grab::StatusCodeAndBody => self.status_code_and_body_as_json(pretty),
+            Grab::HeadersAndBody => self.headers_and_body_as_json(pretty),
+            Grab::Full => self.to_json(pretty),
+            Grab::StatusCode => Ok(self.status_code_string()),
         }
     }
 
-    fn status_code_to_map(&self) -> HashMap<&'static str, u16> {
-        let mut map = HashMap::new();
-        map.insert("status_code", self.status_code_u16());
-        map
+    #[inline]
+    fn status_code_to_json(&self, pretty: bool) -> Result<String, ResponseDataError> {
+        to_json_string(&json!({"status_code": self.status_code_u16()}), pretty)
     }
 
-    fn headers_to_map(&self) -> HashMap<&'static str, &HashMap<String, String>> {
-        let mut map = HashMap::new();
-        map.insert("headers", self.headers());
-        map
+    #[inline]
+    fn headers_to_json(&self, pretty: bool) -> Result<String, ResponseDataError> {
+        to_json_string(&json!({"headers": self.headers()}), pretty)
+    }
+
+    fn body_to_map<'a>(&'a self) -> BodyToMapReturn<'a> {
+        match serde_json::from_str::<serde_json::Value>(self.body()) {
+            Ok(as_json) => BodyToMapReturn::Json(as_json),
+            Err(_) => BodyToMapReturn::Str(self.body()),
+        }
     }
 
     fn body_to_json(&self, pretty: bool) -> Result<String, ResponseDataError> {
-        match serde_json::from_str::<serde_json::Value>(self.body()) {
-            Ok(as_json) => {
-                let mut map: HashMap<&'static str, serde_json::Value> = HashMap::new();
-                map.insert("body", as_json);
-                to_json_string(&map, pretty)
+        let json = match self.body_to_map() {
+            BodyToMapReturn::Json(body) => json!({"body": body}),
+            BodyToMapReturn::Str(body) => json!({"body": body}),
+        };
+        to_json_string(&json, pretty)
+    }
+
+    #[inline]
+    fn status_code_and_headers_as_json(&self, pretty: bool) -> Result<String, ResponseDataError> {
+        to_json_string(
+            &json!({"status_code": self.status_code_u16(), "headers": self.headers()}),
+            pretty,
+        )
+    }
+
+    fn status_code_and_body_as_json(&self, pretty: bool) -> Result<String, ResponseDataError> {
+        let json = match self.body_to_map() {
+            BodyToMapReturn::Json(body) => {
+                json!({
+                    "status_code": self.status_code_u16(),
+                    "body": body,
+                })
             }
-            Err(_) => {
-                let mut map: HashMap<&'static str, &str> = HashMap::new();
-                map.insert("body", self.body());
-                to_json_string(&map, pretty)
+            BodyToMapReturn::Str(body) => {
+                json!({
+                    "status_code": self.status_code_u16(),
+                    "body": body,
+                })
             }
-        }
+        };
+        to_json_string(&json, pretty)
+    }
+
+    fn headers_and_body_as_json(&self, pretty: bool) -> Result<String, ResponseDataError> {
+        let json = match self.body_to_map() {
+            BodyToMapReturn::Json(body) => {
+                json!({
+                    "headers": self.headers(),
+                    "body": body
+                })
+            }
+            BodyToMapReturn::Str(body) => {
+                json!({
+                    "headers": self.headers(),
+                    "body": body
+                })
+            }
+        };
+        to_json_string(&json, pretty)
+    }
+
+    fn to_json(&self, pretty: bool) -> Result<String, ResponseDataError> {
+        let json = match self.body_to_map() {
+            BodyToMapReturn::Json(body) => {
+                json!({
+                    "status_code": self.status_code_u16(),
+                    "headers": self.headers(),
+                    "body": body
+                })
+            }
+            BodyToMapReturn::Str(body) => {
+                json!({
+                    "status_code": self.status_code_u16(),
+                    "headers": self.headers(),
+                    "body": body
+                })
+            }
+        };
+        to_json_string(&json, pretty)
     }
 }
 
-#[derive(Clone, Debug, Serialize)]
-struct ResponseDataSerializable<'a> {
-    status_code: u16,
-    headers: &'a HashMap<String, String>,
-    body: &'a str,
-}
-
-impl<'a> ToSerializable<'a> for ResponseData {
-    type Output = ResponseDataSerializable<'a>;
-    fn to_serializable(&'a self) -> Self::Output {
-        ResponseDataSerializable {
-            status_code: self.status_code_u16(),
-            headers: self.headers(),
-            body: self.body(),
-        }
-    }
+enum BodyToMapReturn<'a> {
+    Json(serde_json::Value),
+    Str(&'a str),
 }
 
 fn build_response_headers(header_map: &HeaderMap) -> HashMap<String, String> {
