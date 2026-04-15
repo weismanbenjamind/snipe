@@ -9,77 +9,6 @@ use serde::Serialize;
 use serde_json::json;
 use std::collections::HashMap;
 
-trait ToHTTPString<'a> {
-    fn to_http_string(&'a self) -> String;
-}
-
-#[derive(Clone, Debug)]
-struct StatusCodeAndHeaders<'a> {
-    status_code: StatusCode,
-    headers: &'a HashMap<String, String>,
-}
-
-impl<'a> From<&'a ResponseData> for StatusCodeAndHeaders<'a> {
-    fn from(value: &'a ResponseData) -> Self {
-        Self {
-            status_code: value.status_code,
-            headers: value.headers(),
-        }
-    }
-}
-
-impl<'a> ToHTTPString<'a> for StatusCodeAndHeaders<'a> {
-    fn to_http_string(&'a self) -> String {
-        format!(
-            "{}\n{}",
-            self.status_code,
-            headers_to_http_string(self.headers)
-        )
-    }
-}
-
-#[derive(Clone, Debug)]
-struct StatusCodeAndBody<'a> {
-    status_code: StatusCode,
-    body: &'a str,
-}
-
-impl<'a> From<&'a ResponseData> for StatusCodeAndBody<'a> {
-    fn from(value: &'a ResponseData) -> Self {
-        Self {
-            status_code: value.status_code(),
-            body: value.body(),
-        }
-    }
-}
-
-impl<'a> ToHTTPString<'a> for StatusCodeAndBody<'a> {
-    fn to_http_string(&'a self) -> String {
-        format!("{}\n\n{}", self.status_code, self.body)
-    }
-}
-
-#[derive(Clone, Debug, Serialize)]
-struct HeadersAndBody<'a> {
-    headers: &'a HashMap<String, String>,
-    body: &'a str,
-}
-
-impl<'a> From<&'a ResponseData> for HeadersAndBody<'a> {
-    fn from(value: &'a ResponseData) -> Self {
-        Self {
-            headers: value.headers(),
-            body: value.body(),
-        }
-    }
-}
-
-impl<'a> ToHTTPString<'a> for HeadersAndBody<'a> {
-    fn to_http_string(&'a self) -> String {
-        format!("{}\n\n{}", headers_to_http_string(self.headers), self.body)
-    }
-}
-
 #[derive(Clone, Debug)]
 pub struct ResponseData {
     status_code: StatusCode,
@@ -96,22 +25,27 @@ impl ResponseData {
         }
     }
 
+    #[inline]
     pub fn status_code(&self) -> StatusCode {
         self.status_code
     }
 
+    #[inline]
     pub fn status_code_u16(&self) -> u16 {
         self.status_code.as_u16()
     }
 
+    #[inline]
     pub fn status_code_string(&self) -> String {
         self.status_code_u16().to_string()
     }
 
+    #[inline]
     pub fn headers(&self) -> &HashMap<String, String> {
         &self.headers
     }
 
+    #[inline]
     pub fn body(&self) -> &str {
         &self.body
     }
@@ -141,41 +75,27 @@ impl ResponseData {
         })
     }
 
-    fn to_full_http_string(&self) -> String {
-        format!(
-            "{}\n{}\n\n{}",
-            self.status_code,
-            headers_to_http_string(self.headers()),
-            self.body(),
-        )
-    }
-
-    // TODO - Dont convert to structs here just use methods
     pub fn to_http_string(&self, grab: Grab) -> String {
         let output = match grab {
             Grab::Status => self.status_code.to_string(),
-            Grab::Headers => headers_to_http_string(self.headers()),
+            Grab::Headers => self.headers_to_http_string(),
             Grab::Body => self.body.clone(),
-            Grab::StatusCodeAndHeaders => StatusCodeAndHeaders::from(self).to_http_string(),
-            Grab::StatusCodeAndBody => StatusCodeAndBody::from(self).to_http_string(),
-            Grab::HeadersAndBody => HeadersAndBody::from(self).to_http_string(),
+            Grab::StatusCodeAndHeaders => self.status_code_and_headers_to_http_string(),
+            Grab::StatusCodeAndBody => self.status_code_and_body_to_http_string(),
+            Grab::HeadersAndBody => self.headers_and_body_to_http_string(),
             Grab::Full => self.to_full_http_string(),
             Grab::StatusCode => self.status_code_string(),
         };
-
         output.trim().to_string()
     }
 
-    // Note - printing body as part of a map/json may not work in a pretty fashion
-    // Because we are alwasy printing a map (e.g. body is a string).
-    // Body might actually have to be a serde_json::Value for a nice print
     pub fn to_json_string(&self, grab: Grab, pretty: bool) -> Result<String, ResponseDataError> {
         match grab {
             Grab::Status => self.status_code_to_json(pretty),
             Grab::Headers => self.headers_to_json(pretty),
             Grab::Body => self.body_to_json(pretty),
-            Grab::StatusCodeAndHeaders => self.status_code_and_headers_as_json(pretty),
-            Grab::StatusCodeAndBody => self.status_code_and_body_as_json(pretty),
+            Grab::StatusCodeAndHeaders => self.status_code_and_headers_to_json(pretty),
+            Grab::StatusCodeAndBody => self.status_code_and_body_to_json(pretty),
             Grab::HeadersAndBody => self.headers_and_body_as_json(pretty),
             Grab::Full => self.to_json(pretty),
             Grab::StatusCode => Ok(self.status_code_string()),
@@ -185,6 +105,19 @@ impl ResponseData {
     #[inline]
     fn status_code_to_json(&self, pretty: bool) -> Result<String, ResponseDataError> {
         to_json_string(&json!({"status_code": self.status_code_u16()}), pretty)
+    }
+
+    fn headers_to_http_string(&self) -> String {
+        let mut http_string = String::new();
+
+        self.headers.iter().for_each(|(k, v)| {
+            http_string.push_str(&format!("{}: {}\n", k, v));
+        });
+
+        match http_string.strip_suffix("\n") {
+            Some(stripped) => stripped.to_string(),
+            None => http_string,
+        }
     }
 
     #[inline]
@@ -208,14 +141,24 @@ impl ResponseData {
     }
 
     #[inline]
-    fn status_code_and_headers_as_json(&self, pretty: bool) -> Result<String, ResponseDataError> {
+    fn status_code_and_headers_to_http_string(&self) -> String {
+        format!("{}\n{}", self.status_code, self.headers_to_http_string())
+    }
+
+    #[inline]
+    fn status_code_and_headers_to_json(&self, pretty: bool) -> Result<String, ResponseDataError> {
         to_json_string(
             &json!({"status_code": self.status_code_u16(), "headers": self.headers()}),
             pretty,
         )
     }
 
-    fn status_code_and_body_as_json(&self, pretty: bool) -> Result<String, ResponseDataError> {
+    #[inline]
+    fn status_code_and_body_to_http_string(&self) -> String {
+        format!("{}\n\n{}", self.status_code, self.body)
+    }
+
+    fn status_code_and_body_to_json(&self, pretty: bool) -> Result<String, ResponseDataError> {
         let json = match self.body_to_map() {
             BodyToMapReturn::Json(body) => {
                 json!({
@@ -231,6 +174,11 @@ impl ResponseData {
             }
         };
         to_json_string(&json, pretty)
+    }
+
+    #[inline]
+    fn headers_and_body_to_http_string(&self) -> String {
+        format!("{}\n\n{}", self.headers_to_http_string(), self.body)
     }
 
     fn headers_and_body_as_json(&self, pretty: bool) -> Result<String, ResponseDataError> {
@@ -249,6 +197,16 @@ impl ResponseData {
             }
         };
         to_json_string(&json, pretty)
+    }
+
+    #[inline]
+    fn to_full_http_string(&self) -> String {
+        format!(
+            "{}\n{}\n\n{}",
+            self.status_code,
+            self.headers_to_http_string(),
+            self.body
+        )
     }
 
     fn to_json(&self, pretty: bool) -> Result<String, ResponseDataError> {
@@ -319,19 +277,6 @@ fn header_value_to_string(header_value: &HeaderValue) -> String {
 
 fn encode_as_base_64(bytes: &[u8]) -> String {
     general_purpose::STANDARD.encode(bytes)
-}
-
-fn headers_to_http_string(headers: &HashMap<String, String>) -> String {
-    let mut http_string = String::new();
-
-    headers.iter().for_each(|(k, v)| {
-        http_string.push_str(&format!("{}: {}\n", k, v));
-    });
-
-    match http_string.strip_suffix("\n") {
-        Some(stripped) => stripped.to_string(),
-        None => http_string,
-    }
 }
 
 fn warn_to_console(warning: &str) {
