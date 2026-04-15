@@ -1,8 +1,10 @@
 use log::debug;
 use regex::{Captures, Regex};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::env;
 
-use crate::errors::EnvVarReplaceError;
+use crate::errors::EnvVarReplaceError; // TODO - Update this error - need a general error for variable replacement
 
 // Raw string to not treat \ as escape characters
 // \$ to match literal '$'
@@ -16,8 +18,42 @@ use crate::errors::EnvVarReplaceError;
 // Putting it all together - Give me a string that starts with '${ENV.', followed by one or more characters that are not `}`, follow by `}`
 const ENV_VAR_PATTERN: &str = r"\$\{ENV\.([^}]+)\}";
 
+const VAR_PATTERN: &str = r"\$\{VAR\.([^}]+)\}";
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+struct Vars {
+    variables: HashMap<String, String>,
+}
+
+impl Vars {
+    fn get_owned(&self, key: &str) -> Option<&String> {
+        self.variables.get(key)
+    }
+}
+
+pub fn replace_variables(toml_str: &str) {
+    let vars: Vars = toml::from_str(toml_str).unwrap();
+    let vars_regex = build_regex(VAR_PATTERN).unwrap();
+    let mut missing_vars: Vec<String> = Vec::new();
+    let mut target_var: &str = "";
+
+    let replaced = vars_regex.replace_all(toml_str, |captures: &Captures| {
+        target_var = &captures[1].to_lowercase(); // TODO - might have to allocate memory for every variable in the closure
+
+        debug!(
+            "Found match {} and searching for pre-defined variable {target_var} in toml.",
+            &captures[0]
+        );
+
+        vars.get_owned(target_var).unwrap_or_else(|| {
+            missing_vars.push(target_var.to_string());
+            &String::from("MISSING") // TODO - figure out if can returned a borrow value - otherwise might need a clone or to_owned
+        })
+    });
+}
+
 pub fn replace_env_vars(input: &str) -> Result<String, EnvVarReplaceError> {
-    let env_var_regex = Regex::new(ENV_VAR_PATTERN).map_err(get_regex_err)?;
+    let env_var_regex = build_regex(ENV_VAR_PATTERN)?;
     let mut missing_env_vars: Vec<String> = Vec::new();
 
     let replaced = env_var_regex.replace_all(input, |captures: &Captures| {
@@ -39,9 +75,14 @@ pub fn replace_env_vars(input: &str) -> Result<String, EnvVarReplaceError> {
 }
 
 #[inline]
+fn build_regex(pattern: &str) -> Result<Regex, EnvVarReplaceError> {
+    Regex::new(pattern).map_err(get_regex_err)
+}
+
+#[inline]
 fn get_regex_err(e: regex::Error) -> EnvVarReplaceError {
     EnvVarReplaceError::Base(format!(
-        "Failed to create Regex object for env var replacement. Error: {e}",
+        "Failed to create Regex object for var replacement. Error: {e}",
     ))
 }
 
