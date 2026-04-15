@@ -4,13 +4,15 @@ use log::info;
 use crate::client::Client;
 use crate::errors::RunError;
 use crate::inputs::SnipeArgs;
+use crate::response_formatter::ResponseFormatter;
 use crate::targets::Targets;
-// use serde_json::to_string_pretty;
 use std::fs;
 use std::path::Path;
 
 pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
     env_logger::init();
+
+    info!("Starting request process.");
 
     let targets = Targets::from_toml_file(args.cfg_path())?;
 
@@ -18,23 +20,37 @@ pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
         .get_target(args.target())
         .ok_or_else(|| RunError::Failure(format!("Failed to find target {}", args.target())))?;
 
-    info!("Sending request for target {}", target.name());
-    let response = Client::new()?.send_request(target).await?;
+    info!("Sending request for target {}.", target.name());
+    let response_data = Client::new()?.send_request(target).await?;
+    info!("Response recieved.");
 
+    info!("Formatting response for output.");
+    let response_formatter = ResponseFormatter::from(&response_data);
     let output_string = match args.json() {
-        true => response
-            .to_json_string(args.grab(), args.pretty())
+        true => response_formatter
+            .get_json_string(args.grab(), args.pretty())
             .map_err(|e| RunError::Failure(e.to_string()))?,
-        false => response.to_http_string(args.grab()),
+        false => response_formatter.get_http_string(args.grab()),
     };
+    info!("Response formatted for output.");
 
     match args.output_file() {
-        None => println!("{output_string}"),
+        None => {
+            info!("Printing output to console.");
+            println!("{output_string}");
+            info!("Successfully printed output to console.");
+        }
         Some(output_path) => {
-            info!("Writing HTTP response to file {}.", output_path.display());
-            write_response_to_file(output_path, &output_string)?
+            info!("Writing response to file {}.", output_path.display());
+            write_response_to_file(output_path, &output_string)?;
+            info!(
+                "Successfully wrote response to file {}.",
+                output_path.display()
+            );
         }
     }
+
+    info!("Finished request process.");
 
     Ok(())
 }

@@ -72,10 +72,10 @@ impl From<ResponseDataError> for ClientError {
 pub enum ResponseDataError {
     #[error("Failed to build response metadata. Error: {0}.")]
     Build(String),
+}
 
-    #[error("Failed to derserialize response data. Error {0}.")]
-    Derserialize(String),
-
-    #[error("Failed to serialize response data. Error {0}")]
-    Serialize(String),
+#[derive(Debug, Error)]
+pub enum ResponseFormatterError {
+    #[error("{0}")]
+    Base(String),
 }
