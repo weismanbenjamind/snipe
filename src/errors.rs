@@ -26,6 +26,12 @@ impl From<ResponseDataError> for RunError {
     }
 }
 
+impl From<ResponseFormatterError> for RunError {
+    fn from(value: ResponseFormatterError) -> Self {
+        RunError::Failure(value.to_string())
+    }
+}
+
 #[derive(Debug, Error)]
 pub enum EnvVarReplaceError {
     #[error("{0}")]

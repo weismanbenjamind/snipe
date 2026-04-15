@@ -80,3 +80,53 @@ pub enum Grab {
     HeadersAndBody,
     StatusCode,
 }
+
+#[derive(Clone, Copy, Debug)]
+pub struct GrabSettings {
+    status: bool,
+    headers: bool,
+    body: bool,
+    status_code: bool,
+}
+
+impl GrabSettings {
+    pub fn new(status: bool, headers: bool, body: bool, status_code: bool) -> Self {
+        Self {
+            status,
+            headers,
+            body,
+            status_code,
+        }
+    }
+
+    pub fn status(&self) -> bool {
+        self.status
+    }
+
+    pub fn headers(&self) -> bool {
+        self.headers
+    }
+
+    pub fn body(&self) -> bool {
+        self.body
+    }
+
+    pub fn status_code(&self) -> bool {
+        self.status_code
+    }
+}
+
+impl From<Grab> for GrabSettings {
+    fn from(value: Grab) -> Self {
+        match value {
+            Grab::Full => Self::new(true, true, true, true),
+            Grab::Status => Self::new(true, false, false, false),
+            Grab::Headers => Self::new(false, true, false, false),
+            Grab::Body => Self::new(false, false, true, false),
+            Grab::StatusCodeAndHeaders => Self::new(true, true, false, false),
+            Grab::StatusCodeAndBody => Self::new(true, false, true, false),
+            Grab::HeadersAndBody => Self::new(false, true, true, false),
+            Grab::StatusCode => Self::new(false, false, false, true),
+        }
+    }
+}

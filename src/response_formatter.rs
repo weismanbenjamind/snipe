@@ -1,8 +1,9 @@
 use crate::errors::ResponseFormatterError;
 use crate::inputs::Grab;
 use crate::response_data::ResponseData;
-use serde::Serialize;
-use serde_json::json;
+use crate::response_output::{HTTPResponseOutput, JsonResponseOutput};
+use reqwest::StatusCode;
+use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
 pub struct ResponseFormatter<'a> {
@@ -20,18 +21,49 @@ impl<'a> ResponseFormatter<'a> {
         self.response_data
     }
 
-    pub fn get_http_string(&self, grab: Grab) -> String {
-        let output = match grab {
-            Grab::Status => self.response_data.status_code().to_string(),
-            Grab::Headers => self.headers_to_http_string(),
-            Grab::Body => self.response_data.body().to_string(),
-            Grab::StatusCodeAndHeaders => self.status_code_and_headers_to_http_string(),
-            Grab::StatusCodeAndBody => self.status_code_and_body_to_http_string(),
-            Grab::HeadersAndBody => self.headers_and_body_to_http_string(),
-            Grab::Full => self.to_full_http_string(),
-            Grab::StatusCode => self.response_data.status_code_string(),
-        };
-        output.trim().to_string()
+    pub fn get_http_string(&self, grab: Grab) -> Result<String, ResponseFormatterError> {
+        let mut status_code: Option<StatusCode> = None;
+        let mut headers: Option<&HashMap<String, String>> = None;
+        let mut body: Option<&str> = None;
+
+        // Note - might want to add flags for status_code, headers, body and set proper values to None when building response data
+        match grab {
+            Grab::Status => {
+                status_code = Some(self.response_data.status_code());
+            }
+            Grab::Headers => {
+                headers = Some(self.response_data.headers());
+            }
+            Grab::Body => {
+                body = Some(self.response_data.body());
+            }
+            Grab::StatusCodeAndHeaders => {
+                status_code = Some(self.response_data.status_code());
+                headers = Some(self.response_data.headers());
+            }
+            Grab::StatusCodeAndBody => {
+                status_code = Some(self.response_data.status_code());
+                body = Some(self.response_data.body())
+            }
+            Grab::HeadersAndBody => {
+                headers = Some(self.response_data.headers());
+                body = Some(self.response_data.body())
+            }
+            Grab::Full => {
+                status_code = Some(self.response_data.status_code());
+                headers = Some(self.response_data.headers());
+                body = Some(self.response_data.body())
+            }
+            Grab::StatusCode => return Ok(self.response_data.status_code_string()),
+        }
+
+        HTTPResponseOutput::new(status_code, headers, body)
+            .into_http_string()
+            .map_err(|e| {
+                ResponseFormatterError::Base(format!(
+                    "Failed to serialize reponse output to HTTP string. Error: {e}"
+                ))
+            })
     }
 
     pub fn get_json_string(
@@ -39,161 +71,48 @@ impl<'a> ResponseFormatter<'a> {
         grab: Grab,
         pretty: bool,
     ) -> Result<String, ResponseFormatterError> {
+        let mut status_code: Option<u16> = None;
+        let mut headers: Option<&HashMap<String, String>> = None;
+        let mut body: Option<&str> = None;
+
+        // Note - might want to add flags for status_code, headers, body and set proper values to None when building response data
         match grab {
-            Grab::Status => self.status_code_to_json(pretty),
-            Grab::Headers => self.headers_to_json(pretty),
-            Grab::Body => self.body_to_json(pretty),
-            Grab::StatusCodeAndHeaders => self.status_code_and_headers_to_json(pretty),
-            Grab::StatusCodeAndBody => self.status_code_and_body_to_json(pretty),
-            Grab::HeadersAndBody => self.headers_and_body_as_json(pretty),
-            Grab::Full => self.to_json(pretty),
-            Grab::StatusCode => Ok(self.response_data.status_code_string()),
-        }
-    }
-
-    #[inline]
-    fn status_code_to_json(&self, pretty: bool) -> Result<String, ResponseFormatterError> {
-        to_json_string(
-            &json!({"status_code": self.response_data.status_code_u16()}),
-            pretty,
-        )
-    }
-
-    fn headers_to_http_string(&self) -> String {
-        let mut http_string = String::new();
-
-        self.response_data.headers().iter().for_each(|(k, v)| {
-            http_string.push_str(&format!("{}: {}\n", k, v));
-        });
-
-        match http_string.strip_suffix("\n") {
-            Some(stripped) => stripped.to_string(),
-            None => http_string,
-        }
-    }
-
-    #[inline]
-    fn headers_to_json(&self, pretty: bool) -> Result<String, ResponseFormatterError> {
-        to_json_string(&json!({"headers": self.response_data.headers()}), pretty)
-    }
-
-    fn body_to_map(&'a self) -> BodyToMapReturn<'a> {
-        match serde_json::from_str::<serde_json::Value>(self.response_data.body()) {
-            Ok(as_json) => BodyToMapReturn::Json(as_json),
-            Err(_) => BodyToMapReturn::Str(self.response_data.body()),
-        }
-    }
-
-    fn body_to_json(&self, pretty: bool) -> Result<String, ResponseFormatterError> {
-        let json = match self.body_to_map() {
-            BodyToMapReturn::Json(body) => json!({"body": body}),
-            BodyToMapReturn::Str(body) => json!({"body": body}),
+            Grab::Status => {
+                status_code = Some(self.response_data.status_code_u16());
+            }
+            Grab::Headers => {
+                headers = Some(self.response_data.headers());
+            }
+            Grab::Body => {
+                body = Some(self.response_data.body());
+            }
+            Grab::StatusCodeAndHeaders => {
+                status_code = Some(self.response_data.status_code_u16());
+                headers = Some(self.response_data.headers());
+            }
+            Grab::StatusCodeAndBody => {
+                status_code = Some(self.response_data.status_code_u16());
+                body = Some(self.response_data.body())
+            }
+            Grab::HeadersAndBody => {
+                headers = Some(self.response_data.headers());
+                body = Some(self.response_data.body())
+            }
+            Grab::Full => {
+                status_code = Some(self.response_data.status_code_u16());
+                headers = Some(self.response_data.headers());
+                body = Some(self.response_data.body())
+            }
+            Grab::StatusCode => return Ok(self.response_data.status_code_string()),
         };
-        to_json_string(&json, pretty)
-    }
 
-    #[inline]
-    fn status_code_and_headers_to_http_string(&self) -> String {
-        format!(
-            "{}\n{}",
-            self.response_data.status_code(),
-            self.headers_to_http_string()
-        )
-    }
-
-    #[inline]
-    fn status_code_and_headers_to_json(
-        &self,
-        pretty: bool,
-    ) -> Result<String, ResponseFormatterError> {
-        to_json_string(
-            &json!({"status_code": self.response_data.status_code_u16(), "headers": self.response_data.headers()}),
-            pretty,
-        )
-    }
-
-    #[inline]
-    fn status_code_and_body_to_http_string(&self) -> String {
-        format!(
-            "{}\n\n{}",
-            self.response_data.status_code(),
-            self.response_data.body()
-        )
-    }
-
-    fn status_code_and_body_to_json(&self, pretty: bool) -> Result<String, ResponseFormatterError> {
-        let json = match self.body_to_map() {
-            BodyToMapReturn::Json(body) => {
-                json!({
-                    "status_code": self.response_data.status_code_u16(),
-                    "body": body,
-                })
-            }
-            BodyToMapReturn::Str(body) => {
-                json!({
-                    "status_code": self.response_data.status_code_u16(),
-                    "body": body,
-                })
-            }
-        };
-        to_json_string(&json, pretty)
-    }
-
-    #[inline]
-    fn headers_and_body_to_http_string(&self) -> String {
-        format!(
-            "{}\n\n{}",
-            self.headers_to_http_string(),
-            self.response_data.body()
-        )
-    }
-
-    fn headers_and_body_as_json(&self, pretty: bool) -> Result<String, ResponseFormatterError> {
-        let json = match self.body_to_map() {
-            BodyToMapReturn::Json(body) => {
-                json!({
-                    "headers": self.response_data.headers(),
-                    "body": body
-                })
-            }
-            BodyToMapReturn::Str(body) => {
-                json!({
-                    "headers": self.response_data.headers(),
-                    "body": body
-                })
-            }
-        };
-        to_json_string(&json, pretty)
-    }
-
-    #[inline]
-    fn to_full_http_string(&self) -> String {
-        format!(
-            "{}\n{}\n\n{}",
-            self.response_data.status_code(),
-            self.headers_to_http_string(),
-            self.response_data.body()
-        )
-    }
-
-    fn to_json(&self, pretty: bool) -> Result<String, ResponseFormatterError> {
-        let json = match self.body_to_map() {
-            BodyToMapReturn::Json(body) => {
-                json!({
-                    "status_code": self.response_data.status_code_u16(),
-                    "headers": self.response_data.headers(),
-                    "body": body
-                })
-            }
-            BodyToMapReturn::Str(body) => {
-                json!({
-                    "status_code": self.response_data.status_code_u16(),
-                    "headers": self.response_data.headers(),
-                    "body": body
-                })
-            }
-        };
-        to_json_string(&json, pretty)
+        JsonResponseOutput::new_from_str_body(status_code, headers, body)
+            .into_json_string(pretty)
+            .map_err(|e| {
+                ResponseFormatterError::Base(format!(
+                    "Failed to serialize reponse output to JSON string. Error: {e}"
+                ))
+            })
     }
 }
 
@@ -203,17 +122,4 @@ impl<'a> From<&'a ResponseData> for ResponseFormatter<'a> {
             response_data: value,
         }
     }
-}
-
-fn to_json_string<T: Serialize>(value: &T, pretty: bool) -> Result<String, ResponseFormatterError> {
-    let result = match pretty {
-        true => serde_json::to_string_pretty(value),
-        false => serde_json::to_string(value),
-    };
-    result.map_err(|e| ResponseFormatterError::Base(e.to_string()))
-}
-
-enum BodyToMapReturn<'a> {
-    Json(serde_json::Value),
-    Str(&'a str),
 }
