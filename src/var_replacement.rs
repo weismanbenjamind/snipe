@@ -6,15 +6,15 @@ use crate::errors::EnvVarReplaceError;
 
 // Raw string to not treat \ as escape characters
 // \$ to match literal '$'
-// \{ to match literal '{'
+// \{ENV\. to match literal '{ENV.'
 // '(' to open the group we want to extract - called a capture groups
 // `[` - Open a character class - single unit that matches one character
 // '^}` - Match 'Anything but the } character`
 // `]+` - close the character group - `[^}]+` - says match one or more characters that is not a '}'
 //  `)` - Close capture group - allows use to capture - ([^}]+) - basically capture strings that aren't `}` that appear one or more times
 // \} to match literal '}'
-// Putting it all together - Give me a string that starts with '${', followed by one or more characters that are not `}`, follow by `}`
-const ENV_VAR_PATTERN: &str = r"\$\{([^}]+)\}";
+// Putting it all together - Give me a string that starts with '${ENV.', followed by one or more characters that are not `}`, follow by `}`
+const ENV_VAR_PATTERN: &str = r"\$\{ENV\.([^}]+)\}";
 
 pub fn replace_env_vars(input: &str) -> Result<String, EnvVarReplaceError> {
     let env_var_regex = Regex::new(ENV_VAR_PATTERN).map_err(get_regex_err)?;
