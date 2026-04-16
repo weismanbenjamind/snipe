@@ -2,6 +2,7 @@ use crate::errors::ResponseDataError;
 use crate::response_output::{HTTPResponseOutput, JsonResponseOutput};
 use base64::Engine;
 use base64::engine::general_purpose;
+use colored::Colorize;
 use log::warn;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{Response, StatusCode};
@@ -154,7 +155,7 @@ fn encode_as_base_64(bytes: &[u8]) -> String {
 }
 
 fn warn_to_console(warning: &str) {
-    eprintln!("[WARNING] {warning}")
+    eprintln!("{} {warning}", "[WARNING]:".yellow().bold())
 }
 
 fn check_grabs(status_code: bool, headers: bool, body: bool) -> Result<(), ResponseDataError> {
