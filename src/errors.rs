@@ -26,8 +26,8 @@ impl From<ResponseDataError> for RunError {
     }
 }
 
-impl From<ResponseFormatterError> for RunError {
-    fn from(value: ResponseFormatterError) -> Self {
+impl From<ArgsValidationError> for RunError {
+    fn from(value: ArgsValidationError) -> Self {
         RunError::Failure(value.to_string())
     }
 }
@@ -95,7 +95,7 @@ impl ResponseDataError {
 }
 
 #[derive(Debug, Error)]
-pub enum ResponseFormatterError {
+pub enum ArgsValidationError {
     #[error("{0}")]
     Base(String),
 }

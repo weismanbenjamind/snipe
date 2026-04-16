@@ -1,4 +1,6 @@
-use clap::{Args, Parser, ValueEnum};
+use crate::errors::ArgsValidationError;
+use clap::{Args, CommandFactory, Parser, ValueEnum};
+use colored::Colorize;
 use serde::Serialize;
 use std::path::PathBuf;
 
@@ -68,14 +70,25 @@ impl SnipeArgs {
     pub fn output_file(&self) -> &Option<PathBuf> {
         &self.output_file
     }
+
+    pub fn validate(&self) -> Result<(), ArgsValidationError> {
+        match self.format {
+            Format::HTTP => match self.pretty {
+                true => get_no_pretty_with_http_format_err(),
+                false => Ok(()),
+            },
+            Format::JSON => Ok(()),
+        }
+    }
 }
 
 #[derive(Args, Clone, Copy, Debug)]
-#[group(required = true, multiple = true)]
+#[group(multiple = true, required = true)]
 pub struct Grab {
     #[arg(
         long,
         short,
+        conflicts_with = "int_status_code",
         help = "If the status code should be grabbed from the response."
     )]
     status_code: bool,
@@ -83,12 +96,21 @@ pub struct Grab {
     #[arg(
         long,
         short = 'H',
+        conflicts_with = "int_status_code",
         help = "If the headers should be grabbed from the response."
     )]
     headers: bool,
 
-    #[arg(long, short, help = "If the body should be grabbed from the response.")]
+    #[arg(
+        long,
+        short,
+        conflicts_with = "int_status_code",
+        help = "If the body should be grabbed from the response."
+    )]
     body: bool,
+
+    #[arg(short, long, conflicts_with_all = ["status_code", "headers", "body"], help = "Grab only the status code as an integer")]
+    int_status_code: bool,
 }
 
 impl Grab {
@@ -103,12 +125,26 @@ impl Grab {
     pub fn body(&self) -> bool {
         self.body
     }
+
+    pub fn int_status_code(&self) -> bool {
+        self.int_status_code
+    }
 }
 
-// TODO - figure out how to no require grab if status code is passed
 #[derive(Clone, Copy, Debug, Serialize, ValueEnum)]
 pub enum Format {
     HTTP,
     JSON,
-    StatusCode,
+}
+
+#[inline]
+fn get_no_pretty_with_http_format_err() -> Result<(), ArgsValidationError> {
+    Err(ArgsValidationError::Base(format!(
+        "{} the argument {} cannot be used with {}\n\n{}\n\nFor more information try '{}'",
+        "error:".red().bold(),
+        "'--pretty'".yellow(),
+        "'--format http'".yellow(),
+        SnipeArgs::command().render_usage(),
+        "--help".bold()
+    )))
 }
