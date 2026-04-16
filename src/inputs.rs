@@ -1,4 +1,5 @@
-use clap::{Parser, ValueEnum};
+use clap::{Args, Parser, ValueEnum};
+use serde::Serialize;
 use std::path::PathBuf;
 
 #[derive(Parser, Debug, Clone)]
@@ -15,23 +16,23 @@ pub struct SnipeArgs {
     #[arg(short, long, help = "Target HTTP request to send.")]
     target: String,
 
-    #[arg(short, long, default_value = "body", help = "Response data to return.")]
+    #[command(flatten)]
     grab: Grab,
 
     #[arg(
         short,
         long,
-        default_value = "false",
-        help = "If the output should be attempted to be parsed into a json string."
+        default_value = "http",
+        help = "Format style for response data."
     )]
-    json: bool,
+    format: Format,
 
+    // TODO - Figure out if there is a way to require Format::JSON to be present if this argument is passed
     #[arg(
         short,
         long,
         default_value = "false",
-        requires = "json",
-        help = "If the output should be pretty printed. Only valid is the --json (-j) option is passed."
+        help = "If the output should be pretty printed. Only valid is the `--format json` (`-f json`) option is passed otherise this args has no effect."
     )]
     pretty: bool,
 
@@ -56,8 +57,8 @@ impl SnipeArgs {
         self.grab
     }
 
-    pub fn json(&self) -> bool {
-        self.json
+    pub fn format(&self) -> Format {
+        self.format
     }
 
     pub fn pretty(&self) -> bool {
@@ -69,38 +70,30 @@ impl SnipeArgs {
     }
 }
 
-#[derive(Debug, Clone, Copy, ValueEnum)]
-pub enum Grab {
-    Full,
-    Status,
-    Headers,
-    Body,
-    StatusCodeAndHeaders,
-    StatusCodeAndBody,
-    HeadersAndBody,
-    StatusCode,
-}
-
-#[derive(Clone, Copy, Debug)]
-pub struct GrabSettings {
-    status: bool,
-    headers: bool,
-    body: bool,
+#[derive(Args, Clone, Copy, Debug)]
+#[group(required = true, multiple = true)]
+pub struct Grab {
+    #[arg(
+        long,
+        short,
+        help = "If the status code should be grabbed from the response."
+    )]
     status_code: bool,
+
+    #[arg(
+        long,
+        short = 'H',
+        help = "If the headers should be grabbed from the response."
+    )]
+    headers: bool,
+
+    #[arg(long, short, help = "If the body should be grabbed from the response.")]
+    body: bool,
 }
 
-impl GrabSettings {
-    pub fn new(status: bool, headers: bool, body: bool, status_code: bool) -> Self {
-        Self {
-            status,
-            headers,
-            body,
-            status_code,
-        }
-    }
-
-    pub fn status(&self) -> bool {
-        self.status
+impl Grab {
+    pub fn status_code(&self) -> bool {
+        self.status_code
     }
 
     pub fn headers(&self) -> bool {
@@ -110,23 +103,12 @@ impl GrabSettings {
     pub fn body(&self) -> bool {
         self.body
     }
-
-    pub fn status_code(&self) -> bool {
-        self.status_code
-    }
 }
 
-impl From<Grab> for GrabSettings {
-    fn from(value: Grab) -> Self {
-        match value {
-            Grab::Full => Self::new(true, true, true, true),
-            Grab::Status => Self::new(true, false, false, false),
-            Grab::Headers => Self::new(false, true, false, false),
-            Grab::Body => Self::new(false, false, true, false),
-            Grab::StatusCodeAndHeaders => Self::new(true, true, false, false),
-            Grab::StatusCodeAndBody => Self::new(true, false, true, false),
-            Grab::HeadersAndBody => Self::new(false, true, true, false),
-            Grab::StatusCode => Self::new(false, false, false, true),
-        }
-    }
+// TODO - figure out how to no require grab if status code is passed
+#[derive(Clone, Copy, Debug, Serialize, ValueEnum)]
+pub enum Format {
+    HTTP,
+    JSON,
+    StatusCode,
 }

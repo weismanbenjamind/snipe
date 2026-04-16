@@ -78,6 +78,20 @@ impl From<ResponseDataError> for ClientError {
 pub enum ResponseDataError {
     #[error("Failed to build response metadata. Error: {0}.")]
     Build(String),
+
+    #[error(
+        "One or more of status_code, headers, or body must be true to build output string for response data."
+    )]
+    InvalidGrab,
+
+    #[error("Failed to convert response data to string. Error {0}")]
+    ToString(String),
+}
+
+impl ResponseDataError {
+    pub fn to_string_err_from_err<T: StdErr>(e: T) -> Self {
+        Self::ToString(e.to_string())
+    }
 }
 
 #[derive(Debug, Error)]

@@ -3,8 +3,7 @@ use log::info;
 
 use crate::client::Client;
 use crate::errors::RunError;
-use crate::inputs::{GrabSettings, SnipeArgs};
-use crate::response_formatter::ResponseFormatter;
+use crate::inputs::{Format, SnipeArgs};
 use crate::targets::Targets;
 use std::fs;
 use std::path::Path;
@@ -21,15 +20,25 @@ pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
         .ok_or_else(|| RunError::Failure(format!("Failed to find target {}", args.target())))?;
 
     info!("Sending request for target {}.", target.name());
-    let _grab_settings = GrabSettings::from(args.grab());
     let response_data = Client::new()?.send_request(target).await?;
     info!("Response recieved.");
 
     info!("Formatting response for output.");
-    let response_formatter = ResponseFormatter::from(&response_data);
-    let output_string = match args.json() {
-        true => response_formatter.get_json_string(args.grab(), args.pretty())?,
-        false => response_formatter.get_http_string(args.grab())?,
+    let output_string = match args.format() {
+        Format::HTTP => {
+            let grab = args.grab();
+            response_data.to_http_string(grab.status_code(), grab.headers(), grab.body())?
+        }
+        Format::JSON => {
+            let grab = args.grab();
+            response_data.to_json_string(
+                grab.status_code(),
+                grab.headers(),
+                grab.body(),
+                args.pretty(),
+            )?
+        }
+        Format::StatusCode => response_data.status_code().to_string(),
     };
     info!("Response formatted for output.");
 

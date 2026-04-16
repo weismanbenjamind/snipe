@@ -2,7 +2,6 @@ pub mod client;
 pub mod errors;
 pub mod inputs;
 pub mod response_data;
-mod response_formatter;
 mod response_output;
 pub mod run;
 pub mod targets;
