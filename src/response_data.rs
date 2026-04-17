@@ -1,6 +1,8 @@
 use crate::errors::ResponseDataError;
+use crate::response_output::{HTTPResponseOutput, JsonResponseOutput};
 use base64::Engine;
 use base64::engine::general_purpose;
+use colored::Colorize;
 use log::warn;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{Response, StatusCode};
@@ -71,6 +73,41 @@ impl ResponseData {
             body: build_body(response).await?,
         })
     }
+
+    pub fn to_http_string(
+        &self,
+        status_code: bool,
+        headers: bool,
+        body: bool,
+    ) -> Result<String, ResponseDataError> {
+        check_grabs(status_code, headers, body)?;
+
+        HTTPResponseOutput::new(
+            status_code.then_some(self.status_code),
+            headers.then_some(&self.headers),
+            body.then_some(&self.body),
+        )
+        .into_http_string()
+        .map_err(ResponseDataError::to_string_err_from_err)
+    }
+
+    pub fn to_json_string(
+        &self,
+        status_code: bool,
+        headers: bool,
+        body: bool,
+        pretty: bool,
+    ) -> Result<String, ResponseDataError> {
+        check_grabs(status_code, headers, body)?;
+
+        JsonResponseOutput::new_from_str_body(
+            status_code.then_some(self.status_code.as_u16()),
+            headers.then_some(&self.headers),
+            body.then_some(&self.body),
+        )
+        .into_json_string(pretty)
+        .map_err(ResponseDataError::to_string_err_from_err)
+    }
 }
 
 fn build_response_headers(header_map: &HeaderMap) -> HashMap<String, String> {
@@ -118,5 +155,12 @@ fn encode_as_base_64(bytes: &[u8]) -> String {
 }
 
 fn warn_to_console(warning: &str) {
-    eprintln!("[WARNING] {warning}")
+    eprintln!("{} {warning}", "[WARNING]:".yellow().bold())
+}
+
+fn check_grabs(status_code: bool, headers: bool, body: bool) -> Result<(), ResponseDataError> {
+    if !status_code && !headers && !body {
+        return Err(ResponseDataError::InvalidGrab);
+    }
+    Ok(())
 }

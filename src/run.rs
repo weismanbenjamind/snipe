@@ -1,10 +1,9 @@
-//use log::{debug, info};
 use log::info;
 
+use crate::ResponseData;
 use crate::client::Client;
-use crate::errors::RunError;
-use crate::inputs::SnipeArgs;
-use crate::response_formatter::ResponseFormatter;
+use crate::errors::{ResponseDataError, RunError};
+use crate::inputs::{Format, Grab, SnipeArgs};
 use crate::targets::Targets;
 use std::fs;
 use std::path::Path;
@@ -13,6 +12,8 @@ pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
     env_logger::init();
 
     info!("Starting request process.");
+
+    args.validate()?;
 
     let targets = Targets::from_toml_file(args.cfg_path())?;
 
@@ -25,13 +26,12 @@ pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
     info!("Response recieved.");
 
     info!("Formatting response for output.");
-    let response_formatter = ResponseFormatter::from(&response_data);
-    let output_string = match args.json() {
-        true => response_formatter
-            .get_json_string(args.grab(), args.pretty())
-            .map_err(|e| RunError::Failure(e.to_string()))?,
-        false => response_formatter.get_http_string(args.grab()),
+    let grab = Grab::from(args.grab());
+    let output_string = match grab.int_status_code() {
+        true => response_data.status_code().to_string(),
+        false => handle_formatted_output(&response_data, args.format(), grab, args.pretty())?,
     };
+
     info!("Response formatted for output.");
 
     match args.output_file() {
@@ -53,6 +53,22 @@ pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
     info!("Finished request process.");
 
     Ok(())
+}
+
+fn handle_formatted_output(
+    response_data: &ResponseData,
+    format: Format,
+    grab: Grab,
+    pretty: bool,
+) -> Result<String, ResponseDataError> {
+    match format {
+        Format::HTTP => {
+            response_data.to_http_string(grab.status_code(), grab.headers(), grab.body())
+        }
+        Format::JSON => {
+            response_data.to_json_string(grab.status_code(), grab.headers(), grab.body(), pretty)
+        }
+    }
 }
 
 fn write_response_to_file<P: AsRef<Path>>(output_path: P, response: &str) -> Result<(), RunError> {
