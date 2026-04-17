@@ -26,7 +26,7 @@ pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
     info!("Response recieved.");
 
     info!("Formatting response for output.");
-    let grab = args.grab();
+    let grab = Grab::from(args.grab());
     let output_string = match grab.int_status_code() {
         true => response_data.status_code().to_string(),
         false => handle_formatted_output(&response_data, args.format(), grab, args.pretty())?,

@@ -19,7 +19,7 @@ pub struct SnipeArgs {
     target: String,
 
     #[command(flatten)]
-    grab: Grab,
+    grab: RawGrab,
 
     #[arg(
         short,
@@ -29,12 +29,11 @@ pub struct SnipeArgs {
     )]
     format: Format,
 
-    // TODO - Figure out if there is a way to require Format::JSON to be present if this argument is passed
     #[arg(
         short,
         long,
         default_value = "false",
-        help = "If the output should be pretty printed. Only valid is the `--format json` (`-f json`) option is passed otherise this args has no effect."
+        help = "If the output should be pretty printed. Only valid is the `--format json` (`-f json`) option is passed."
     )]
     pretty: bool,
 
@@ -55,7 +54,7 @@ impl SnipeArgs {
         &self.target
     }
 
-    pub fn grab(&self) -> Grab {
+    pub fn grab(&self) -> RawGrab {
         self.grab
     }
 
@@ -83,12 +82,12 @@ impl SnipeArgs {
 }
 
 #[derive(Args, Clone, Copy, Debug)]
-#[group(multiple = true, required = true)]
-pub struct Grab {
+#[group(multiple = true, required = false)]
+pub struct RawGrab {
     #[arg(
         long,
-        short,
-        conflicts_with = "int_status_code",
+        short = 'S',
+        conflicts_with_all = ["int_status_code", "full"],
         help = "If the status code should be grabbed from the response."
     )]
     status_code: bool,
@@ -96,21 +95,54 @@ pub struct Grab {
     #[arg(
         long,
         short = 'H',
-        conflicts_with = "int_status_code",
+        conflicts_with_all = ["int_status_code", "full"],
         help = "If the headers should be grabbed from the response."
     )]
     headers: bool,
 
     #[arg(
         long,
-        short,
-        conflicts_with = "int_status_code",
-        help = "If the body should be grabbed from the response."
+        short = 'B',
+        conflicts_with_all = ["int_status_code", "full"],
+        help = "If the body should be grabbed from the response. If nothing is specified to grabbed from the response, the body will be grabbed by default."
     )]
     body: bool,
 
-    #[arg(short, long, conflicts_with_all = ["status_code", "headers", "body"], help = "Grab only the status code as an integer")]
+    #[arg(short = 'I', long, conflicts_with_all = ["status_code", "headers", "body", "full"], help = "Grab only the status code as an integer")]
     int_status_code: bool,
+
+    #[arg(short = 'F', long, conflicts_with_all = ["status_code", "headers", "body", "int_status_code"], help = "Grab status code, headers, and body.")]
+    full: bool,
+}
+
+impl RawGrab {
+    pub fn status_code(&self) -> bool {
+        self.status_code
+    }
+
+    pub fn headers(&self) -> bool {
+        self.headers
+    }
+
+    pub fn body(&self) -> bool {
+        self.body
+    }
+
+    pub fn int_status_code(&self) -> bool {
+        self.int_status_code
+    }
+
+    pub fn full(&self) -> bool {
+        self.full
+    }
+}
+
+pub struct Grab {
+    status_code: bool,
+    headers: bool,
+    body: bool,
+    int_status_code: bool,
+    full: bool,
 }
 
 impl Grab {
@@ -128,6 +160,36 @@ impl Grab {
 
     pub fn int_status_code(&self) -> bool {
         self.int_status_code
+    }
+
+    pub fn full(&self) -> bool {
+        self.full
+    }
+}
+
+impl From<RawGrab> for Grab {
+    fn from(value: RawGrab) -> Self {
+        if !value.status_code
+            && !value.headers
+            && !value.body
+            && !value.int_status_code
+            && !value.full
+        {
+            return Self {
+                status_code: false,
+                headers: false,
+                body: true,
+                int_status_code: false,
+                full: false,
+            };
+        }
+        Self {
+            status_code: value.status_code,
+            headers: value.headers,
+            body: value.body,
+            int_status_code: value.int_status_code,
+            full: value.full,
+        }
     }
 }
 
