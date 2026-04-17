@@ -33,7 +33,7 @@ impl From<ArgsValidationError> for RunError {
 }
 
 #[derive(Debug, Error)]
-pub enum EnvVarReplaceError {
+pub enum VarReplaceError {
     #[error("{0}")]
     Base(String),
 }
