@@ -289,7 +289,7 @@ impl From<Format> for RawFormat {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub(crate) enum Format {
+enum Format {
     Http,
     Json,
 }
@@ -363,11 +363,7 @@ impl SnipeArgs {
         self.grab
     }
 
-    pub(crate) fn format(&self) -> Format {
-        self.format
-    }
-
-    pub fn raw_format(&self) -> RawFormat {
+    pub fn format(&self) -> RawFormat {
         self.format.into()
     }
 

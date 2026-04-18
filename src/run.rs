@@ -2,7 +2,7 @@ use log::info;
 
 use crate::client::Client;
 use crate::errors::{ResponseDataError, RunError};
-use crate::inputs::{Format, Grab, SnipeArgs};
+use crate::inputs::{Grab, RawFormat, SnipeArgs};
 use crate::response_data::ResponseData;
 use crate::targets::Targets;
 use std::fs;
@@ -55,15 +55,15 @@ pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
 
 fn handle_formatted_output(
     response_data: &ResponseData,
-    format: Format,
+    format: RawFormat,
     grab: Grab,
     pretty: bool,
 ) -> Result<String, ResponseDataError> {
     match format {
-        Format::Http => {
+        RawFormat::Http => {
             response_data.to_http_string(grab.status_code(), grab.headers(), grab.body())
         }
-        Format::Json => {
+        RawFormat::Json => {
             response_data.to_json_string(grab.status_code(), grab.headers(), grab.body(), pretty)
         }
     }
