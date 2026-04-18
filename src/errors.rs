@@ -40,7 +40,7 @@ pub enum VarReplaceError {
 
 #[derive(Debug, Error)]
 pub enum TargetsError {
-    #[error("Failed to deserialize targets. Error: {0}.")]
+    #[error("Failed to deserialize targets file. Error: {0}.")]
     Dersialization(String),
 }
 
