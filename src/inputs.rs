@@ -116,24 +116,8 @@ pub struct RawGrab {
 }
 
 impl RawGrab {
-    pub fn status_code(&self) -> bool {
-        self.status_code
-    }
-
-    pub fn headers(&self) -> bool {
-        self.headers
-    }
-
-    pub fn body(&self) -> bool {
-        self.body
-    }
-
-    pub fn int_status_code(&self) -> bool {
-        self.int_status_code
-    }
-
-    pub fn full(&self) -> bool {
-        self.full
+    pub fn in_default_state(&self) -> bool {
+        !self.status_code && !self.headers && !self.body && !self.int_status_code && !self.full
     }
 }
 
@@ -142,7 +126,6 @@ pub struct Grab {
     headers: bool,
     body: bool,
     int_status_code: bool,
-    full: bool,
 }
 
 impl Grab {
@@ -161,34 +144,40 @@ impl Grab {
     pub fn int_status_code(&self) -> bool {
         self.int_status_code
     }
-
-    pub fn full(&self) -> bool {
-        self.full
-    }
 }
 
+// NOTE - ASSUMING CLAP ALREADY HANDLED VALIDATION AT THIS POINTS
+// WHEN ADD ::new() TO SnipeArgs TO ALLOW FOR RUNS OUSIDE OF CLI WILL WANT ADDITIONAL VALIDATION
+// HERE TO ENSURE Grab IS IN PROPER STATE
 impl From<RawGrab> for Grab {
     fn from(value: RawGrab) -> Self {
-        if !value.status_code
-            && !value.headers
-            && !value.body
-            && !value.int_status_code
-            && !value.full
-        {
+        // If everything is false default to headers
+        if value.in_default_state() {
             return Self {
                 status_code: false,
                 headers: false,
                 body: true,
                 int_status_code: false,
-                full: false,
             };
         }
+
+        // If full is true then set status_code, headers, and body to true
+        // and int_status_code to false
+        if value.full {
+            return Self {
+                status_code: true,
+                headers: true,
+                body: true,
+                int_status_code: false,
+            };
+        }
+
+        // Otherwise return all values as set in RawGrab
         Self {
             status_code: value.status_code,
             headers: value.headers,
             body: value.body,
             int_status_code: value.int_status_code,
-            full: value.full,
         }
     }
 }
