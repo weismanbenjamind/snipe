@@ -1,5 +1,5 @@
 use crate::errors::ArgsValidationError;
-use clap::{Args, CommandFactory, Parser, ValueEnum};
+use clap::{Args, Parser, ValueEnum};
 use colored::Colorize;
 use serde::Serialize;
 use std::path::PathBuf;
@@ -267,14 +267,19 @@ impl Format {
     }
 }
 
+//Usage: snipe --target <TARGET> --body
 #[inline]
 fn get_no_pretty_with_http_format_err<T>() -> Result<T, ArgsValidationError> {
     Err(ArgsValidationError::Base(format!(
-        "{} the argument {} cannot be used with {}\n\n{}\n\nFor more information try '{}'",
+        "{} the argument {} cannot be used with {}\n\n{} {} {} <TARGET> {} {}\n\nFor more information, try '{}'.",
         "error:".red().bold(),
         "'--pretty'".yellow(),
         "'--format http'".yellow(),
-        RawSnipeArgs::command().render_usage(),
+        "Usage:".bold().underline(),
+        "snipe".bold(),
+        "--target".bold(),
+        "--format".bold(),
+        "http".bold(),
         "--help".bold()
     )))
 }
