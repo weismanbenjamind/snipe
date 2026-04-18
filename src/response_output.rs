@@ -8,8 +8,13 @@ use std::fmt::Write;
 
 #[derive(Clone, Debug, Serialize)]
 pub struct JsonResponseOutput<'a> {
+    #[serde(skip_serializing_if = "Option::is_none")]
     status_code: Option<u16>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     headers: Option<&'a HashMap<String, String>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
     body: Option<Body<'a>>,
 }
 
