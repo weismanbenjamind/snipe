@@ -6,7 +6,7 @@ use std::path::PathBuf;
 
 #[derive(Parser, Debug, Clone)]
 #[command(name = "Snipe", about = "Lightweight, fast, precise CLI HTTP client.")]
-pub struct SnipeArgs {
+pub struct RawSnipeArgs {
     #[arg(
         short,
         long,
@@ -27,7 +27,7 @@ pub struct SnipeArgs {
         default_value = "http",
         help = "Format style for response data."
     )]
-    format: Format,
+    format: RawFormat,
 
     #[arg(
         short,
@@ -45,7 +45,25 @@ pub struct SnipeArgs {
     output_file: Option<PathBuf>,
 }
 
-impl SnipeArgs {
+impl RawSnipeArgs {
+    pub fn new(
+        cfg: PathBuf,
+        target: String,
+        grab: RawGrab,
+        format: RawFormat,
+        pretty: bool,
+        output_file: Option<PathBuf>,
+    ) -> Self {
+        Self {
+            cfg,
+            target,
+            grab,
+            format,
+            pretty,
+            output_file,
+        }
+    }
+
     pub fn cfg_path(&self) -> &PathBuf {
         &self.cfg
     }
@@ -58,7 +76,7 @@ impl SnipeArgs {
         self.grab
     }
 
-    pub fn format(&self) -> Format {
+    pub fn format(&self) -> RawFormat {
         self.format
     }
 
@@ -68,16 +86,6 @@ impl SnipeArgs {
 
     pub fn output_file(&self) -> &Option<PathBuf> {
         &self.output_file
-    }
-
-    pub fn validate(&self) -> Result<(), ArgsValidationError> {
-        match self.format {
-            Format::HTTP => match self.pretty {
-                true => get_no_pretty_with_http_format_err(),
-                false => Ok(()),
-            },
-            Format::JSON => Ok(()),
-        }
     }
 }
 
@@ -116,11 +124,66 @@ pub struct RawGrab {
 }
 
 impl RawGrab {
+    pub fn new(
+        status_code: bool,
+        headers: bool,
+        body: bool,
+        int_status_code: bool,
+        full: bool,
+    ) -> Result<Self, ArgsValidationError> {
+        let have_individuals = status_code || headers || body;
+
+        if have_individuals && int_status_code {
+            return ArgsValidationError::new_err(
+                "Cannot pass status_code, headers, or body, with int_status_code.",
+            );
+        }
+
+        if have_individuals && full {
+            return ArgsValidationError::new_err(
+                "Cannot pass status_code, headers, or body, with full.",
+            );
+        }
+
+        if int_status_code && full {
+            return ArgsValidationError::new_err("Cannot pass full with int_status_code.");
+        }
+
+        Ok(Self {
+            status_code,
+            headers,
+            body,
+            int_status_code,
+            full,
+        })
+    }
+
+    pub fn status_code(&self) -> bool {
+        self.status_code
+    }
+
+    pub fn headers(&self) -> bool {
+        self.headers
+    }
+
+    pub fn body(&self) -> bool {
+        self.body
+    }
+
+    pub fn int_status_code(&self) -> bool {
+        self.int_status_code
+    }
+
+    pub fn full(&self) -> bool {
+        self.full
+    }
+
     pub fn in_default_state(&self) -> bool {
         !self.status_code && !self.headers && !self.body && !self.int_status_code && !self.full
     }
 }
 
+#[derive(Clone, Copy, Debug)]
 pub struct Grab {
     status_code: bool,
     headers: bool,
@@ -146,9 +209,7 @@ impl Grab {
     }
 }
 
-// NOTE - ASSUMING CLAP ALREADY HANDLED VALIDATION AT THIS POINTS
-// WHEN ADD ::new() TO SnipeArgs TO ALLOW FOR RUNS OUSIDE OF CLI WILL WANT ADDITIONAL VALIDATION
-// HERE TO ENSURE Grab IS IN PROPER STATE
+// Validation should occur at RawArgs level
 impl From<RawGrab> for Grab {
     fn from(value: RawGrab) -> Self {
         // If everything is false default to headers
@@ -183,19 +244,106 @@ impl From<RawGrab> for Grab {
 }
 
 #[derive(Clone, Copy, Debug, Serialize, ValueEnum)]
+pub enum RawFormat {
+    HTTP,
+    JSON,
+}
+
+#[derive(Clone, Copy, Debug)]
 pub enum Format {
     HTTP,
     JSON,
 }
 
+impl Format {
+    fn new(raw_format: RawFormat, pretty: bool) -> Result<Self, ArgsValidationError> {
+        match raw_format {
+            RawFormat::HTTP => match pretty {
+                true => get_no_pretty_with_http_format_err(),
+                false => Ok(Self::HTTP),
+            },
+            RawFormat::JSON => Ok(Self::JSON),
+        }
+    }
+}
+
 #[inline]
-fn get_no_pretty_with_http_format_err() -> Result<(), ArgsValidationError> {
+fn get_no_pretty_with_http_format_err<T>() -> Result<T, ArgsValidationError> {
     Err(ArgsValidationError::Base(format!(
         "{} the argument {} cannot be used with {}\n\n{}\n\nFor more information try '{}'",
         "error:".red().bold(),
         "'--pretty'".yellow(),
         "'--format http'".yellow(),
-        SnipeArgs::command().render_usage(),
+        RawSnipeArgs::command().render_usage(),
         "--help".bold()
     )))
+}
+
+pub struct SnipeArgs {
+    cfg: PathBuf,
+    target: String,
+    grab: Grab,
+    format: Format,
+    pretty: bool,
+    output_file: Option<PathBuf>,
+}
+
+impl SnipeArgs {
+    pub fn cfg_path(&self) -> &PathBuf {
+        &self.cfg
+    }
+
+    pub fn target(&self) -> &str {
+        &self.target
+    }
+
+    pub fn grab(&self) -> Grab {
+        self.grab
+    }
+
+    pub fn format(&self) -> Format {
+        self.format
+    }
+
+    pub fn pretty(&self) -> bool {
+        self.pretty
+    }
+
+    pub fn output_file(&self) -> &Option<PathBuf> {
+        &self.output_file
+    }
+}
+
+impl SnipeArgs {
+    pub fn new(
+        cfg: PathBuf,
+        target: String,
+        grab: RawGrab,
+        format: RawFormat,
+        pretty: bool,
+        output_file: Option<PathBuf>,
+    ) -> Result<Self, ArgsValidationError> {
+        Ok(Self {
+            cfg,
+            target,
+            grab: Grab::from(grab),
+            format: Format::new(format, pretty)?,
+            pretty,
+            output_file,
+        })
+    }
+}
+
+impl TryFrom<RawSnipeArgs> for SnipeArgs {
+    type Error = ArgsValidationError;
+    fn try_from(value: RawSnipeArgs) -> Result<Self, Self::Error> {
+        Ok(Self {
+            cfg: value.cfg,
+            target: value.target,
+            grab: Grab::from(value.grab),
+            format: Format::new(value.format, value.pretty)?,
+            pretty: value.pretty,
+            output_file: value.output_file,
+        })
+    }
 }

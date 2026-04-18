@@ -99,3 +99,15 @@ pub enum ArgsValidationError {
     #[error("{0}")]
     Base(String),
 }
+
+impl ArgsValidationError {
+    pub fn new_err<T>(msg: &str) -> Result<T, Self> {
+        Err(Self::from(msg))
+    }
+}
+
+impl From<&str> for ArgsValidationError {
+    fn from(value: &str) -> Self {
+        Self::Base(value.into())
+    }
+}

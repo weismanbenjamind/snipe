@@ -1,10 +1,18 @@
 use clap::Parser;
-use snipe::{SnipeArgs, run};
+use snipe::{RawSnipeArgs, SnipeArgs, run};
 use std::process::ExitCode;
 
 #[tokio::main]
 async fn main() -> ExitCode {
-    match run(SnipeArgs::parse()).await {
+    let args = match SnipeArgs::try_from(RawSnipeArgs::parse()) {
+        Ok(args) => args,
+        Err(err) => {
+            eprintln!("{err}");
+            return ExitCode::FAILURE;
+        }
+    };
+
+    match run(args).await {
         Ok(()) => ExitCode::SUCCESS,
         Err(err) => {
             eprintln!("{err}");

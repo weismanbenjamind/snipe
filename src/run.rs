@@ -13,8 +13,6 @@ pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
 
     info!("Starting request process.");
 
-    args.validate()?;
-
     let targets = Targets::from_toml_file(args.cfg_path())?;
 
     let target = targets
@@ -26,7 +24,7 @@ pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
     info!("Response recieved.");
 
     info!("Formatting response for output.");
-    let grab = Grab::from(args.grab());
+    let grab = args.grab();
     let output_string = match grab.int_status_code() {
         true => response_data.status_code().to_string(),
         false => handle_formatted_output(&response_data, args.format(), grab, args.pretty())?,
