@@ -1,9 +1,9 @@
 use log::info;
 
-use crate::ResponseData;
 use crate::client::Client;
 use crate::errors::{ResponseDataError, RunError};
 use crate::inputs::{Format, Grab, SnipeArgs};
+use crate::response_data::ResponseData;
 use crate::targets::Targets;
 use std::fs;
 use std::path::Path;
@@ -26,7 +26,7 @@ pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
     info!("Formatting response for output.");
     let grab = args.grab();
     let output_string = match grab.int_status_code() {
-        true => response_data.status_code().to_string(),
+        true => response_data.status_code_string(),
         false => handle_formatted_output(&response_data, args.format(), grab, args.pretty())?,
     };
 
@@ -60,10 +60,10 @@ fn handle_formatted_output(
     pretty: bool,
 ) -> Result<String, ResponseDataError> {
     match format {
-        Format::HTTP => {
+        Format::Http => {
             response_data.to_http_string(grab.status_code(), grab.headers(), grab.body())
         }
-        Format::JSON => {
+        Format::Json => {
             response_data.to_json_string(grab.status_code(), grab.headers(), grab.body(), pretty)
         }
     }

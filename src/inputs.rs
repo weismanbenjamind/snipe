@@ -131,13 +131,8 @@ impl RawGrab {
         int_status_code: bool,
         full: bool,
     ) -> Result<Self, ArgsValidationError> {
-        let have_individuals = status_code || headers || body;
-
-        if have_individuals && int_status_code {
-            return ArgsValidationError::new_err(
-                "Cannot pass status_code, headers, or body, with int_status_code.",
-            );
-        }
+        let have_individuals = have_inividuals(status_code, headers, body);
+        check_have_individuals_vs_int_status_code(have_individuals, int_status_code)?;
 
         if have_individuals && full {
             return ArgsValidationError::new_err(
@@ -192,6 +187,23 @@ pub struct Grab {
 }
 
 impl Grab {
+    pub fn new(
+        status_code: bool,
+        headers: bool,
+        body: bool,
+        int_status_code: bool,
+    ) -> Result<Self, ArgsValidationError> {
+        let have_individuals = have_inividuals(status_code, headers, body);
+        check_have_individuals_vs_int_status_code(have_individuals, int_status_code)?;
+
+        Ok(Self {
+            status_code,
+            headers,
+            body,
+            int_status_code,
+        })
+    }
+
     pub fn status_code(&self) -> bool {
         self.status_code
     }
@@ -207,6 +219,24 @@ impl Grab {
     pub fn int_status_code(&self) -> bool {
         self.int_status_code
     }
+}
+
+#[inline]
+fn have_inividuals(status_code: bool, headers: bool, body: bool) -> bool {
+    status_code || headers || body
+}
+
+#[inline]
+fn check_have_individuals_vs_int_status_code(
+    have_individuals: bool,
+    int_status_code: bool,
+) -> Result<(), ArgsValidationError> {
+    if have_individuals && int_status_code {
+        return ArgsValidationError::new_err(
+            "Cannot pass status_code, headers, or body, with int_status_code.",
+        );
+    }
+    Ok(())
 }
 
 // Validation should occur at RawArgs level
@@ -245,29 +275,38 @@ impl From<RawGrab> for Grab {
 
 #[derive(Clone, Copy, Debug, Serialize, ValueEnum)]
 pub enum RawFormat {
-    HTTP,
-    JSON,
+    Http,
+    Json,
+}
+
+impl From<Format> for RawFormat {
+    fn from(value: Format) -> Self {
+        match value {
+            Format::Http => Self::Http,
+            Format::Json => Self::Json,
+        }
+    }
 }
 
 #[derive(Clone, Copy, Debug)]
-pub enum Format {
-    HTTP,
-    JSON,
+pub(crate) enum Format {
+    Http,
+    Json,
 }
 
 impl Format {
     fn new(raw_format: RawFormat, pretty: bool) -> Result<Self, ArgsValidationError> {
         match raw_format {
-            RawFormat::HTTP => match pretty {
+            RawFormat::Http => match pretty {
                 true => get_no_pretty_with_http_format_err(),
-                false => Ok(Self::HTTP),
+                false => Ok(Self::Http),
             },
-            RawFormat::JSON => Ok(Self::JSON),
+            RawFormat::Json => Ok(Self::Json),
         }
     }
 }
 
-//Usage: snipe --target <TARGET> --body
+// TODO - need a CLI and non-CLI variant for this error message
 #[inline]
 fn get_no_pretty_with_http_format_err<T>() -> Result<T, ArgsValidationError> {
     Err(ArgsValidationError::Base(format!(
@@ -294,6 +333,24 @@ pub struct SnipeArgs {
 }
 
 impl SnipeArgs {
+    pub fn new(
+        cfg: PathBuf,
+        target: String,
+        grab: Grab,
+        format: RawFormat,
+        pretty: bool,
+        output_file: Option<PathBuf>,
+    ) -> Result<Self, ArgsValidationError> {
+        Ok(Self {
+            cfg,
+            target,
+            grab,
+            format: Format::new(format, pretty)?,
+            pretty,
+            output_file,
+        })
+    }
+
     pub fn cfg_path(&self) -> &PathBuf {
         &self.cfg
     }
@@ -306,8 +363,12 @@ impl SnipeArgs {
         self.grab
     }
 
-    pub fn format(&self) -> Format {
+    pub(crate) fn format(&self) -> Format {
         self.format
+    }
+
+    pub fn raw_format(&self) -> RawFormat {
+        self.format.into()
     }
 
     pub fn pretty(&self) -> bool {
@@ -316,26 +377,6 @@ impl SnipeArgs {
 
     pub fn output_file(&self) -> &Option<PathBuf> {
         &self.output_file
-    }
-}
-
-impl SnipeArgs {
-    pub fn new(
-        cfg: PathBuf,
-        target: String,
-        grab: RawGrab,
-        format: RawFormat,
-        pretty: bool,
-        output_file: Option<PathBuf>,
-    ) -> Result<Self, ArgsValidationError> {
-        Ok(Self {
-            cfg,
-            target,
-            grab: Grab::from(grab),
-            format: Format::new(format, pretty)?,
-            pretty,
-            output_file,
-        })
     }
 }
 

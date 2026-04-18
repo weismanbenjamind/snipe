@@ -12,6 +12,7 @@ pub struct Targets {
 }
 
 impl Targets {
+    #[allow(dead_code)]
     pub fn new(targets: HashMap<String, Target>) -> Self {
         Self { targets }
     }
@@ -85,6 +86,7 @@ pub struct Target {
 }
 
 impl Target {
+    #[allow(dead_code)]
     pub fn new(
         name: &str,
         url: &str,
@@ -189,6 +191,7 @@ pub struct BearerAuth {
 }
 
 impl BearerAuth {
+    #[allow(dead_code)]
     pub fn new(token: &str) -> Self {
         Self {
             token: token.to_string(),
@@ -207,6 +210,7 @@ pub struct BasicAuth {
 }
 
 impl BasicAuth {
+    #[allow(dead_code)]
     pub fn new(username: &str, password: &str) -> Self {
         Self {
             username: username.to_string(),

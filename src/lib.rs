@@ -1,14 +1,12 @@
 // TODO - Make sure pub/private are dialed in
-pub mod client;
-pub mod errors;
+mod client;
+mod errors;
 pub mod inputs;
-pub mod response_data;
+mod response_data;
 mod response_output;
 pub mod run;
-pub mod targets;
+mod targets;
 mod var_replacement;
 
-pub use client::Client;
 pub use inputs::{RawSnipeArgs, SnipeArgs};
-pub use response_data::ResponseData;
 pub use run::run;
