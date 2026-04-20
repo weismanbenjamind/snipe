@@ -1,6 +1,5 @@
 use crate::errors::ArgsValidationError;
 use clap::{Args, Parser, ValueEnum};
-use colored::Colorize;
 use serde::Serialize;
 use std::path::PathBuf;
 
@@ -298,29 +297,12 @@ impl Format {
     fn new(raw_format: RawFormat, pretty: bool) -> Result<Self, ArgsValidationError> {
         match raw_format {
             RawFormat::Http => match pretty {
-                true => get_no_pretty_with_http_format_err(),
+                true => Err(ArgsValidationError::PrettyWithHTTP),
                 false => Ok(Self::Http),
             },
             RawFormat::Json => Ok(Self::Json),
         }
     }
-}
-
-// TODO - need a CLI and non-CLI variant for this error message
-#[inline]
-fn get_no_pretty_with_http_format_err<T>() -> Result<T, ArgsValidationError> {
-    Err(ArgsValidationError::Base(format!(
-        "{} the argument {} cannot be used with {}\n\n{} {} {} <TARGET> {} {}\n\nFor more information, try '{}'.",
-        "error:".red().bold(),
-        "'--pretty'".yellow(),
-        "'--format http'".yellow(),
-        "Usage:".bold().underline(),
-        "snipe".bold(),
-        "--target".bold(),
-        "--format".bold(),
-        "http".bold(),
-        "--help".bold()
-    )))
 }
 
 pub struct SnipeArgs {

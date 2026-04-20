@@ -98,6 +98,9 @@ impl ResponseDataError {
 pub enum ArgsValidationError {
     #[error("{0}")]
     Base(String),
+
+    #[error("Cannot pretty formatting invalid for HTTP String")]
+    PrettyWithHTTP,
 }
 
 impl ArgsValidationError {
