@@ -134,13 +134,13 @@ impl RawGrab {
         check_have_individuals_vs_int_status_code(have_individuals, int_status_code)?;
 
         if have_individuals && full {
-            return ArgsValidationError::new_err(
+            return ArgsValidationError::new_base(
                 "Cannot pass status_code, headers, or body, with full.",
             );
         }
 
         if int_status_code && full {
-            return ArgsValidationError::new_err("Cannot pass full with int_status_code.");
+            return ArgsValidationError::new_base("Cannot pass full with int_status_code.");
         }
 
         Ok(Self {
@@ -231,7 +231,7 @@ fn check_have_individuals_vs_int_status_code(
     int_status_code: bool,
 ) -> Result<(), ArgsValidationError> {
     if have_individuals && int_status_code {
-        return ArgsValidationError::new_err(
+        return ArgsValidationError::new_base(
             "Cannot pass status_code, headers, or body, with int_status_code.",
         );
     }

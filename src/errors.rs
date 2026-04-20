@@ -104,13 +104,11 @@ pub enum ArgsValidationError {
 }
 
 impl ArgsValidationError {
-    pub fn new_err<T>(msg: &str) -> Result<T, Self> {
-        Err(Self::from(msg))
+    pub fn new_base<T>(msg: &str) -> Result<T, Self> {
+        Err(Self::base_from_str(msg))
     }
-}
 
-impl From<&str> for ArgsValidationError {
-    fn from(value: &str) -> Self {
+    pub fn base_from_str(value: &str) -> Self {
         Self::Base(value.into())
     }
 }
