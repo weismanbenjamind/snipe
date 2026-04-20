@@ -1,4 +1,3 @@
-use reqwest::StatusCode;
 use std::error::Error as StdErr;
 use thiserror::Error;
 
@@ -60,9 +59,6 @@ pub enum ClientError {
 
     #[error("Failed to send request. Error: {0}.")]
     SendRequestFailure(String),
-
-    #[error("Bad response for request. Status code: {0}, Error: {1}")]
-    BadResponse(StatusCode, String),
 
     #[error("{0}")]
     ResponseBuild(String),

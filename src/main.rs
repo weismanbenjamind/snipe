@@ -1,6 +1,6 @@
 use clap::Parser;
 use colored::Colorize;
-use snipe::ArgsValidationError;
+use snipe::errors::ArgsValidationError;
 use snipe::inputs::{RawSnipeArgs, SnipeArgs};
 use snipe::run;
 use std::error::Error;
