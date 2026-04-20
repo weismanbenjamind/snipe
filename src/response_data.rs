@@ -1,8 +1,5 @@
 use crate::errors::ResponseDataError;
 use crate::response_output::{HTTPResponseOutput, JsonResponseOutput};
-use base64::Engine;
-use base64::engine::general_purpose;
-use colored::Colorize;
 use log::warn;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{Response, StatusCode};
@@ -76,7 +73,7 @@ impl ResponseData {
     pub async fn try_from_response(response: Response) -> Result<Self, ResponseDataError> {
         Ok(Self {
             status_code: response.status(),
-            headers: build_response_headers(response.headers()),
+            headers: build_response_headers(response.headers())?,
             body: build_body(response).await?,
         })
     }
@@ -113,18 +110,31 @@ impl ResponseData {
     }
 }
 
-fn build_response_headers(header_map: &HeaderMap) -> HashMap<String, String> {
+fn build_response_headers(
+    header_map: &HeaderMap,
+) -> Result<HashMap<String, String>, ResponseDataError> {
     let mut as_hash_map: HashMap<String, String> = HashMap::new();
 
-    header_map.iter().for_each(|(k, v)| {
+    header_map.iter().try_for_each(|(k, v)| {
         if let Some(header_override) =
-            as_hash_map.insert(k.as_str().into(), header_value_to_string(v))
+            as_hash_map.insert(k.as_str().into(), header_value_to_string(v)?)
         {
             warn!("Overriding header {}", header_override)
         }
-    });
+        Ok(()) // try_for_each each must return Result<(), Err>
+    })?; // Need the ? here to propogate errors out of try_for_each
 
-    as_hash_map
+    Ok(as_hash_map)
+}
+
+#[inline]
+fn header_value_to_string(header_value: &HeaderValue) -> Result<String, ResponseDataError> {
+    match header_value.to_str() {
+        Ok(str_) => Ok(str_.to_string()),
+        Err(e) => Err(ResponseDataError::new_response_field_to_string(
+            "headers", e,
+        )),
+    }
 }
 
 async fn build_body(response: Response) -> Result<String, ResponseDataError> {
@@ -136,27 +146,6 @@ async fn build_body(response: Response) -> Result<String, ResponseDataError> {
 
     match std::str::from_utf8(&as_bytes) {
         Ok(str_) => Ok(str_.to_string()),
-        Err(_) => {
-            warn_to_console("Could not convert response body to a String. Encoding as base64.");
-            Ok(encode_as_base_64(&as_bytes))
-        }
+        Err(e) => Err(ResponseDataError::new_response_field_to_string("body", e)),
     }
-}
-
-fn header_value_to_string(header_value: &HeaderValue) -> String {
-    match header_value.to_str() {
-        Ok(str_) => str_.into(),
-        Err(_) => {
-            warn_to_console("Found invalid utf-8 header value. Encoding as base64.");
-            encode_as_base_64(header_value.as_bytes())
-        }
-    }
-}
-
-fn encode_as_base_64(bytes: &[u8]) -> String {
-    general_purpose::STANDARD.encode(bytes)
-}
-
-fn warn_to_console(warning: &str) {
-    eprintln!("{} {warning}", "[WARNING]:".yellow().bold())
 }

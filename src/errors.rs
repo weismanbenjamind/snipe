@@ -77,11 +77,18 @@ pub enum ResponseDataError {
 
     #[error("Failed to convert response data to string. Error {0}")]
     ToString(String),
+
+    #[error("Failed to convert response field {0} to string. Error {1}")]
+    ResponseFieldToString(String, String),
 }
 
 impl ResponseDataError {
     pub fn to_string_err_from_err<T: StdErr>(e: T) -> Self {
         Self::ToString(e.to_string())
+    }
+
+    pub fn new_response_field_to_string<T: StdErr>(field: &str, err: T) -> Self {
+        Self::ResponseFieldToString(field.into(), err.to_string())
     }
 }
 
