@@ -87,8 +87,6 @@ impl ResponseData {
         headers: bool,
         body: bool,
     ) -> Result<String, ResponseDataError> {
-        check_grabs(status_code, headers, body)?;
-
         HTTPResponseOutput::new(
             status_code.then_some(self.status_code),
             headers.then_some(&self.headers),
@@ -105,8 +103,6 @@ impl ResponseData {
         body: bool,
         pretty: bool,
     ) -> Result<String, ResponseDataError> {
-        check_grabs(status_code, headers, body)?;
-
         JsonResponseOutput::new_from_str_body(
             status_code.then_some(self.status_code.as_u16()),
             headers.then_some(&self.headers),
@@ -163,11 +159,4 @@ fn encode_as_base_64(bytes: &[u8]) -> String {
 
 fn warn_to_console(warning: &str) {
     eprintln!("{} {warning}", "[WARNING]:".yellow().bold())
-}
-
-fn check_grabs(status_code: bool, headers: bool, body: bool) -> Result<(), ResponseDataError> {
-    if !status_code && !headers && !body {
-        return Err(ResponseDataError::InvalidGrab);
-    }
-    Ok(())
 }
