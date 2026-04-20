@@ -42,6 +42,14 @@ pub struct RawSnipeArgs {
         help = "Optional file that output should be written to. If passed contents will be written to this file and not stdout."
     )]
     output_file: Option<PathBuf>,
+
+    #[arg(
+        short = 'e',
+        long,
+        default_value = "SNIPE_TARGETS",
+        help = "Environment variable whose value will be used to look for cfg file if the path pointed to by the --cfg (-c) argument does not exist."
+    )]
+    cfg_env: String,
 }
 
 impl RawSnipeArgs {
@@ -52,6 +60,7 @@ impl RawSnipeArgs {
         format: RawFormat,
         pretty: bool,
         output_file: Option<PathBuf>,
+        cfg_env: String,
     ) -> Self {
         Self {
             cfg,
@@ -60,6 +69,7 @@ impl RawSnipeArgs {
             format,
             pretty,
             output_file,
+            cfg_env,
         }
     }
 
@@ -85,6 +95,10 @@ impl RawSnipeArgs {
 
     pub fn output_file(&self) -> &Option<PathBuf> {
         &self.output_file
+    }
+
+    pub fn cfg_env(&self) -> &str {
+        &self.cfg_env
     }
 }
 
@@ -312,6 +326,7 @@ pub struct SnipeArgs {
     format: Format,
     pretty: bool,
     output_file: Option<PathBuf>,
+    cfg_env: String,
 }
 
 impl SnipeArgs {
@@ -322,6 +337,7 @@ impl SnipeArgs {
         format: RawFormat,
         pretty: bool,
         output_file: Option<PathBuf>,
+        cfg_env: String,
     ) -> Result<Self, ArgsValidationError> {
         Ok(Self {
             cfg,
@@ -330,6 +346,7 @@ impl SnipeArgs {
             format: Format::new(format, pretty)?,
             pretty,
             output_file,
+            cfg_env,
         })
     }
 
@@ -356,6 +373,10 @@ impl SnipeArgs {
     pub fn output_file(&self) -> &Option<PathBuf> {
         &self.output_file
     }
+
+    pub fn cfg_env(&self) -> &str {
+        &self.cfg_env
+    }
 }
 
 impl TryFrom<RawSnipeArgs> for SnipeArgs {
@@ -368,6 +389,7 @@ impl TryFrom<RawSnipeArgs> for SnipeArgs {
             format: Format::new(value.format, value.pretty)?,
             pretty: value.pretty,
             output_file: value.output_file,
+            cfg_env: value.cfg_env,
         })
     }
 }
