@@ -16,7 +16,9 @@ pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
 
     let cfg_path = CfgResolver::new(args.cfg_path(), args.cfg_env()).resolve_cfg_path_from_env()?;
 
+    info!("Creating targets from file at {}.", cfg_path.display());
     let targets = Targets::from_toml_file(&cfg_path)?;
+    info!("Targets successfully created.");
 
     let target = targets
         .get_target(args.target())
