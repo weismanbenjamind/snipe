@@ -31,6 +31,12 @@ impl From<ArgsValidationError> for RunError {
     }
 }
 
+impl From<CfgResolverError> for RunError {
+    fn from(value: CfgResolverError) -> Self {
+        RunError::Failure(value.to_string())
+    }
+}
+
 #[derive(Debug, Error)]
 pub enum VarReplaceError {
     #[error("{0}")]
@@ -109,4 +115,12 @@ impl ArgsValidationError {
     pub fn base_from_str(value: &str) -> Self {
         Self::Base(value.into())
     }
+}
+
+#[derive(Debug, Error)]
+pub enum CfgResolverError {
+    #[error(
+        "Failed to resolve path to configuration file. Path at {0} does not exist and value at env var {1} is not not set."
+    )]
+    UnresolvedCfg(String, String),
 }

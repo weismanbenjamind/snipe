@@ -1,3 +1,4 @@
+mod cfg_resolver;
 mod client;
 pub mod errors;
 pub mod inputs;

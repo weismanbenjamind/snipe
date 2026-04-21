@@ -1,22 +1,20 @@
 use log::info;
 
+use crate::cfg_resolver::CfgResolver;
 use crate::client::Client;
 use crate::errors::{ResponseDataError, RunError};
 use crate::inputs::{Grab, RawFormat, SnipeArgs};
 use crate::response_data::ResponseData;
 use crate::targets::Targets;
-use std::path::{Path, PathBuf};
-use std::{env, fs};
+use std::fs;
+use std::path::Path;
 
 pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
     env_logger::init();
 
     info!("Starting request process.");
 
-    // TODO - clean this up
-    let cfg_path = resolve_cfg_path(args.cfg_path(), args.cfg_env()).ok_or_else(|| {
-        RunError::Failure("Failed to resolve path to configuration file".to_string())
-    })?;
+    let cfg_path = CfgResolver::new(args.cfg_path(), args.cfg_env()).resolve_cfg_path_from_env()?;
 
     let targets = Targets::from_toml_file(&cfg_path)?;
 
@@ -56,14 +54,6 @@ pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
     info!("Finished request process.");
 
     Ok(())
-}
-
-#[inline]
-fn resolve_cfg_path(cfg_path: &Path, cfg_env_var: &str) -> Option<PathBuf> {
-    match cfg_path.exists() {
-        true => Some(cfg_path.to_path_buf()),
-        false => env::var(cfg_env_var).ok().map(|val| PathBuf::from(val)),
-    }
 }
 
 fn handle_formatted_output(

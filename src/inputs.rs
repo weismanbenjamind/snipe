@@ -43,11 +43,12 @@ pub struct RawSnipeArgs {
     )]
     output_file: Option<PathBuf>,
 
+    // TODO - Maybe add ability to disable looking for the env var
     #[arg(
         short = 'e',
         long,
         default_value = "SNIPE_TARGETS",
-        help = "Environment variable whose value will be used to look for cfg file if the path pointed to by the --cfg (-c) argument does not exist."
+        help = "Environment variable whose value will be used to look for cfg the file if the path pointed to by the --cfg (-c) argument does not exist."
     )]
     cfg_env: String,
 }
