@@ -81,10 +81,10 @@ pub enum ResponseDataError {
     #[error("Failed to build response metadata. Error: {0}.")]
     Build(String),
 
-    #[error("Failed to convert response data to string. Error {0}")]
+    #[error("Failed to convert response data to string. Error {0}.")]
     ToString(String),
 
-    #[error("Failed to convert response field {0} to string. Error {1}")]
+    #[error("Failed to convert response field {0} to string. Error {1}.")]
     ResponseFieldToString(String, String),
 }
 
@@ -103,7 +103,7 @@ pub enum ArgsValidationError {
     #[error("{0}")]
     Base(String),
 
-    #[error("Cannot pretty formatting invalid for HTTP String")]
+    #[error("Cannot pretty formatting invalid for HTTP String.")]
     PrettyWithHTTP,
 }
 
@@ -122,5 +122,8 @@ pub enum CfgResolverError {
     #[error(
         "Failed to resolve path to configuration file. Path at {0} does not exist and value at env var {1} is not not set."
     )]
-    UnresolvedCfg(String, String),
+    UnresolvedCfgWithEnv(String, String),
+
+    #[error("Failed to resolve path to configuration file. Path at {0} does not exist.")]
+    UnresolvedCfg(String),
 }

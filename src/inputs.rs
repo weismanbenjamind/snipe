@@ -43,12 +43,11 @@ pub struct RawSnipeArgs {
     )]
     output_file: Option<PathBuf>,
 
-    // TODO - Maybe add ability to disable looking for the env var
     #[arg(
         short = 'e',
         long,
         default_value = "SNIPE_TARGETS",
-        help = "Environment variable whose value will be used to look for cfg the file if the path pointed to by the --cfg (-c) argument does not exist."
+        help = "Environment variable whose value will be used to look for cfg the file if the path pointed to by the --cfg (-c) argument does not exist. Pass 'skip' to disable searching for this env var."
     )]
     cfg_env: String,
 }
@@ -327,7 +326,7 @@ pub struct SnipeArgs {
     format: Format,
     pretty: bool,
     output_file: Option<PathBuf>,
-    cfg_env: String,
+    cfg_env: Option<String>,
 }
 
 impl SnipeArgs {
@@ -338,7 +337,7 @@ impl SnipeArgs {
         format: RawFormat,
         pretty: bool,
         output_file: Option<PathBuf>,
-        cfg_env: String,
+        cfg_env: Option<String>,
     ) -> Result<Self, ArgsValidationError> {
         Ok(Self {
             cfg,
@@ -375,8 +374,15 @@ impl SnipeArgs {
         &self.output_file
     }
 
-    pub fn cfg_env(&self) -> &str {
-        &self.cfg_env
+    pub fn cfg_env(&self) -> Option<&str> {
+        self.cfg_env.as_deref()
+    }
+
+    fn resolve_cfg_env(cfg_env: String) -> Option<String> {
+        match cfg_env.to_lowercase().as_str() {
+            "skip" => None,
+            _ => Some(cfg_env.to_string()),
+        }
     }
 }
 
@@ -390,7 +396,7 @@ impl TryFrom<RawSnipeArgs> for SnipeArgs {
             format: Format::new(value.format, value.pretty)?,
             pretty: value.pretty,
             output_file: value.output_file,
-            cfg_env: value.cfg_env,
+            cfg_env: Self::resolve_cfg_env(value.cfg_env),
         })
     }
 }

@@ -40,13 +40,13 @@ fn validate_toml_path<P: AsRef<Path>>(path: P) -> Result<(), TargetsError> {
     let path = path.as_ref();
     if !path.exists() {
         return Err(TargetsError::Dersialization(format!(
-            "Path {} does not exist.",
+            "Path {} does not exist",
             path.display()
         )));
     }
     if !path.is_file() {
         return Err(TargetsError::Dersialization(format!(
-            "Path {} is not a file.",
+            "Path {} is not a file",
             path.display()
         )));
     }
