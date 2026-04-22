@@ -126,4 +126,7 @@ pub enum CfgResolverError {
 
     #[error("Failed to resolve path to configuration file. Path at {0} does not exist.")]
     UnresolvedCfg(String),
+
+    #[error("{0}")]
+    HomeDirExpansion(String),
 }

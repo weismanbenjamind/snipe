@@ -17,6 +17,7 @@ impl Targets {
         Self { targets }
     }
 
+    // TODO - add ability to resolve special characters like ~
     pub fn from_toml_file<P: AsRef<Path>>(path: P) -> Result<Self, TargetsError> {
         validate_toml_path(&path)?;
         let toml_str = read_toml(&path)?;

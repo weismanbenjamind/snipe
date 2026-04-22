@@ -1,7 +1,10 @@
 use crate::errors::CfgResolverError;
 use log::info;
+
 use std::env;
 use std::path::{Path, PathBuf};
+
+const HOME_DELMITER: &str = "~";
 
 pub struct CfgResolver<'a> {
     cfg_path: &'a Path,
@@ -30,7 +33,11 @@ impl<'a> CfgResolver<'a> {
                     .and_then(|key| env::var(key).ok().map(PathBuf::from))
             }
         };
-        found.ok_or_else(|| self.get_unresolved_cfg_err())
+        let found = found.ok_or_else(|| self.get_unresolved_cfg_err())?;
+        match found.starts_with(HOME_DELMITER) {
+            true => replace_home_dir(found),
+            false => Ok(found),
+        }
     }
 
     fn get_unresolved_cfg_err(&'a self) -> CfgResolverError {
@@ -42,4 +49,16 @@ impl<'a> CfgResolver<'a> {
             None => CfgResolverError::UnresolvedCfg(self.cfg_path.display().to_string()),
         }
     }
+}
+
+fn replace_home_dir(path: PathBuf) -> Result<PathBuf, CfgResolverError> {
+    let home_dir = dirs::home_dir().ok_or_else(|| {
+        CfgResolverError::HomeDirExpansion("Failed to resolve home dir.".to_string())
+    })?;
+
+    let to_join = path.strip_prefix(HOME_DELMITER).map_err(|e| {
+        CfgResolverError::HomeDirExpansion(format!("Failed to replace home directory. Error: {e}"))
+    })?;
+
+    Ok(home_dir.join(to_join))
 }
