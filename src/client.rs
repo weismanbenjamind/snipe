@@ -5,9 +5,10 @@ use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use crate::errors::ClientError;
 use crate::response_data::ResponseData;
 use crate::targets::{Auth, Method, Target};
-use log::warn;
+use log::{info, warn};
 use std::collections::HashMap;
 use std::str::FromStr;
+use std::time::Duration;
 
 pub struct Client {
     _client: Client_,
@@ -34,21 +35,31 @@ impl Client {
     }
 
     fn build_request(&self, target: &Target) -> Result<RequestBuilder, ClientError> {
+        info!("Starting request build.");
         let mut request_builder = self.init_request_builder(target);
 
+        if let Some(timeout) = target.timeout_seconds() {
+            info!("Adding timeout {timeout}s to request.");
+            request_builder = request_builder.timeout(Duration::from_secs(timeout));
+        }
+
         if let Some(headers) = target.headers() {
+            info!("Adding headers to request.");
             let headers = build_headers(headers)?;
             request_builder = request_builder.headers(headers);
         }
 
         if let Some(auth) = target.auth() {
+            info!("Adding auth to request.");
             request_builder = build_auth(request_builder, auth);
         }
 
         if let Some(payload) = target.payload() {
+            info!("Adding payload to request.");
             request_builder = request_builder.json(payload);
         }
 
+        info!("Request built");
         Ok(request_builder)
     }
 

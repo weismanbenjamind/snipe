@@ -81,6 +81,7 @@ pub struct Target {
     name: String,
     url: String,
     method: Method,
+    timeout_seconds: Option<u64>,
     headers: Option<HashMap<String, String>>,
     auth: Option<Auth>,
     payload: Option<HashMap<String, Value>>,
@@ -92,6 +93,7 @@ impl Target {
         name: &str,
         url: &str,
         method: Method,
+        timeout_seconds: Option<u64>,
         headers: Option<HashMap<String, String>>,
         auth: Option<Auth>,
         payload: Option<HashMap<String, Value>>,
@@ -100,6 +102,7 @@ impl Target {
             name: name.to_string(),
             url: url.to_string(),
             method,
+            timeout_seconds,
             headers,
             auth,
             payload,
@@ -116,6 +119,10 @@ impl Target {
 
     pub fn url(&self) -> &str {
         &self.url
+    }
+
+    pub fn timeout_seconds(&self) -> Option<u64> {
+        self.timeout_seconds
     }
 
     pub fn headers(&self) -> &Option<HashMap<String, String>> {
