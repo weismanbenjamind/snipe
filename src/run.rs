@@ -3,13 +3,13 @@ use log::info;
 use crate::cfg_resolver::CfgResolver;
 use crate::client::Client;
 use crate::errors::{ResponseDataError, RunError};
-use crate::inputs::{Grab, RawFormat, SnipeArgs};
+use crate::inputs::{Grab, RawFormat, ShootArgs};
 use crate::response_data::ResponseData;
 use crate::targets::Targets;
 use std::fs;
 use std::path::Path;
 
-pub async fn run(args: SnipeArgs) -> Result<(), RunError> {
+pub async fn shoot(args: ShootArgs) -> Result<(), RunError> {
     env_logger::init();
 
     info!("Starting request process.");

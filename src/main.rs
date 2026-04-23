@@ -1,8 +1,8 @@
 use clap::Parser;
 use colored::Colorize;
 use snipe::errors::ArgsValidationError;
-use snipe::inputs::{RawSnipeArgs, SnipeArgs};
-use snipe::run;
+use snipe::inputs::{RawShootArgs, ShootArgs};
+use snipe::shoot;
 use std::error::Error;
 use std::process::ExitCode;
 
@@ -10,7 +10,7 @@ use std::process::ExitCode;
 // Also check to see if pretty actually has in an impact on HTTP output and if it does just use it
 #[tokio::main]
 async fn main() -> ExitCode {
-    let args = match SnipeArgs::try_from(RawSnipeArgs::parse()) {
+    let args = match ShootArgs::try_from(RawShootArgs::parse()) {
         Ok(args) => args,
         Err(err) => {
             print_args_validation_err(err);
@@ -18,7 +18,7 @@ async fn main() -> ExitCode {
         }
     };
 
-    match run(args).await {
+    match shoot(args).await {
         Ok(()) => ExitCode::SUCCESS,
         Err(err) => {
             print_err(err);

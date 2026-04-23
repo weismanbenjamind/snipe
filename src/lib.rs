@@ -8,5 +8,5 @@ pub mod run;
 mod targets;
 mod var_replacement;
 
-pub use inputs::{RawSnipeArgs, SnipeArgs};
-pub use run::run;
+pub use inputs::{RawShootArgs, ShootArgs};
+pub use run::shoot;

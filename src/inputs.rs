@@ -1,5 +1,5 @@
 use crate::errors::ArgsValidationError;
-use clap::{Args, Parser, ValueEnum};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 use serde::Serialize;
 use std::path::PathBuf;
 
@@ -9,7 +9,7 @@ use std::path::PathBuf;
     about = "Lightweight, fast, precise CLI HTTP client.",
     version
 )]
-pub struct RawSnipeArgs {
+pub struct RawShootArgs {
     #[arg(
         short,
         long,
@@ -56,7 +56,13 @@ pub struct RawSnipeArgs {
     cfg_env: String,
 }
 
-impl RawSnipeArgs {
+#[derive(Subcommand, Debug)]
+pub enum Command {
+    ListTargets,
+    Shoot,
+}
+
+impl RawShootArgs {
     pub fn new(
         cfg: PathBuf,
         target: String,
@@ -323,7 +329,7 @@ impl Format {
     }
 }
 
-pub struct SnipeArgs {
+pub struct ShootArgs {
     cfg: PathBuf,
     target: String,
     grab: Grab,
@@ -333,7 +339,7 @@ pub struct SnipeArgs {
     cfg_env: Option<String>,
 }
 
-impl SnipeArgs {
+impl ShootArgs {
     pub fn new(
         cfg: PathBuf,
         target: String,
@@ -390,9 +396,9 @@ impl SnipeArgs {
     }
 }
 
-impl TryFrom<RawSnipeArgs> for SnipeArgs {
+impl TryFrom<RawShootArgs> for ShootArgs {
     type Error = ArgsValidationError;
-    fn try_from(value: RawSnipeArgs) -> Result<Self, Self::Error> {
+    fn try_from(value: RawShootArgs) -> Result<Self, Self::Error> {
         Ok(Self {
             cfg: value.cfg,
             target: value.target,
