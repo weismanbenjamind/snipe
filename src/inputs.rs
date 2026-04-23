@@ -4,7 +4,11 @@ use serde::Serialize;
 use std::path::PathBuf;
 
 #[derive(Parser, Debug, Clone)]
-#[command(name = "Snipe", about = "Lightweight, fast, precise CLI HTTP client.")]
+#[command(
+    name = "Snipe",
+    about = "Lightweight, fast, precise CLI HTTP client.",
+    version
+)]
 pub struct RawSnipeArgs {
     #[arg(
         short,
