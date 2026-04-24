@@ -9,4 +9,4 @@ mod targets;
 mod var_replacement;
 
 pub use inputs::{RawShootArgs, ShootArgs};
-pub use run::shoot;
+pub use run::{list_targets, run_cli, shoot};
