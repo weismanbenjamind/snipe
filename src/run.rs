@@ -6,28 +6,33 @@ use crate::errors::{ResponseDataError, RunError};
 use crate::inputs::{Command, Grab, RawFormat, ShootArgs, SnipeCLIArgs};
 use crate::response_data::ResponseData;
 use crate::targets::Targets;
+use env_logger;
 use std::error::Error;
 use std::fmt::Write;
 use std::fs;
 use std::path::Path;
 
 pub async fn run_cli(snipe_cli_args: SnipeCLIArgs) -> Result<(), RunError> {
-    match snipe_cli_args.command() {
-        Command::ListTargets => list_targets(snipe_cli_args.cfg(), snipe_cli_args.cfg_env()),
-        Command::Shoot(shoot_args) => shoot(shoot_args).await,
-    }
-}
-
-// TODO - Maybe make this a method off the List targets enum? - House a run_cli argument that just matches the command then calls run off the command - or even house this command off the CLI iteself
-pub fn list_targets<P: AsRef<Path>>(cfg_path: P, cfg_env: Option<&str>) -> Result<(), RunError> {
     env_logger::init();
-    info!("Getting target list.");
 
-    let cfg_path = CfgResolver::new(cfg_path.as_ref(), cfg_env).resolve_cfg_path_from_env()?;
+    info!("Resolving config file path.");
+    let cfg_path = CfgResolver::new(snipe_cli_args.cfg(), snipe_cli_args.cfg_env())
+        .resolve_cfg_path_from_env()?;
+    info!("Resolved config file path to {}.", cfg_path.display());
 
     info!("Creating targets from file at {}.", cfg_path.display());
     let targets = Targets::from_toml_file(&cfg_path)?;
     info!("Targets successfully created.");
+
+    match snipe_cli_args.command() {
+        Command::ListTargets => list_targets(&targets),
+        Command::Shoot(shoot_args) => shoot(shoot_args, &targets).await,
+    }
+}
+
+// TODO - Maybe make this a method off the List targets enum? - House a run_cli argument that just matches the command then calls run off the command - or even house this command off the CLI iteself
+pub fn list_targets(targets: &Targets) -> Result<(), RunError> {
+    info!("Getting target list.");
 
     info!("Writing target names to buffer");
     let mut buf = String::new();
@@ -50,16 +55,8 @@ fn get_failed_get_targets_list_err<T: Error>(e: T) -> RunError {
 
 // TODO - maybe make this a method off the ShootArgs class? - House a run_cli argument that just matches the command then calls run off the command - or even house this command off the CLI itself
 // // When make this a method way want to remove the borrow to &ShootArgs
-pub async fn shoot(args: &ShootArgs) -> Result<(), RunError> {
-    env_logger::init();
-
+pub async fn shoot(args: &ShootArgs, targets: &Targets) -> Result<(), RunError> {
     info!("Starting request process.");
-
-    let cfg_path = CfgResolver::new(args.cfg_path(), args.cfg_env()).resolve_cfg_path_from_env()?;
-
-    info!("Creating targets from file at {}.", cfg_path.display());
-    let targets = Targets::from_toml_file(&cfg_path)?;
-    info!("Targets successfully created.");
 
     let target = targets
         .get_target(args.target())
@@ -99,6 +96,7 @@ pub async fn shoot(args: &ShootArgs) -> Result<(), RunError> {
     Ok(())
 }
 
+#[inline]
 fn handle_formatted_output(
     response_data: &ResponseData,
     format: RawFormat,
