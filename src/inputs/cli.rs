@@ -1,5 +1,5 @@
 use crate::errors::ArgsValidationError;
-use crate::input::shoot::{RawShootArgs, ShootArgs};
+use crate::inputs::shoot::{RawShootArgs, ShootArgs};
 use clap::{Parser, Subcommand};
 use std::path::{Path, PathBuf};
 

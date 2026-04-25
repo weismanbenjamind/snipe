@@ -1,6 +1,6 @@
 use crate::errors::ArgsValidationError;
-use crate::input::format::{Format, RawFormat};
-use crate::input::grab::{Grab, RawGrab};
+use crate::inputs::format::{Format, RawFormat};
+use crate::inputs::grab::{Grab, RawGrab};
 use clap::Args;
 use std::path::{Path, PathBuf};
 
