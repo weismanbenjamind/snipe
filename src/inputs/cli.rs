@@ -1,5 +1,6 @@
+use crate::commands::ShootCmd;
 use crate::errors::ArgsValidationError;
-use crate::inputs::shoot::{RawShootArgs, ShootArgs};
+use crate::inputs::shoot::RawShootArgs;
 use clap::{Parser, Subcommand};
 use std::path::{Path, PathBuf};
 
@@ -93,7 +94,7 @@ pub enum RawCommand {
 #[derive(Clone, Debug)]
 pub enum Command {
     ListTargets,
-    Shoot(ShootArgs),
+    Shoot(ShootCmd),
 }
 
 impl TryFrom<RawCommand> for Command {
@@ -102,7 +103,7 @@ impl TryFrom<RawCommand> for Command {
         match value {
             RawCommand::ListTargets => Ok(Self::ListTargets),
             RawCommand::Shoot(raw_shoot_args) => {
-                Ok(Self::Shoot(ShootArgs::try_from(raw_shoot_args)?))
+                Ok(Self::Shoot(ShootCmd::try_from(raw_shoot_args)?))
             }
         }
     }

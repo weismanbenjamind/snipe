@@ -63,17 +63,17 @@ impl TryFrom<RawShootArgs> for ShootCmd {
     fn try_from(value: RawShootArgs) -> Result<Self, Self::Error> {
         let (target, raw_grab, raw_format, pretty, output_file) = value.into_parts();
         Ok(Self {
-            target: target,
+            target,
             grab: Grab::from(raw_grab),
             format: Format::new(raw_format, pretty)?,
-            pretty: pretty,
-            output_file: output_file,
+            pretty,
+            output_file,
         })
     }
 }
 
 impl ShootCmd {
-    pub async fn run(self, targets: &Targets) -> Result<(), RunError> {
+    pub async fn run(&self, targets: &Targets) -> Result<(), RunError> {
         info!("Starting request process.");
 
         let target = targets

@@ -5,8 +5,8 @@ pub mod errors;
 pub mod inputs;
 mod response_data;
 mod response_output;
-pub mod run;
+mod run;
 mod targets;
 mod var_replacement;
 
-pub use run::{list_targets, run_cli, shoot};
+pub use run::run_cli;

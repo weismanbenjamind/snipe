@@ -1,0 +1,28 @@
+use log::info;
+
+use crate::errors::RunError;
+use crate::targets::Targets;
+use std::error::Error;
+use std::fmt::Write;
+
+pub fn run_list_targets_cmd(targets: &Targets) -> Result<(), RunError> {
+    info!("Getting target list.");
+
+    info!("Writing target names to buffer");
+    let mut buf = String::new();
+    targets
+        .as_map()
+        .keys()
+        .try_for_each(|key| writeln!(buf, "{}", key).map_err(get_failed_get_targets_list_err))?;
+    info!("Targets writtin");
+
+    print!("{buf}");
+
+    info!("Done getting targets list.");
+    Ok(())
+}
+
+#[inline]
+fn get_failed_get_targets_list_err<T: Error>(e: T) -> RunError {
+    RunError::Failure(format!("Failed to get targets list. Error: {}", e))
+}

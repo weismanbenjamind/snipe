@@ -76,13 +76,13 @@ impl RawShootArgs {
     }
 
     pub fn into_parts(self) -> (String, RawGrab, RawFormat, bool, Option<PathBuf>) {
-        return (
+        (
             self.target,
             self.grab,
             self.format,
             self.pretty,
             self.output_file,
-        );
+        )
     }
 }
 
