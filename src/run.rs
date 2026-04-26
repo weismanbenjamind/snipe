@@ -53,8 +53,6 @@ fn get_failed_get_targets_list_err<T: Error>(e: T) -> RunError {
     RunError::Failure(format!("Failed to get targets list. Error: {}", e))
 }
 
-// TODO - maybe make this a method off the ShootArgs class? - House a run_cli argument that just matches the command then calls run off the command - or even house this command off the CLI itself
-// // When make this a method way want to remove the borrow to &ShootArgs
 pub async fn shoot(args: &ShootArgs, targets: &Targets) -> Result<(), RunError> {
     info!("Starting request process.");
 

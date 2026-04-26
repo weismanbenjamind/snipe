@@ -1,5 +1,6 @@
 mod cfg_resolver;
 mod client;
+mod commands;
 pub mod errors;
 pub mod inputs;
 mod response_data;
