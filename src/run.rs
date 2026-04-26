@@ -5,9 +5,17 @@ use crate::commands::run_list_targets_cmd;
 use crate::errors::RunError;
 use crate::inputs::{Command, SnipeCLIArgs};
 use crate::targets::Targets;
+use std::env;
+use tracing_subscriber::EnvFilter;
+use tracing_subscriber::fmt as tracing_subscriber_fmt;
+
+const RUST_LOG: &str = "RUST_LOG";
+const WARN: &str = "warn";
+const INFO: &str = "info";
+const DEBUG: &str = "debug";
 
 pub async fn run_cli(snipe_cli_args: SnipeCLIArgs) -> Result<(), RunError> {
-    env_logger::init();
+    set_vebosity(snipe_cli_args.verbose())?;
 
     info!("Resolving config file path.");
     let cfg_path = CfgResolver::new(snipe_cli_args.cfg(), snipe_cli_args.cfg_env())
@@ -22,4 +30,38 @@ pub async fn run_cli(snipe_cli_args: SnipeCLIArgs) -> Result<(), RunError> {
         Command::ListTargets => run_list_targets_cmd(&targets),
         Command::Shoot(cmd) => cmd.run(&targets).await,
     }
+}
+
+fn set_vebosity(verbosity: u8) -> Result<(), RunError> {
+    let log_level = get_log_level(verbosity);
+
+    if let Some(log_level) = log_level {
+        init_tracing_subscriber(&log_level)?;
+    }
+
+    Ok(())
+}
+
+#[inline]
+fn get_log_level(verbosity: u8) -> Option<String> {
+    match env::var(RUST_LOG) {
+        Ok(level) => Some(level),
+        Err(_) => Some(
+            match verbosity {
+                0 => WARN,
+                1 => INFO,
+                _ => DEBUG,
+            }
+            .to_string(),
+        ),
+    }
+}
+
+#[inline]
+fn init_tracing_subscriber(log_level: &str) -> Result<(), RunError> {
+    tracing_subscriber_fmt()
+        .without_time()
+        .with_env_filter(EnvFilter::new(log_level))
+        .try_init()
+        .map_err(|e| RunError::Failure(format!("Failed to set verbosity. Error: {e}.")))
 }
