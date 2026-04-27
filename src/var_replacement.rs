@@ -77,7 +77,7 @@ fn replace_env_vars(input: &str, env_pattern: Option<&str>) -> Result<String, Va
     let replaced = env_var_regex.replace_all(input, |captures: &Captures| {
         // Note - duplicate using &captures[index] to prevent memory allocation
         debug!(
-            "Found match {} and searching for env var {}",
+            "Found match {} and searching for env var {}.",
             &captures[0], &captures[1]
         );
         env::var(&captures[1]).unwrap_or_else(|_| {

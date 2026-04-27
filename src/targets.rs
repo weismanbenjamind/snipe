@@ -1,5 +1,6 @@
 use crate::errors::TargetsError;
 use crate::var_replacement::resolve_vars;
+use log::info;
 use serde::{Deserialize, Serialize};
 use std::fs::read_to_string;
 use std::path::Path;
@@ -17,18 +18,25 @@ impl Targets {
         Self { targets }
     }
 
-    // TODO - add ability to resolve special characters like ~
     pub fn from_toml_file<P: AsRef<Path>>(path: P) -> Result<Self, TargetsError> {
+        info!(
+            "Attempting to read toml file at path {}.",
+            path.as_ref().display()
+        );
         validate_toml_path(&path)?;
         let toml_str = read_toml(&path)?;
+        info!("Toml file successfully read.");
+
         Self::from_toml(&toml_str)
     }
 
     pub fn from_toml(toml_str: &str) -> Result<Self, TargetsError> {
+        info!("Attempting to replace user defined variables and environment varables in toml.");
         let maybe_vars: Option<Vars> =
             toml::from_str(toml_str).map_err(TargetsError::deserialization_from_err)?;
         let resolved_toml = resolve_vars(toml_str, maybe_vars.as_ref(), None, None)
             .map_err(TargetsError::deserialization_from_err)?;
+        info!("Variables replaced.");
         toml::from_str(&resolved_toml).map_err(TargetsError::deserialization_from_err)
     }
 
@@ -45,7 +53,7 @@ fn validate_toml_path<P: AsRef<Path>>(path: P) -> Result<(), TargetsError> {
     let path = path.as_ref();
     if !path.exists() {
         return Err(TargetsError::Dersialization(format!(
-            "Path {} does not exist",
+            "Path {} does not exist.",
             path.display()
         )));
     }

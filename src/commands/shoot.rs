@@ -80,9 +80,9 @@ impl ShootCmd {
             .get_target(self.target())
             .ok_or_else(|| RunError::Failure(format!("Failed to find target {}", self.target)))?;
 
-        info!("Sending request for target {}.", target.name());
+        info!("Sending request for target '{}'.", target.name());
         let response_data = Client::new()?.send_request(target).await?;
-        info!("Response recieved.");
+        info!("Response recieved and ResponseData object built.");
 
         info!("Formatting response for output.");
         let output_string = match self.grab.int_status_code() {
@@ -91,7 +91,6 @@ impl ShootCmd {
                 handle_formatted_output(&response_data, self.format(), self.grab, self.pretty)?
             }
         };
-
         info!("Response formatted for output.");
 
         match self.output_file() {

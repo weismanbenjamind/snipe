@@ -1,6 +1,6 @@
 use crate::errors::ResponseDataError;
 use crate::response_output::{HTTPResponseOutput, JsonResponseOutput};
-use log::warn;
+use log::{info, warn};
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{Response, StatusCode};
 use std::collections::HashMap;
@@ -113,6 +113,7 @@ impl ResponseData {
 fn build_response_headers(
     header_map: &HeaderMap,
 ) -> Result<HashMap<String, String>, ResponseDataError> {
+    info!("Building response headers.");
     let mut as_hash_map: HashMap<String, String> = HashMap::new();
 
     header_map.iter().try_for_each(|(k, v)| {
@@ -124,6 +125,7 @@ fn build_response_headers(
         Ok(()) // try_for_each each must return Result<(), Err>
     })?; // Need the ? here to propogate errors out of try_for_each
 
+    info!("Response headers built.");
     Ok(as_hash_map)
 }
 
@@ -138,6 +140,7 @@ fn header_value_to_string(header_value: &HeaderValue) -> Result<String, Response
 }
 
 async fn build_body(response: Response) -> Result<String, ResponseDataError> {
+    info!("Building response body.");
     let as_bytes = response
         .bytes()
         .await
@@ -145,7 +148,13 @@ async fn build_body(response: Response) -> Result<String, ResponseDataError> {
         .to_vec();
 
     match std::str::from_utf8(&as_bytes) {
-        Ok(str_) => Ok(str_.to_string()),
-        Err(e) => Err(ResponseDataError::new_response_field_to_string("body", e)),
+        Ok(str_) => {
+            info!("Response body built.");
+            Ok(str_.to_string())
+        }
+        Err(e) => {
+            info!("Failed to build response body with error: {e}.");
+            Err(ResponseDataError::new_response_field_to_string("body", e))
+        }
     }
 }

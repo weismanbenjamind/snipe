@@ -16,9 +16,11 @@ pub struct Client {
 
 impl Client {
     pub fn new() -> Result<Self, ClientError> {
+        info!("Building client");
         let _client = Client_::builder()
             .build()
             .map_err(|e| ClientError::ClientBuild(e.to_string()))?;
+        info!("Client built.");
         Ok(Self { _client })
     }
 
@@ -39,24 +41,27 @@ impl Client {
         let mut request_builder = self.init_request_builder(target);
 
         if let Some(timeout) = target.timeout_seconds() {
-            info!("Adding timeout {timeout}s to request.");
+            info!("Adding timeout of {timeout} seconds.");
             request_builder = request_builder.timeout(Duration::from_secs(timeout));
+            info!("Timeout added.")
         }
 
         if let Some(headers) = target.headers() {
-            info!("Adding headers to request.");
-            let headers = build_headers(headers)?;
-            request_builder = request_builder.headers(headers);
+            info!("Adding headers");
+            request_builder = request_builder.headers(build_headers(headers)?);
+            info!("Headers added.")
         }
 
         if let Some(auth) = target.auth() {
-            info!("Adding auth to request.");
+            info!("Adding auth.");
             request_builder = build_auth(request_builder, auth);
+            info!("Auth added.")
         }
 
         if let Some(payload) = target.payload() {
-            info!("Adding payload to request.");
+            info!("Adding payload.");
             request_builder = request_builder.json(payload);
+            info!("Payload added.");
         }
 
         info!("Request built");
