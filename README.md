@@ -61,7 +61,7 @@ By default snipe will display the response body to `stdout`. However, flags can 
 `snipe` allows for grabbing specific components from a response. Some response components cannot be grabbed at the same time. Examples below.
 
 ```sh
-# Valid uses
+# Valid args
 snipe shoot --target request-id-from-cfg --status-code  # Only status code (e.g. 200 OK)
 snipe shoot --target request-id-from-cfg --headers  # Only headers
 snipe shoot --target request-id-from-cfg --body  # Only body (default)
@@ -71,7 +71,7 @@ snipe shoot --target request-id-from-cfg --status-code --headers  # Status code 
 snipe shoot --target request-id-from-cfg --status-code --body  # Status code (e.g. 200 OK) and body
 snipe shoot --target request-id-from-cfg --headers --body  # Headers and body
 
-# Invalid uses
+# Invalid args
 snipe shoot --target request-id-from-cfg --status-code --full  # ERROR! => --full cannot be passed with any other flags
 snipe shoot --target request-id-from-cfg --status-code --int-status-code  # ERROR! => --int-status-code cannot be passed with any other flags
 ```
