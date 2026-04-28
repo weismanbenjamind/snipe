@@ -1,0 +1,17 @@
+repos:
+  - repo: local
+    hooks:
+      - id: format
+        name: Format
+        entry: ./scripts/format.sh
+        language: script
+
+      - id: clippy_debug
+        name: Clippy Debug
+        entry: ./scripts/clippy_debug.sh
+        language: script
+
+      - id: clippy_release
+        name: Clippy Release
+        entry: ./scripts/clippy_release.sh
+        language: script
