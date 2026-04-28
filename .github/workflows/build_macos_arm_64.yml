@@ -12,10 +12,6 @@ jobs:
         id: checkout-code
         uses: actions/checkout@v4
 
-      # Note - Pinning to 1.95.0 to match my local setup
-      # If run 'rustup update' to update rust
-      # want to run 'rustc --version' after updating
-      # and update to dtolnay/resut-action@<version> below
       - name: Install Rust
         id: install-rust
         uses: dtolnay/resut-action@1.95.0
