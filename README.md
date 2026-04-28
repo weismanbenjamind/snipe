@@ -103,7 +103,7 @@ status_code
 headers
 ```
 
-***Note - if the the response cannot be parsed a string the snipe will emit an error.***
+***Note - if the the response cannot be parsed into a string the snipe will emit an error.***
 
 The `json` format will attempt to parse the response into a json string. The output is formatted something like:
 
@@ -133,7 +133,7 @@ While the combo `snipe shoot --target request-id-from-cfg --status-code --header
 }
 ```
 
-***Note - if the the response component requested cannot be parsed into json the snipe will emit an error.***
+***Note - if the the response cannot be parsed into a json string snipe will emit an error.***
 
 Parsing to json also has a `--pretty` flag which can be used to make the output more readable. An example of getting a full response in pretty printed json is shown below:
 
