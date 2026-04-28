@@ -32,8 +32,7 @@ impl Targets {
 
     pub fn from_toml(toml_str: &str) -> Result<Self, TargetsError> {
         info!("Attempting to replace user defined variables and environment varables in toml.");
-        let maybe_vars: Option<Vars> =
-            toml::from_str(toml_str).map_err(TargetsError::deserialization_from_err)?;
+        let maybe_vars: Option<Vars> = toml::from_str(toml_str).ok();
         let resolved_toml = resolve_vars(toml_str, maybe_vars.as_ref(), None, None)
             .map_err(TargetsError::deserialization_from_err)?;
         info!("Variables replaced.");
