@@ -1,0 +1,28 @@
+name: Build Binary For macOS ARM64
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Binary For macOS ARM64
+    runs-on: macos-14
+    steps:
+      - name: Checkout Code
+        id: checkout-code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        id: install-rust
+        uses: dtolnay/resut-action@1.95.0
+
+      - name: Build Binary
+        id: build-binary
+        run: cargo build --release
+
+      - name: Upload Build Artifact
+        id: upload-build-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: snipe
+          path: target/release/snipe
