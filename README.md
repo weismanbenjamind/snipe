@@ -160,7 +160,7 @@ Use the the `--config` (`-c`) argument to change the path of the configuration f
 snipe --config ~/.config/snipe/snipe_targets.toml shoot --target request-id-from-cfg
 ```
 
-If the config cannot be found, snipe will fall back to attempting to read the `SNIPE_TARGETS` environment variable which houses the path to the config. The environment variable to look for can be tweaked with the `--cfg-env` (`-e`) flag. Searching for the environment variable can be skipped entirely by passing `skip` for this argument. For example:
+If the config cannot be found, snipe will fall back to attempting to read the `SNIPE_TARGETS` environment variable which houses the path to the config. The environment variable to look for can be tweaked with the `--cfg-env` (`-e`) arg. Searching for the environment variable can be skipped entirely by passing `skip` for this argument. For example:
 
 ```sh
 snipe --cfg-env SNIPE_CONFIG shoot --target request-id-from-cfg  # If can't find the config at the value specified by --config use the value at the environment variable SNIPE_CONFIG
