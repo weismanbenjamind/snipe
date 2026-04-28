@@ -103,7 +103,7 @@ status_code
 headers
 ```
 
-***Note - if the the response component requested cannot be parsed a string the snipe will emit an error.***
+***Note - if the the response cannot be parsed a string the snipe will emit an error.***
 
 The `json` format will attempt to parse the response into a json string. The output is formatted something like:
 
