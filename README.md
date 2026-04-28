@@ -154,7 +154,7 @@ snipe shoot --target request-id-from-cfg --full --format json --pretty --output-
 
 ### Changing the Path to the Configuration File
 
-Use the the `--config` (`-c`) argument to change the path of the configuration file. As stated above by default `snipe` will look for a `.snipe_targets.toml` file in your present working directory. An example of using a different config might look like the following:
+Use the the `--config` (`-c`) argument to change the path of the configuration file. As stated above by default `snipe` will look for a `.snipe_targets.toml` file in your present working directory. An example of using a different config looks something like the following:
 
 ```sh
 snipe --config ~/.config/snipe/snipe_targets.toml shoot --target request-id-from-cfg
