@@ -2,11 +2,24 @@ name: Build Binary For macOS ARM64
 
 on:
   workflow_dispatch:
+    inputs:
+      runs-on:
+        type: choice
+        options:
+          - macos-14
+          - macos-15
+        default: macos-15
+        description: macOS version to run on
+
+      rust-version:
+        type: string
+        default: stable
+        description: Rust toolchain version used to build the binary
 
 jobs:
   build:
     name: Build Binary For macOS ARM64
-    runs-on: macos-14
+    runs-on: ${{ inputs.runs-on }}
     steps:
       - name: Checkout Code
         id: checkout-code
@@ -14,7 +27,7 @@ jobs:
 
       - name: Install Rust
         id: install-rust
-        run: rustup update stable
+        run: rustup update ${{ inputs.rust-version }}
 
       - name: Build Binary
         id: build-binary
