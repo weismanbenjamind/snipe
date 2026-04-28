@@ -14,7 +14,7 @@ jobs:
 
       - name: Install Rust
         id: install-rust
-        uses: dtolnay/rust-action@stable
+        run: rustup update stable
 
       - name: Build Binary
         id: build-binary
