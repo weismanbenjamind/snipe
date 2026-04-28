@@ -135,16 +135,21 @@ While the combo `snipe shoot --target request-id-from-cfg --status-code --header
 
 ***Note - if the the response cannot be parsed into a json string snipe will emit an error.***
 
-Parsing to json also has a `--pretty` flag which can be used to make the output more readable. An example of getting a full response in pretty printed json is shown below:
+Parsing to json also has a `--pretty` flag which can be used to make the output more readable. `--pretty` is not valid with `--format http` and if this combination is passed snipe will emit an error. An examples of using `--pretty` are shown below:
 
 ```sh
-snipe shoot --target get-gists --full --format json --pretty 
+# Valid args
+snipe shoot --target request-id-from-cfg --full --format json --pretty
+
+# Invalid args
+snipe shoot --target request-id-from-cfg --full --format http --pretty # ERROR! => Can't pass --format http with --pretty
+snipe shoot --target request-id-from-cfg --full --pretty # ERROR! => By default snipe uses --format http which is invalid with --pretty
 ```
 
 Lastly, `snipe` can output a response to a file using the `--output` argument. An example of writing a full response in pretty printed json to a file is shown below:
 
 ```sh
-snipe shoot --target get-gists --full --format json --pretty --output-file full-response.json
+snipe shoot --target request-id-from-cfg --full --format json --pretty --output-file full-response.json
 ```
 
 ### Changing the Path to the Configuration File
