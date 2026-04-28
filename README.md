@@ -10,7 +10,7 @@ By default `snipe` will look for a `.snipe_targets.toml` file in your present wo
 [vars]  # Reusable variables
 github_base_url = "https://api.github.com"
 
-[targets.create-gist]  # Create an API request with id "create-gist"
+[targets.create-gist]  # Create an API request with id 'create-gist'
 name = "Github Gist"
 method = "POST"
 url = "${VARS.github_base_url}/gists"  # Reuse the variable github_base_url from [vars]
