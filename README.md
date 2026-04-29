@@ -1,5 +1,3 @@
-![Version](https://img.shields.io/badge/version-0.1.0-blue)
-
 # Snipe
 
 Snipe is a lightweight, fast, precise CLI HTTP client. The idea of the tool is to configure HTTP requests in a `.toml` file then use the CLI tool to make requests and tweak output/formatting options.
