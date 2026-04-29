@@ -2,7 +2,7 @@
 
 - [ ] Create branch off `master` with name `pre-release-prep-<version-number>`
 - [ ] Bump version in `cargo.toml` to `<version-number>`
-- [ ] Update the `## Unreleased` section in the `CHANGELOG.md` to `<version-number>`
+- [ ] Update the `## Unreleased` section in the `CHANGELOG.md` to `Version <version-number>`
 - [ ] Run `./scripts/format.sh` to apply formatting changes if needed
 - [ ] Run `./scripts/clippy_debug.sh` and resolve all linting errors
 - [ ] Run `./scripts/clippy_release.sh` and resolve all linting errors
