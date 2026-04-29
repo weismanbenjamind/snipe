@@ -29,13 +29,31 @@ jobs:
         id: install-rust
         run: rustup update ${{ inputs.rust-version }}
 
-      - name: Build Binary
+      - name: Build Debug Binary
+        id: build-debug-binary
+        run: cargo build
+
+      - name: Build Release Binary
         id: build-binary
         run: cargo build --release
 
-      - name: Upload Build Artifact
-        id: upload-build-artifact
+      - name: Set Artifact Prefix
+        id: set-artifact-prefix
+        run: |
+          artifact_prefix=$(./target/release/snipe --version | tr '[:upper:] ' '[:lower:]_')
+          echo Artifact prefix: $artifact_prefix
+          echo "artifact_prefix=$artifact_prefix" >> $GITHUB_OUTPUT
+
+      - name: Upload Debug Artifact
+        id: upload-debug-artifact
         uses: actions/upload-artifact@v4
         with:
-          name: snipe
+          name: ${{ steps.set-artifact-prefix.outputs.artifact_prefix }}_debug
+          path: target/debug/snipe
+
+      - name: Upload Release Artifact
+        id: upload-release-artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.set-artifact-prefix.outputs.artifact_prefix }}_release
           path: target/release/snipe

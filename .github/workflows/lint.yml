@@ -1,0 +1,49 @@
+name: Lint
+
+on:
+  pull_request:
+    paths:
+      - src/**
+      - .github/workflows/lint.yml
+      - Cargo.toml
+      - Cargo.lock
+
+  push:
+    branches:
+      - master
+    paths:
+      - src/**
+      - .github/workflows/lint.yml
+      - Cargo.toml
+      - Cargo.lock
+
+  workflow_dispatch:
+    inputs:
+      runs-on:
+        type: choice
+        options:
+          - macos-14
+          - macos-15
+        default: macos-15
+        description: macOS version to run on
+
+      rust-version:
+        type: string
+        default: stable
+        description: Rust toolchain version used to test
+
+jobs:
+  lint:
+    runs-on: ${{ inputs.runs-on  || 'macos-15'}}
+    steps:
+      - name: Checkout Code
+        id: checkout-code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        id: install-rust
+        run: rustup update ${{ inputs.rust-version || 'stable'}}
+
+      - name: Lint
+        id: lint
+        run: ./scripts/lint.sh
