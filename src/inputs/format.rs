@@ -27,6 +27,7 @@ pub enum Format {
 }
 
 impl Format {
+    // Use this new method to create a validated Format enum from pretty
     pub fn new(raw_format: RawFormat, pretty: bool) -> Result<Self, ArgsValidationError> {
         match pretty {
             false => match raw_format {

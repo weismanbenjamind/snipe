@@ -95,13 +95,21 @@ pub struct ShootArgs {
 }
 
 impl ShootArgs {
+    // Since take RawGrab and RawFormat here
+    // ::new() enforces validated grab and format args in the constructor
+    // We know outside this module ShootArgs will always been in a valid state
     pub fn new(
         target: String,
-        grab: Grab,
-        format: Format,
+        grab: RawGrab,
+        format: RawFormat,
         pretty: bool,
         output_file: Option<PathBuf>,
     ) -> Result<Self, ArgsValidationError> {
+        // TODO - de-dupe this code if it appears everywhere.
+        // Might also be worth it to let Grab know about format and pretty - that might just be ShootArgs at this points
+        let format = Format::new(format, pretty)?;
+        let grab = Grab::new(grab, format)?;
+
         Ok(Self {
             target,
             grab,
@@ -135,14 +143,12 @@ impl ShootArgs {
 impl TryFrom<RawShootArgs> for ShootArgs {
     type Error = ArgsValidationError;
     fn try_from(value: RawShootArgs) -> Result<Self, Self::Error> {
-        let format = Format::new(value.format, value.pretty)?;
-        let grab = Grab::new(value.grab, format)?;
-        Ok(Self {
-            target: value.target,
-            grab,
-            format,
-            pretty: value.pretty,
-            output_file: value.output_file,
-        })
+        Self::new(
+            value.target,
+            value.grab,
+            value.format,
+            value.pretty,
+            value.output_file,
+        )
     }
 }

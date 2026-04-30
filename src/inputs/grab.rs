@@ -105,6 +105,8 @@ pub struct Grab {
 }
 
 impl Grab {
+    // New off grab ensures we only ever get a validated grab struct
+    // Validation occurs at RawGrab level (for response component combos) and below for interaction with formatting
     pub fn new(grab: RawGrab, format: Format) -> Result<Self, ArgsValidationError> {
         let grab = Self::init_from_raw_grab(grab);
         match format {
