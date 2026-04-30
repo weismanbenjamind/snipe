@@ -6,6 +6,7 @@ use serde::Serialize;
 pub enum RawFormat {
     Http,
     Json,
+    Binary,
 }
 
 impl From<Format> for RawFormat {
@@ -13,6 +14,7 @@ impl From<Format> for RawFormat {
         match value {
             Format::Http => Self::Http,
             Format::Json => Self::Json,
+            Format::Binary => Self::Binary,
         }
     }
 }
@@ -21,16 +23,22 @@ impl From<Format> for RawFormat {
 pub enum Format {
     Http,
     Json,
+    Binary,
 }
 
 impl Format {
     pub fn new(raw_format: RawFormat, pretty: bool) -> Result<Self, ArgsValidationError> {
-        match raw_format {
-            RawFormat::Http => match pretty {
-                true => Err(ArgsValidationError::PrettyWithHTTP),
-                false => Ok(Self::Http),
+        match pretty {
+            false => match raw_format {
+                RawFormat::Json => Ok(Self::Json),
+                RawFormat::Http => Ok(Self::Http),
+                RawFormat::Binary => Ok(Self::Binary),
             },
-            RawFormat::Json => Ok(Self::Json),
+            true => match raw_format {
+                RawFormat::Json => Ok(Self::Json),
+                RawFormat::Http => Err(ArgsValidationError::PrettyWithHTTP),
+                RawFormat::Binary => Err(ArgsValidationError::PrettyWithBinary),
+            },
         }
     }
 }

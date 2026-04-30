@@ -1,4 +1,5 @@
 use crate::errors::ArgsValidationError;
+use crate::inputs::Format;
 use clap::Args;
 
 #[derive(Args, Clone, Copy, Debug)]
@@ -43,8 +44,13 @@ impl RawGrab {
         int_status_code: bool,
         full: bool,
     ) -> Result<Self, ArgsValidationError> {
-        let have_individuals = have_inividuals(status_code, headers, body);
-        check_have_individuals_vs_int_status_code(have_individuals, int_status_code)?;
+        let have_individuals = status_code || headers || body;
+
+        if have_individuals && int_status_code {
+            return ArgsValidationError::new_base(
+                "Cannot pass status_code, headers, or body, with int_status_code.",
+            );
+        }
 
         if have_individuals && full {
             return ArgsValidationError::new_base(
@@ -99,21 +105,21 @@ pub struct Grab {
 }
 
 impl Grab {
-    pub fn new(
-        status_code: bool,
-        headers: bool,
-        body: bool,
-        int_status_code: bool,
-    ) -> Result<Self, ArgsValidationError> {
-        let have_individuals = have_inividuals(status_code, headers, body);
-        check_have_individuals_vs_int_status_code(have_individuals, int_status_code)?;
+    pub fn new(grab: RawGrab, format: Format) -> Result<Self, ArgsValidationError> {
+        let grab = Self::init_from_raw_grab(grab);
+        match format {
+            Format::Http => Ok(grab),
+            Format::Json => Ok(grab),
+            Format::Binary => match grab.only_body() {
+                true => Ok(grab),
+                false => Err(ArgsValidationError::NonBodyWithBinary),
+            },
+        }
+    }
 
-        Ok(Self {
-            status_code,
-            headers,
-            body,
-            int_status_code,
-        })
+    #[inline]
+    fn only_body(&self) -> bool {
+        self.body && !self.headers && !self.status_code && !self.int_status_code
     }
 
     pub fn status_code(&self) -> bool {
@@ -131,29 +137,11 @@ impl Grab {
     pub fn int_status_code(&self) -> bool {
         self.int_status_code
     }
-}
 
-#[inline]
-fn have_inividuals(status_code: bool, headers: bool, body: bool) -> bool {
-    status_code || headers || body
-}
-
-#[inline]
-fn check_have_individuals_vs_int_status_code(
-    have_individuals: bool,
-    int_status_code: bool,
-) -> Result<(), ArgsValidationError> {
-    if have_individuals && int_status_code {
-        return ArgsValidationError::new_base(
-            "Cannot pass status_code, headers, or body, with int_status_code.",
-        );
-    }
-    Ok(())
-}
-
-// Validation should occur at RawArgs level
-impl From<RawGrab> for Grab {
-    fn from(value: RawGrab) -> Self {
+    // Validation occurs at the RawGrab level
+    // Raw grab validates good combos
+    // Validation either happens at CLI level or via ::new() method
+    fn init_from_raw_grab(value: RawGrab) -> Self {
         // If everything is false default to headers
         if value.in_default_state() {
             return Self {

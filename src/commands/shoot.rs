@@ -24,14 +24,14 @@ impl ShootCmd {
     pub fn new(
         target: String,
         grab: Grab,
-        format: RawFormat,
+        format: Format,
         pretty: bool,
         output_file: Option<PathBuf>,
     ) -> Result<Self, ArgsValidationError> {
         Ok(Self {
             target,
             grab,
-            format: Format::new(format, pretty)?,
+            format,
             pretty,
             output_file,
         })
@@ -62,10 +62,12 @@ impl TryFrom<RawShootArgs> for ShootCmd {
     type Error = ArgsValidationError;
     fn try_from(value: RawShootArgs) -> Result<Self, Self::Error> {
         let (target, raw_grab, raw_format, pretty, output_file) = value.into_parts();
+        let format = Format::new(raw_format, pretty)?;
+        let grab = Grab::new(raw_grab, format)?;
         Ok(Self {
             target,
-            grab: Grab::from(raw_grab),
-            format: Format::new(raw_format, pretty)?,
+            grab,
+            format,
             pretty,
             output_file,
         })
@@ -129,6 +131,7 @@ fn handle_formatted_output(
         RawFormat::Json => {
             response_data.to_json_string(grab.status_code(), grab.headers(), grab.body(), pretty)
         }
+        RawFormat::Binary => Ok("Binary output coming soon!".to_string()),
     }
 }
 

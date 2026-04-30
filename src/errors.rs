@@ -103,8 +103,14 @@ pub enum ArgsValidationError {
     #[error("{0}")]
     Base(String),
 
-    #[error("Cannot pretty formatting invalid for HTTP String.")]
+    #[error("Cannot use pretty formatting. Invalid for HTTP tring.")]
     PrettyWithHTTP,
+
+    #[error("Cannot use pretty formatting. Invalid for Binary response.")]
+    PrettyWithBinary,
+
+    #[error("Cannot use Binary format and try to output a response field other than the body.")]
+    NonBodyWithBinary,
 }
 
 impl ArgsValidationError {

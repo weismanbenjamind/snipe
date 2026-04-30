@@ -2,7 +2,7 @@ use crate::errors::ArgsValidationError;
 use crate::inputs::format::{Format, RawFormat};
 use crate::inputs::grab::{Grab, RawGrab};
 use clap::Args;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Args, Debug, Clone)]
 #[command(about = "Make a specific API request")]
@@ -70,9 +70,8 @@ impl RawShootArgs {
         self.pretty
     }
 
-    // TODO - deref here
-    pub fn output_file(&self) -> &Option<PathBuf> {
-        &self.output_file
+    pub fn output_file(&self) -> Option<&Path> {
+        self.output_file.as_deref()
     }
 
     pub fn into_parts(self) -> (String, RawGrab, RawFormat, bool, Option<PathBuf>) {
@@ -99,14 +98,14 @@ impl ShootArgs {
     pub fn new(
         target: String,
         grab: Grab,
-        format: RawFormat,
+        format: Format,
         pretty: bool,
         output_file: Option<PathBuf>,
     ) -> Result<Self, ArgsValidationError> {
         Ok(Self {
             target,
             grab,
-            format: Format::new(format, pretty)?,
+            format,
             pretty,
             output_file,
         })
@@ -136,10 +135,12 @@ impl ShootArgs {
 impl TryFrom<RawShootArgs> for ShootArgs {
     type Error = ArgsValidationError;
     fn try_from(value: RawShootArgs) -> Result<Self, Self::Error> {
+        let format = Format::new(value.format, value.pretty)?;
+        let grab = Grab::new(value.grab, format)?;
         Ok(Self {
             target: value.target,
-            grab: Grab::from(value.grab),
-            format: Format::new(value.format, value.pretty)?,
+            grab,
+            format,
             pretty: value.pretty,
             output_file: value.output_file,
         })
