@@ -76,6 +76,11 @@ snipe shoot --target request-id-from-cfg --status-code --full  # ERROR! => --ful
 snipe shoot --target request-id-from-cfg --status-code --int-status-code  # ERROR! => --int-status-code cannot be passed with any other flags
 ```
 
+If no formatting args are passed after the desired target, the response body is grabbed. For example the following will return only the response body:
+
+```sh
+snipe shoot --target request-id-from-cfg
+```
 
 #### Tweaking response format
 
