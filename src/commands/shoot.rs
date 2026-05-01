@@ -62,7 +62,7 @@ impl TryFrom<RawShootArgs> for ShootCmd {
     type Error = ArgsValidationError;
     fn try_from(value: RawShootArgs) -> Result<Self, Self::Error> {
         let (target, raw_grab, raw_format, pretty, output_file) = value.into_parts();
-        let format = Format::new(raw_format, pretty)?;
+        let format = Format::new(raw_format, pretty, output_file.as_deref())?;
         let grab = Grab::new(raw_grab, format)?;
         Ok(Self {
             target,
