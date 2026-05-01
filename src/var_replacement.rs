@@ -52,7 +52,6 @@ fn replace_vars(
     let (vars_regex, mut missing_vars) =
         init_for_replace(var_pattern.unwrap_or(VAR_PATTERN_DEFAULT))?;
 
-    // Create custom closre I pass to .replace_all
     let replaced = vars_regex.replace_all(input, |captures: &Captures| {
         let target_var = &captures[1].to_lowercase();
 
@@ -73,7 +72,6 @@ fn replace_env_vars(input: &str, env_pattern: Option<&str>) -> Result<String, Va
     let (env_var_regex, mut missing_vars) =
         init_for_replace(env_pattern.unwrap_or(ENV_VAR_PATTERN_DEFAULT))?;
 
-    // Create custom closure I pass to replace_all
     let replaced = env_var_regex.replace_all(input, |captures: &Captures| {
         // Note - duplicate using &captures[index] to prevent memory allocation
         debug!(
