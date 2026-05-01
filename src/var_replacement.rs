@@ -3,7 +3,7 @@ use log::debug;
 use regex::{Captures, Regex};
 use std::env;
 
-use crate::errors::VarReplaceError; // TODO - Update this error - need a general error for variable replacement
+use crate::errors::VarReplaceError;
 
 // Raw string to not treat \ as escape characters
 // \$ to match literal '$'
