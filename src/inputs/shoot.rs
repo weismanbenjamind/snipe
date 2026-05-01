@@ -1,6 +1,5 @@
-use crate::errors::ArgsValidationError;
-use crate::inputs::format::{Format, RawFormat};
-use crate::inputs::grab::{Grab, RawGrab};
+use crate::inputs::format::RawFormat;
+use crate::inputs::grab::RawGrab;
 use clap::Args;
 use std::path::{Path, PathBuf};
 
@@ -81,74 +80,6 @@ impl RawShootArgs {
             self.format,
             self.pretty,
             self.output_file,
-        )
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct ShootArgs {
-    target: String,
-    grab: Grab,
-    format: Format,
-    pretty: bool,
-    output_file: Option<PathBuf>,
-}
-
-impl ShootArgs {
-    // Since take RawGrab and RawFormat here
-    // ::new() enforces validated grab and format args in the constructor
-    // We know outside this module ShootArgs will always been in a valid state
-    pub fn new(
-        target: String,
-        grab: RawGrab,
-        format: RawFormat,
-        pretty: bool,
-        output_file: Option<PathBuf>,
-    ) -> Result<Self, ArgsValidationError> {
-        // TODO - de-dupe this code if it appears everywhere.
-        // Might also be worth it to let Grab know about format and pretty - that might just be ShootArgs at this points
-        let format = Format::new(format, pretty)?;
-        let grab = Grab::new(grab, format)?;
-
-        Ok(Self {
-            target,
-            grab,
-            format,
-            pretty,
-            output_file,
-        })
-    }
-
-    pub fn target(&self) -> &str {
-        &self.target
-    }
-
-    pub fn grab(&self) -> Grab {
-        self.grab
-    }
-
-    pub fn format(&self) -> RawFormat {
-        self.format.into()
-    }
-
-    pub fn pretty(&self) -> bool {
-        self.pretty
-    }
-
-    pub fn output_file(&self) -> &Option<PathBuf> {
-        &self.output_file
-    }
-}
-
-impl TryFrom<RawShootArgs> for ShootArgs {
-    type Error = ArgsValidationError;
-    fn try_from(value: RawShootArgs) -> Result<Self, Self::Error> {
-        Self::new(
-            value.target,
-            value.grab,
-            value.format,
-            value.pretty,
-            value.output_file,
         )
     }
 }
