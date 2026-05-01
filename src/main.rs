@@ -6,8 +6,6 @@ use snipe::run_cli;
 use std::error::Error;
 use std::process::ExitCode;
 
-// TODO - special logic to capture an error related to pretty and json and exit
-// Also check to see if pretty actually has in an impact on HTTP output and if it does just use it
 #[tokio::main]
 async fn main() -> ExitCode {
     let args = match SnipeCLIArgs::try_from(RawSnipeCLIArgs::parse()) {
