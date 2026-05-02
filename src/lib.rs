@@ -1,4 +1,5 @@
 mod cfg_resolver;
+pub mod cli_formatting;
 mod client;
 mod commands;
 pub mod errors;
