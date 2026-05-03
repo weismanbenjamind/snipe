@@ -1,14 +1,13 @@
 use crate::client::Client;
-use crate::errors::{ResponseDataError, RunError};
+use crate::errors::RunError;
 use crate::inputs::{Grab, RawFormat};
-use crate::response_data::ResponseData;
 use crate::targets::Targets;
 use log::info;
-use std::fs;
 use std::path::Path;
 
 use crate::errors::ArgsValidationError;
 use crate::inputs::{Format, RawShootArgs};
+use crate::response_writer::ResponseWriter;
 use std::path::PathBuf;
 
 #[derive(Clone, Debug)]
@@ -83,39 +82,24 @@ impl ShootCmd {
             .ok_or_else(|| RunError::Failure(format!("Failed to find target {}", self.target)))?;
 
         info!("Sending request for target '{}'.", target.name());
-        // Actually want to return ResponseAdapter from response .send_request
-        let response_data = Client::new()?.send_request(target).await?;
-        info!("Response recieved and ResponseData object built.");
+        let response = Client::new()?.send_request(target).await?;
+        info!("Response recieved");
 
-        // Once get ResponseAdapter back match on format
-        // Binary calls .into_byte_stream and streams into file
-        // Everything else calls .try_into_response_data and uses old methodology
-        // ResponseData might need a rename into ResponseStringAdapter or something similar
+        let response_writer = ResponseWriter::new(response);
 
-        info!("Formatting response for output.");
-        let output_string = match self.grab.int_status_code() {
-            true => response_data.status_code_string(),
-            false => {
-                handle_formatted_output(&response_data, self.format(), self.grab, self.pretty)?
+        match self.format {
+            Format::Binary => handle_binary_output(response_writer, self.output_file()).await,
+            Format::Http | Format::Json => {
+                handle_string_output(
+                    response_writer,
+                    self.grab,
+                    self.format(),
+                    self.pretty,
+                    self.output_file(),
+                )
+                .await
             }
-        };
-        info!("Response formatted for output.");
-
-        match self.output_file() {
-            None => {
-                info!("Printing output to console.");
-                println!("{output_string}");
-                info!("Successfully printed output to console.");
-            }
-            Some(output_path) => {
-                info!("Writing response to file {}.", output_path.display());
-                write_response_to_file(output_path, &output_string)?;
-                info!(
-                    "Successfully wrote response to file {}.",
-                    output_path.display()
-                );
-            }
-        }
+        }?;
 
         info!("Finished request process.");
 
@@ -124,41 +108,34 @@ impl ShootCmd {
 }
 
 #[inline]
-fn handle_formatted_output(
-    response_data: &ResponseData,
-    format: RawFormat,
-    grab: Grab,
-    pretty: bool,
-) -> Result<String, ResponseDataError> {
-    match format {
-        RawFormat::Http => {
-            response_data.to_http_string(grab.status_code(), grab.headers(), grab.body())
-        }
-        RawFormat::Json => {
-            response_data.to_json_string(grab.status_code(), grab.headers(), grab.body(), pretty)
-        }
-        RawFormat::Binary => Ok("Binary output coming soon!".to_string()),
+async fn handle_binary_output(
+    response_writer: ResponseWriter,
+    output_file: Option<&Path>,
+) -> Result<(), RunError> {
+    match output_file {
+        Some(output_file) => Ok(response_writer.try_into_binary_file(output_file).await?),
+        None => Err(RunError::from(
+            "Must set output file for writing to a binary file",
+        )),
     }
 }
 
-fn write_response_to_file<P: AsRef<Path>>(output_path: P, response: &str) -> Result<(), RunError> {
-    let as_ref = output_path.as_ref();
+#[inline]
+async fn handle_string_output(
+    response_writer: ResponseWriter,
+    grab: Grab,
+    format: RawFormat,
+    pretty: bool,
+    output_file: Option<&Path>,
+) -> Result<(), RunError> {
+    let result = match output_file {
+        Some(output_file) => {
+            response_writer
+                .try_into_text_file(grab, format, pretty, output_file)
+                .await
+        }
+        None => response_writer.try_into_console(grab, format, pretty).await,
+    };
 
-    if let Some(parent) = as_ref.parent() {
-        fs::create_dir_all(parent).map_err(|e| {
-            RunError::Failure(format!(
-                "Failed to create path to output path {}. Error {e}",
-                parent.display()
-            ))
-        })?;
-    }
-
-    fs::write(as_ref, response).map_err(|e| {
-        RunError::Failure(format!(
-            "Failed to write results to output file {}. Error {e}",
-            as_ref.display()
-        ))
-    })?;
-
-    Ok(())
+    Ok(result?)
 }

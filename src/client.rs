@@ -1,9 +1,8 @@
 use reqwest::Client as Client_;
-use reqwest::RequestBuilder;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
+use reqwest::{RequestBuilder, Response};
 
 use crate::errors::ClientError;
-use crate::response_data::ResponseData;
 use crate::targets::{Auth, Method, Target};
 use log::{info, warn};
 use std::collections::HashMap;
@@ -24,16 +23,11 @@ impl Client {
         Ok(Self { _client })
     }
 
-    pub async fn send_request(&self, target: &Target) -> Result<ResponseData, ClientError> {
-        let response = self
-            .build_request(target)?
+    pub async fn send_request(&self, target: &Target) -> Result<Response, ClientError> {
+        self.build_request(target)?
             .send()
             .await
-            .map_err(|e| ClientError::SendRequestFailure(e.to_string()))?;
-
-        ResponseData::try_from_response(response)
-            .await
-            .map_err(ClientError::from)
+            .map_err(|e| ClientError::SendRequestFailure(e.to_string()))
     }
 
     fn build_request(&self, target: &Target) -> Result<RequestBuilder, ClientError> {

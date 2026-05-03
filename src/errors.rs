@@ -8,6 +8,12 @@ pub enum RunError {
     Failure(String),
 }
 
+impl From<&str> for RunError {
+    fn from(value: &str) -> Self {
+        Self::Failure(value.into())
+    }
+}
+
 impl From<TargetsError> for RunError {
     fn from(value: TargetsError) -> Self {
         RunError::Failure(value.to_string())
