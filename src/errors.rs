@@ -1,6 +1,7 @@
 use std::error::Error as StdErr;
 use thiserror::Error;
 
+// TODO - check out which intos are needed for RunError
 #[derive(Debug, Error)]
 pub enum RunError {
     #[error("{0}")]
@@ -33,6 +34,12 @@ impl From<ArgsValidationError> for RunError {
 
 impl From<CfgResolverError> for RunError {
     fn from(value: CfgResolverError) -> Self {
+        RunError::Failure(value.to_string())
+    }
+}
+
+impl From<ResponseWriterError> for RunError {
+    fn from(value: ResponseWriterError) -> Self {
         RunError::Failure(value.to_string())
     }
 }
@@ -86,6 +93,9 @@ pub enum ResponseDataError {
 
     #[error("Failed to convert response field {0} to string. Error {1}.")]
     ResponseFieldToString(String, String),
+
+    #[error("Cannot convert a binary output to a String")]
+    BinaryToString,
 }
 
 impl ResponseDataError {
@@ -138,4 +148,38 @@ pub enum CfgResolverError {
 
     #[error("{0}")]
     HomeDirExpansion(String),
+}
+
+#[derive(Debug, Error)]
+pub enum FilesystemError {
+    #[error("Failed to create path to output path {0}. Error: {1}")]
+    PathCreation(String, String),
+
+    #[error("Failed to create file {0}. Error: {1}")]
+    FileCreation(String, String),
+}
+
+#[derive(Debug, Error)]
+pub enum ResponseWriterError {
+    #[error("{0}")]
+    Base(String),
+
+    #[error("Bad response {0}. {1}.")]
+    BadResponse(u16, String),
+
+    #[error("Failed to write binary. Error: {0}")]
+    BinaryWrite(String),
+
+    #[error("Failed to write response to file {0}. Error: {1}")]
+    TextWrite(String, String),
+}
+
+impl ResponseWriterError {
+    pub fn base_from_err<T: StdErr>(err: T) -> Self {
+        Self::Base(err.to_string())
+    }
+
+    pub fn binary_write_from_err<T: StdErr>(err: T) -> Self {
+        Self::BinaryWrite(err.to_string())
+    }
 }

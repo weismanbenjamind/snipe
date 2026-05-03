@@ -5,6 +5,7 @@ use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::{Response, StatusCode};
 use std::collections::HashMap;
 
+// TODO - Might need a rename here - this is technically trying to represent response data as a string
 #[derive(Clone, Debug)]
 pub struct ResponseData {
     status_code: StatusCode,
@@ -78,6 +79,7 @@ impl ResponseData {
         })
     }
 
+    // TODO - Should this be terminal and consume self
     pub fn to_http_string(
         &self,
         status_code: bool,
@@ -93,6 +95,7 @@ impl ResponseData {
         .map_err(ResponseDataError::to_string_err_from_err)
     }
 
+    // TODO - Should this method be terminal and consume self
     pub fn to_json_string(
         &self,
         status_code: bool,

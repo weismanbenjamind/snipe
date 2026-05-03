@@ -1,0 +1,138 @@
+// TODO - LOGGING!!!!!!!
+// TODO - ERROR HANDLING - SEE IF INTO WORKS GOOD IN SOME SITUATION
+// TODO - Check comsumption. Everything is being consumed now. Ensure that is the right design
+
+use crate::errors::{FilesystemError, ResponseDataError, ResponseWriterError};
+use crate::inputs::Grab;
+use crate::inputs::RawFormat;
+use crate::response_data::ResponseData;
+use bytes::Bytes;
+use futures_util::StreamExt;
+use reqwest::Response;
+use std::fs;
+use std::io::Write;
+use std::path::Path;
+
+struct ResponseWriter {
+    response: Response,
+}
+
+impl ResponseWriter {
+    pub async fn try_into_binary_file(self, output_file: &Path) -> Result<(), ResponseWriterError> {
+        if !self.response.status().is_success() {
+            return get_bad_response_for_binary_write_err(
+                self.response.status().as_u16(),
+                output_file,
+            );
+        }
+
+        let mut file = open_output_file(output_file).map_err(ResponseWriterError::base_from_err)?;
+
+        let mut stream = self.response.bytes_stream();
+        let mut chunk: Bytes; // Don't want to allocate memory every loop iteration
+
+        while let Some(maybe_chunk) = stream.next().await {
+            chunk = maybe_chunk.map_err(ResponseWriterError::binary_write_from_err)?;
+            file.write_all(&chunk)
+                .map_err(ResponseWriterError::binary_write_from_err)?;
+        }
+
+        Ok(())
+    }
+
+    pub async fn try_into_text_file(
+        self,
+        grab: Grab,
+        format: RawFormat, // TODO - Why use RawFormat here?
+        pretty: bool,
+        output_file: &Path,
+    ) -> Result<(), ResponseWriterError> {
+        let response_string = self.try_into_string(grab, format, pretty).await?;
+        try_create_parent_dirs(output_file).map_err(ResponseWriterError::base_from_err)?;
+        fs::write(output_file, response_string).map_err(|e| {
+            ResponseWriterError::TextWrite(output_file.display().to_string(), e.to_string())
+        })
+    }
+
+    pub async fn try_into_console(
+        self,
+        grab: Grab,
+        format: RawFormat, // TODO - Why use RawFormat here?
+        pretty: bool,
+    ) -> Result<(), ResponseWriterError> {
+        println!("{}", self.try_into_string(grab, format, pretty).await?);
+        Ok(())
+    }
+
+    async fn try_into_string(
+        self,
+        grab: Grab,
+        format: RawFormat, // TODO - Why use RawFormat here?
+        pretty: bool,
+    ) -> Result<String, ResponseWriterError> {
+        let response_data = ResponseData::try_from_response(self.response)
+            .await
+            .map_err(ResponseWriterError::base_from_err)?;
+
+        match grab.int_status_code() {
+            true => Ok(response_data.status_code_string()),
+            false => handle_string_formatted_output(response_data, format, grab, pretty),
+        }
+        .map_err(ResponseWriterError::base_from_err)
+    }
+}
+
+#[inline]
+fn get_bad_response_for_binary_write_err(
+    status_code: u16,
+    output_file: &Path,
+) -> Result<(), ResponseWriterError> {
+    Err(ResponseWriterError::BadResponse(
+        status_code,
+        format!("Could not write to file {}", output_file.display()),
+    ))
+}
+
+fn open_output_file<P: AsRef<Path>>(output_path: P) -> Result<fs::File, FilesystemError> {
+    let as_ref = output_path.as_ref();
+
+    // If we have a parent try to create all directoies
+    // fs::create_all will pass through for any directories that already exist
+    // This code should handle creating any directories leading to the output file that don't exist
+    try_create_parent_dirs(as_ref)?;
+
+    // Open the file for write only
+    // Create the file if it doesn't exist
+    fs::File::create(as_ref)
+        .map_err(|e| FilesystemError::FileCreation(as_ref.display().to_string(), e.to_string()))
+}
+
+#[inline]
+fn try_create_parent_dirs(path: &Path) -> Result<(), FilesystemError> {
+    match path.parent() {
+        Some(parent) => fs::create_dir_all(parent).map_err(|e| {
+            FilesystemError::PathCreation(parent.display().to_string(), e.to_string())
+        }),
+        None => Ok(()),
+    }
+}
+
+#[inline]
+fn handle_string_formatted_output(
+    response_data: ResponseData,
+    format: RawFormat, // TODO - Why use RawFormat here?
+    grab: Grab,
+    pretty: bool,
+) -> Result<String, ResponseDataError> {
+    match format {
+        RawFormat::Http => {
+            // TODO - Why use RawFormat here?
+            response_data.to_http_string(grab.status_code(), grab.headers(), grab.body())
+        }
+        RawFormat::Json => {
+            // TODO - Why use RawFormat here?
+            response_data.to_json_string(grab.status_code(), grab.headers(), grab.body(), pretty)
+        }
+        RawFormat::Binary => Err(ResponseDataError::BinaryToString), // TODO - Why use RawFormat here?
+    }
+}

@@ -83,8 +83,14 @@ impl ShootCmd {
             .ok_or_else(|| RunError::Failure(format!("Failed to find target {}", self.target)))?;
 
         info!("Sending request for target '{}'.", target.name());
+        // Actually want to return ResponseAdapter from response .send_request
         let response_data = Client::new()?.send_request(target).await?;
         info!("Response recieved and ResponseData object built.");
+
+        // Once get ResponseAdapter back match on format
+        // Binary calls .into_byte_stream and streams into file
+        // Everything else calls .try_into_response_data and uses old methodology
+        // ResponseData might need a rename into ResponseStringAdapter or something similar
 
         info!("Formatting response for output.");
         let output_string = match self.grab.int_status_code() {
