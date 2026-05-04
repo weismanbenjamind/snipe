@@ -1,5 +1,3 @@
-// TODO - LOGGING!!!!!!!
-// TODO - ERROR HANDLING - SEE IF INTO FOR ERRORS WORKS GOOD IN SOME SITUATIONS
 // TODO - Check comsumption. Everything is being consumed now. Ensure that is the right design
 
 use crate::errors::{FilesystemError, ResponseDataError, ResponseWriterError};
@@ -37,7 +35,7 @@ impl ResponseWriter {
             );
         }
 
-        let mut file = open_output_file(output_file).map_err(ResponseWriterError::base_from_err)?;
+        let mut file = open_output_file(output_file)?;
 
         info!("Staring response body stream.");
         let mut stream = self.response.bytes_stream();
@@ -69,7 +67,7 @@ impl ResponseWriter {
         );
 
         let response_string = self.try_into_string(grab, format, pretty).await?;
-        try_create_parent_dirs(output_file).map_err(ResponseWriterError::base_from_err)?;
+        try_create_parent_dirs(output_file)?;
         fs::write(output_file, response_string).map_err(|e| {
             ResponseWriterError::TextWrite(output_file.display().to_string(), e.to_string())
         })?;
@@ -100,15 +98,14 @@ impl ResponseWriter {
         pretty: bool,
     ) -> Result<String, ResponseWriterError> {
         info!("Transforming response into String.");
-        let response_data = ResponseData::try_from_response(self.response)
-            .await
-            .map_err(ResponseWriterError::base_from_err)?;
+        let response_data = ResponseData::try_from_response(self.response).await?;
 
-        match grab.int_status_code() {
-            true => Ok(response_data.status_code_string()),
-            false => handle_string_formatted_output(response_data, format, grab, pretty),
-        }
-        .map_err(ResponseWriterError::base_from_err)
+        let result = match grab.int_status_code() {
+            true => response_data.status_code_string(),
+            false => handle_string_formatted_output(response_data, format, grab, pretty)?,
+        };
+
+        Ok(result)
     }
 }
 

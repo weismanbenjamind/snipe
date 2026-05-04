@@ -180,11 +180,19 @@ pub enum ResponseWriterError {
     TextWrite(String, String),
 }
 
-impl ResponseWriterError {
-    pub fn base_from_err<T: StdErr>(err: T) -> Self {
-        Self::Base(err.to_string())
+impl From<FilesystemError> for ResponseWriterError {
+    fn from(value: FilesystemError) -> Self {
+        Self::Base(value.to_string())
     }
+}
 
+impl From<ResponseDataError> for ResponseWriterError {
+    fn from(value: ResponseDataError) -> Self {
+        Self::Base(value.to_string())
+    }
+}
+
+impl ResponseWriterError {
     pub fn binary_write_from_err<T: StdErr>(err: T) -> Self {
         Self::BinaryWrite(err.to_string())
     }
