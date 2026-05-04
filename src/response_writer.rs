@@ -8,7 +8,7 @@ use crate::inputs::RawFormat;
 use crate::response_data::ResponseData;
 use bytes::Bytes;
 use futures_util::StreamExt;
-use log::{debug, error, info};
+use log::{debug, info};
 use reqwest::Response;
 use std::fs;
 use std::io::Write;
@@ -31,12 +31,10 @@ impl ResponseWriter {
         );
 
         if !self.response.status().is_success() {
-            let status_code = self.response.status().as_u16();
-            error!(
-                "Bad response {} detected. Cannot write to binary.",
-                status_code
+            return get_bad_response_for_binary_write_err(
+                self.response.status().as_u16(),
+                output_file,
             );
-            return get_bad_response_for_binary_write_err(status_code, output_file);
         }
 
         let mut file = open_output_file(output_file).map_err(ResponseWriterError::base_from_err)?;
@@ -73,10 +71,6 @@ impl ResponseWriter {
         let response_string = self.try_into_string(grab, format, pretty).await?;
         try_create_parent_dirs(output_file).map_err(ResponseWriterError::base_from_err)?;
         fs::write(output_file, response_string).map_err(|e| {
-            error!(
-                "Failed to write response {} with error: {e}",
-                output_file.display()
-            );
             ResponseWriterError::TextWrite(output_file.display().to_string(), e.to_string())
         })?;
 
@@ -114,10 +108,7 @@ impl ResponseWriter {
             true => Ok(response_data.status_code_string()),
             false => handle_string_formatted_output(response_data, format, grab, pretty),
         }
-        .map_err(|e| {
-            error!("Failed to convert response to formatted string with error: {e}");
-            ResponseWriterError::base_from_err(e)
-        })
+        .map_err(ResponseWriterError::base_from_err)
     }
 }
 
@@ -143,17 +134,14 @@ fn open_output_file<P: AsRef<Path>>(output_path: P) -> Result<fs::File, Filesyst
     // Open the file for write only
     // Create the file if it doesn't exist
     debug!("Opening file at {}.", as_ref.display());
-    fs::File::create(as_ref).map_err(|e| {
-        error!("Failed to open file at {}.", as_ref.display());
-        FilesystemError::FileCreation(as_ref.display().to_string(), e.to_string())
-    })
+    fs::File::create(as_ref)
+        .map_err(|e| FilesystemError::FileCreation(as_ref.display().to_string(), e.to_string()))
 }
 
 #[inline]
 fn try_create_parent_dirs(path: &Path) -> Result<(), FilesystemError> {
     match path.parent() {
         Some(parent) => fs::create_dir_all(parent).map_err(|e| {
-            error!("Failed to create directory structure {}.", parent.display());
             FilesystemError::PathCreation(parent.display().to_string(), e.to_string())
         }),
         None => Ok(()),
@@ -179,7 +167,6 @@ fn handle_string_formatted_output(
             response_data.to_json_string(grab.status_code(), grab.headers(), grab.body(), pretty)
         }
         RawFormat::Binary => {
-            error!("Found binary format when String format was expected.");
             // TODO - Why use RawFormat here?
             Err(ResponseDataError::BinaryToString)
         }

@@ -87,6 +87,7 @@ impl ShootCmd {
 
         let response_writer = ResponseWriter::new(response);
 
+        info!("Outputting response");
         match self.format {
             Format::Binary => handle_binary_output(response_writer, self.output_file()).await,
             Format::Http | Format::Json => {
@@ -100,6 +101,7 @@ impl ShootCmd {
                 .await
             }
         }?;
+        info!("Successfully output response.");
 
         info!("Finished request process.");
 
