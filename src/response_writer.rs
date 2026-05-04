@@ -1,5 +1,3 @@
-// TODO - Check comsumption. Everything is being consumed now. Ensure that is the right design
-
 use crate::errors::{FilesystemError, ResponseDataError, ResponseWriterError};
 use crate::inputs::Grab;
 use crate::inputs::RawFormat;
