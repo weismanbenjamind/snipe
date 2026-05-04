@@ -26,4 +26,20 @@ if [ $last -ne 0 ]; then
 fi
 echo Done running clippy on release build artifact
 
+echo Running cargo check on debug build artifact
+./scripts/cargo_check_debug.sh
+last=$?
+if [ $last -ne 0 ]; then
+    exit_code=$last
+fi
+echo Done running cargo check on debug build artifact
+
+echo Running cargo check on release build artifact
+./scripts/cargo_check_release.sh
+last=$?
+if [ $last -ne 0 ]; then
+    exit_code=$last
+fi
+echo Done running cargo check on release build artifact
+
 exit $exit_code
