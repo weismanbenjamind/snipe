@@ -20,6 +20,9 @@ impl From<Format> for RawFormat {
     }
 }
 
+// TODO - Make this a FormatCfg or something similar
+// Should be a struct
+// Encapsulates RawFormat and pretty
 #[derive(Clone, Copy, Debug)]
 pub enum Format {
     Http,
