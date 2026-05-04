@@ -4,6 +4,7 @@ mod client;
 mod commands;
 pub mod errors;
 pub mod inputs;
+mod response;
 mod response_data;
 mod response_output;
 mod response_writer;
