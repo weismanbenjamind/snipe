@@ -1,5 +1,5 @@
 // TODO - LOGGING!!!!!!!
-// TODO - ERROR HANDLING - SEE IF INTO WORKS GOOD IN SOME SITUATION
+// TODO - ERROR HANDLING - SEE IF INTO FOR ERRORS WORKS GOOD IN SOME SITUATIONS
 // TODO - Check comsumption. Everything is being consumed now. Ensure that is the right design
 
 use crate::errors::{FilesystemError, ResponseDataError, ResponseWriterError};
@@ -59,7 +59,7 @@ impl ResponseWriter {
     pub async fn try_into_text_file(
         self,
         grab: Grab,
-        format: RawFormat, // TODO - Why use RawFormat here?
+        format: RawFormat,
         pretty: bool,
         output_file: &Path,
     ) -> Result<(), ResponseWriterError> {
@@ -84,7 +84,7 @@ impl ResponseWriter {
     pub async fn try_into_console(
         self,
         grab: Grab,
-        format: RawFormat, // TODO - Why use RawFormat here?
+        format: RawFormat,
         pretty: bool,
     ) -> Result<(), ResponseWriterError> {
         info!("Writing formatted response to console");
@@ -96,7 +96,7 @@ impl ResponseWriter {
     async fn try_into_string(
         self,
         grab: Grab,
-        format: RawFormat, // TODO - Why use RawFormat here?
+        format: RawFormat,
         pretty: bool,
     ) -> Result<String, ResponseWriterError> {
         info!("Transforming response into String.");
@@ -151,24 +151,19 @@ fn try_create_parent_dirs(path: &Path) -> Result<(), FilesystemError> {
 #[inline]
 fn handle_string_formatted_output(
     response_data: ResponseData,
-    format: RawFormat, // TODO - Why use RawFormat here?
+    format: RawFormat,
     grab: Grab,
     pretty: bool,
 ) -> Result<String, ResponseDataError> {
     match format {
         RawFormat::Http => {
             info!("Writing response to HTTP string");
-            // TODO - Why use RawFormat here?
             response_data.to_http_string(grab.status_code(), grab.headers(), grab.body())
         }
         RawFormat::Json => {
             info!("Writing response to JSON string.");
-            // TODO - Why use RawFormat here?
             response_data.to_json_string(grab.status_code(), grab.headers(), grab.body(), pretty)
         }
-        RawFormat::Binary => {
-            // TODO - Why use RawFormat here?
-            Err(ResponseDataError::BinaryToString)
-        }
+        RawFormat::Binary => Err(ResponseDataError::BinaryToString),
     }
 }
