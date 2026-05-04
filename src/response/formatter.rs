@@ -1,4 +1,4 @@
-use crate::errors::ResponseDataError;
+use crate::errors::ResponseFormatterError;
 use crate::response::formats::{HTTPFormat, JsonFormat};
 use log::{info, warn};
 use reqwest::header::{HeaderMap, HeaderValue};
@@ -52,7 +52,7 @@ impl ResponseFormatter {
         &self.body
     }
 
-    pub async fn try_from_response(response: Response) -> Result<Self, ResponseDataError> {
+    pub async fn try_from_response(response: Response) -> Result<Self, ResponseFormatterError> {
         Ok(Self {
             status_code: response.status(),
             headers: build_response_headers(response.headers())?,
@@ -65,14 +65,14 @@ impl ResponseFormatter {
         status_code: bool,
         headers: bool,
         body: bool,
-    ) -> Result<String, ResponseDataError> {
+    ) -> Result<String, ResponseFormatterError> {
         HTTPFormat::new(
             status_code.then_some(self.status_code),
             headers.then_some(&self.headers),
             body.then_some(&self.body),
         )
         .into_http_string()
-        .map_err(ResponseDataError::to_string_err_from_err)
+        .map_err(ResponseFormatterError::to_string_err_from_err)
     }
 
     pub fn get_json_string(
@@ -81,20 +81,20 @@ impl ResponseFormatter {
         headers: bool,
         body: bool,
         pretty: bool,
-    ) -> Result<String, ResponseDataError> {
+    ) -> Result<String, ResponseFormatterError> {
         JsonFormat::new_from_str_body(
             status_code.then_some(self.status_code.as_u16()),
             headers.then_some(&self.headers),
             body.then_some(&self.body),
         )
         .into_json_string(pretty)
-        .map_err(ResponseDataError::to_string_err_from_err)
+        .map_err(ResponseFormatterError::to_string_err_from_err)
     }
 }
 
 fn build_response_headers(
     header_map: &HeaderMap,
-) -> Result<HashMap<String, String>, ResponseDataError> {
+) -> Result<HashMap<String, String>, ResponseFormatterError> {
     info!("Building response headers.");
     let mut as_hash_map: HashMap<String, String> = HashMap::new();
 
@@ -112,21 +112,21 @@ fn build_response_headers(
 }
 
 #[inline]
-fn header_value_to_string(header_value: &HeaderValue) -> Result<String, ResponseDataError> {
+fn header_value_to_string(header_value: &HeaderValue) -> Result<String, ResponseFormatterError> {
     match header_value.to_str() {
         Ok(str_) => Ok(str_.to_string()),
-        Err(e) => Err(ResponseDataError::new_response_field_to_string(
+        Err(e) => Err(ResponseFormatterError::new_response_field_to_string(
             "headers", e,
         )),
     }
 }
 
-async fn build_body(response: Response) -> Result<String, ResponseDataError> {
+async fn build_body(response: Response) -> Result<String, ResponseFormatterError> {
     info!("Building response body.");
     let as_bytes = response
         .bytes()
         .await
-        .map_err(|e| ResponseDataError::Build(e.to_string()))?
+        .map_err(|e| ResponseFormatterError::Build(e.to_string()))?
         .to_vec();
 
     match std::str::from_utf8(&as_bytes) {
@@ -136,7 +136,9 @@ async fn build_body(response: Response) -> Result<String, ResponseDataError> {
         }
         Err(e) => {
             info!("Failed to build response body with error: {e}.");
-            Err(ResponseDataError::new_response_field_to_string("body", e))
+            Err(ResponseFormatterError::new_response_field_to_string(
+                "body", e,
+            ))
         }
     }
 }

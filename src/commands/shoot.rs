@@ -7,7 +7,7 @@ use std::path::Path;
 
 use crate::errors::ArgsValidationError;
 use crate::inputs::{Format, RawShootArgs};
-use crate::response_writer::ResponseWriter;
+use crate::response::ResponseWriter;
 use std::path::PathBuf;
 
 #[derive(Clone, Debug)]

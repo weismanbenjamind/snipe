@@ -1,4 +1,4 @@
-use crate::errors::{FilesystemError, ResponseDataError, ResponseWriterError};
+use crate::errors::{FilesystemError, ResponseFormatterError, ResponseWriterError};
 use crate::inputs::Grab;
 use crate::inputs::RawFormat;
 use crate::response::ResponseFormatter;
@@ -149,7 +149,7 @@ fn handle_string_formatted_output(
     format: RawFormat,
     grab: Grab,
     pretty: bool,
-) -> Result<String, ResponseDataError> {
+) -> Result<String, ResponseFormatterError> {
     match format {
         RawFormat::Http => {
             info!("Writing response to HTTP string");
@@ -164,6 +164,6 @@ fn handle_string_formatted_output(
                 pretty,
             )
         }
-        RawFormat::Binary => Err(ResponseDataError::BinaryToString),
+        RawFormat::Binary => Err(ResponseFormatterError::BinaryToString),
     }
 }

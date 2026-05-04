@@ -71,7 +71,7 @@ pub enum ClientError {
 }
 
 #[derive(Debug, Error)]
-pub enum ResponseDataError {
+pub enum ResponseFormatterError {
     #[error("Failed to build response metadata. Error: {0}.")]
     Build(String),
 
@@ -85,7 +85,7 @@ pub enum ResponseDataError {
     BinaryToString,
 }
 
-impl ResponseDataError {
+impl ResponseFormatterError {
     pub fn to_string_err_from_err<T: StdErr>(e: T) -> Self {
         Self::ToString(e.to_string())
     }
@@ -167,8 +167,8 @@ impl From<FilesystemError> for ResponseWriterError {
     }
 }
 
-impl From<ResponseDataError> for ResponseWriterError {
-    fn from(value: ResponseDataError) -> Self {
+impl From<ResponseFormatterError> for ResponseWriterError {
+    fn from(value: ResponseFormatterError) -> Self {
         Self::Base(value.to_string())
     }
 }
