@@ -26,18 +26,6 @@ impl From<ClientError> for RunError {
     }
 }
 
-impl From<ResponseDataError> for RunError {
-    fn from(value: ResponseDataError) -> Self {
-        RunError::Failure(value.to_string())
-    }
-}
-
-impl From<ArgsValidationError> for RunError {
-    fn from(value: ArgsValidationError) -> Self {
-        RunError::Failure(value.to_string())
-    }
-}
-
 impl From<CfgResolverError> for RunError {
     fn from(value: CfgResolverError) -> Self {
         RunError::Failure(value.to_string())
@@ -81,12 +69,6 @@ pub enum ClientError {
 
     #[error("{0}")]
     ResponseBuild(String),
-}
-
-impl From<ResponseDataError> for ClientError {
-    fn from(value: ResponseDataError) -> Self {
-        Self::ResponseBuild(value.to_string())
-    }
 }
 
 #[derive(Debug, Error)]

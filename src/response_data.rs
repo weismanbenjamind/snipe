@@ -80,7 +80,6 @@ impl ResponseData {
         })
     }
 
-    // TODO - Should this be terminal and consume self
     pub fn to_http_string(
         &self,
         status_code: bool,
@@ -96,7 +95,6 @@ impl ResponseData {
         .map_err(ResponseDataError::to_string_err_from_err)
     }
 
-    // TODO - Should this method be terminal and consume self
     pub fn to_json_string(
         &self,
         status_code: bool,
