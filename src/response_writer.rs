@@ -119,7 +119,7 @@ fn get_bad_response_for_binary_write_err(
 ) -> Result<(), ResponseWriterError> {
     Err(ResponseWriterError::BadResponse(
         status_code,
-        format!("Could not write to file {}", output_file.display()),
+        format!("Blocked writing to file {}", output_file.display()),
     ))
 }
 

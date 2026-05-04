@@ -4,7 +4,7 @@ use reqwest::{RequestBuilder, Response};
 
 use crate::errors::ClientError;
 use crate::targets::{Auth, Method, Target};
-use log::{info, warn};
+use log::{debug, info, warn};
 use std::collections::HashMap;
 use std::str::FromStr;
 use std::time::Duration;
@@ -63,12 +63,15 @@ impl Client {
     }
 
     fn init_request_builder(&self, target: &Target) -> RequestBuilder {
-        match target.method() {
-            Method::Delete => self._client.delete(target.url()),
-            Method::Get => self._client.get(target.url()),
-            Method::Patch => self._client.patch(target.url()),
-            Method::Post => self._client.post(target.url()),
-            Method::Put => self._client.put(target.url()),
+        let method = target.method();
+        let url = target.url();
+        debug!("Attempting to build '{:?}' request for url {url}", method);
+        match method {
+            Method::Delete => self._client.delete(url),
+            Method::Get => self._client.get(url),
+            Method::Patch => self._client.patch(url),
+            Method::Post => self._client.post(url),
+            Method::Put => self._client.put(url),
         }
     }
 }

@@ -6,6 +6,7 @@ use reqwest::{Response, StatusCode};
 use std::collections::HashMap;
 
 // TODO - Might need a rename here - this is technically trying to represent response data as a string
+// Might want to make a module for this and whatever ResponseOutput is renamed to
 #[derive(Clone, Debug)]
 pub struct ResponseData {
     status_code: StatusCode,

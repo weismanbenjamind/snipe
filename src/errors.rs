@@ -170,7 +170,7 @@ pub enum ResponseWriterError {
     #[error("{0}")]
     Base(String),
 
-    #[error("Bad response {0}. {1}.")]
+    #[error("Bad response with status code {0}. {1}.")]
     BadResponse(u16, String),
 
     #[error("Failed to write binary. Error: {0}")]
