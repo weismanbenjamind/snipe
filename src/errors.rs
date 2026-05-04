@@ -1,7 +1,6 @@
 use std::error::Error as StdErr;
 use thiserror::Error;
 
-// TODO - check out which intos are needed for RunError
 #[derive(Debug, Error)]
 pub enum RunError {
     #[error("{0}")]
