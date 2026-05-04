@@ -5,23 +5,28 @@ repos:
         name: Format
         entry: ./scripts/format.sh
         language: script
+        pass_filenames: false
 
       - id: clippy_debug
         name: Clippy Debug
         entry: ./scripts/clippy_debug.sh
         language: script
+        pass_filenames: false
 
       - id: clippy_release
         name: Clippy Release
         entry: ./scripts/clippy_release.sh
         language: script
+        pass_filenames: false
 
       - id: cargo_check_debug
         name: Cargo Check Debug
         entry: ./scripts/cargo_check_debug.sh
         language: script
+        pass_filenames: false
 
       - id: cargo_check_release
         name: Cargo Check Release
         entry: ./scripts/cargo_check_release.sh
         language: script
+        pass_filenames: false
