@@ -6,6 +6,7 @@ All relevant updates will be listed in this document
 
 ### Refactored
 
+- Internal code to use `ValidatedGrab` notation
 - Internal code to use `ValidatedFormat` notation
 
 ### Updated
