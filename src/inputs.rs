@@ -5,5 +5,5 @@ mod shoot;
 
 pub use cli::{Command, RawCommand, RawSnipeCLIArgs, SnipeCLIArgs};
 pub use format::{RawFormat, ValidatedFormat};
-pub use grab::{Grab, RawGrab};
+pub use grab::{RawGrab, ValidatedGrab};
 pub use shoot::RawShootArgs;

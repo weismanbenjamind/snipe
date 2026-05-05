@@ -1,6 +1,5 @@
 use crate::errors::{FilesystemError, ResponseFormatterError, ResponseWriterError};
-use crate::inputs::RawFormat;
-use crate::inputs::{Grab, ValidatedFormat};
+use crate::inputs::{RawFormat, ValidatedFormat, ValidatedGrab};
 use crate::response::ResponseFormatter;
 use bytes::Bytes;
 use futures_util::StreamExt;
@@ -54,7 +53,7 @@ impl ResponseWriter {
 
     pub async fn try_into_text_file(
         self,
-        grab: Grab,
+        validated_grab: ValidatedGrab,
         validated_format: ValidatedFormat,
         pretty: bool,
         output_file: &Path,
@@ -64,7 +63,9 @@ impl ResponseWriter {
             output_file.display()
         );
 
-        let response_string = self.try_into_string(grab, validated_format, pretty).await?;
+        let response_string = self
+            .try_into_string(validated_grab, validated_format, pretty)
+            .await?;
         try_create_parent_dirs(output_file)?;
         fs::write(output_file, response_string).map_err(|e| {
             ResponseWriterError::TextWrite(output_file.display().to_string(), e.to_string())
@@ -79,14 +80,15 @@ impl ResponseWriter {
 
     pub async fn try_into_console(
         self,
-        grab: Grab,
+        validated_grab: ValidatedGrab,
         validated_format: ValidatedFormat,
         pretty: bool,
     ) -> Result<(), ResponseWriterError> {
         info!("Writing formatted response to console");
         println!(
             "{}",
-            self.try_into_string(grab, validated_format, pretty).await?
+            self.try_into_string(validated_grab, validated_format, pretty)
+                .await?
         );
         info!("Successfully wrote formatted response to console.");
         Ok(())
@@ -94,18 +96,21 @@ impl ResponseWriter {
 
     async fn try_into_string(
         self,
-        grab: Grab,
+        validated_grab: ValidatedGrab,
         validated_format: ValidatedFormat,
         pretty: bool,
     ) -> Result<String, ResponseWriterError> {
         info!("Transforming response into String.");
         let response_formatter = ResponseFormatter::try_from_response(self.response).await?;
 
-        let result = match grab.int_status_code() {
+        let result = match validated_grab.int_status_code() {
             true => response_formatter.status_code_string(),
-            false => {
-                handle_string_formatted_output(response_formatter, validated_format, grab, pretty)?
-            }
+            false => handle_string_formatted_output(
+                response_formatter,
+                validated_format,
+                validated_grab,
+                pretty,
+            )?,
         };
 
         Ok(result)
@@ -152,20 +157,24 @@ fn try_create_parent_dirs(path: &Path) -> Result<(), FilesystemError> {
 fn handle_string_formatted_output(
     response_formatter: ResponseFormatter,
     validated_format: ValidatedFormat,
-    grab: Grab,
+    validated_grab: ValidatedGrab,
     pretty: bool,
 ) -> Result<String, ResponseFormatterError> {
     match validated_format.raw_format() {
         RawFormat::Http => {
             info!("Writing response to HTTP string");
-            response_formatter.get_http_string(grab.status_code(), grab.headers(), grab.body())
+            response_formatter.get_http_string(
+                validated_grab.status_code(),
+                validated_grab.headers(),
+                validated_grab.body(),
+            )
         }
         RawFormat::Json => {
             info!("Writing response to JSON string.");
             response_formatter.get_json_string(
-                grab.status_code(),
-                grab.headers(),
-                grab.body(),
+                validated_grab.status_code(),
+                validated_grab.headers(),
+                validated_grab.body(),
                 pretty,
             )
         }

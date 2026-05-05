@@ -97,7 +97,7 @@ impl RawGrab {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct Grab {
+pub struct ValidatedGrab {
     status_code: bool,
     headers: bool,
     body: bool,
@@ -105,10 +105,10 @@ pub struct Grab {
 }
 
 // TODO - Might want a rename to ValidatedGrab here
-impl Grab {
+impl ValidatedGrab {
     // New off grab ensures we only ever get a validated grab struct
     // Validation occurs at RawGrab level (for response component combos) and below for interaction with formatting
-    pub fn new(
+    pub fn new_validated(
         grab: RawGrab,
         validated_format: ValidatedFormat,
     ) -> Result<Self, ArgsValidationError> {

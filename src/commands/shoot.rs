@@ -1,6 +1,6 @@
 use crate::client::Client;
 use crate::errors::RunError;
-use crate::inputs::{Grab, RawFormat};
+use crate::inputs::{RawFormat, ValidatedGrab};
 use crate::targets::Targets;
 use log::info;
 use std::path::Path;
@@ -13,7 +13,7 @@ use std::path::PathBuf;
 #[derive(Clone, Debug)]
 pub struct ShootCmd {
     target: String,
-    grab: Grab,
+    validated_grab: ValidatedGrab,
     validated_format: ValidatedFormat,
     pretty: bool,
     output_file: Option<PathBuf>,
@@ -22,14 +22,14 @@ pub struct ShootCmd {
 impl ShootCmd {
     pub fn new(
         target: String,
-        grab: Grab,
+        validated_grab: ValidatedGrab,
         validated_format: ValidatedFormat,
         pretty: bool,
         output_file: Option<PathBuf>,
     ) -> Result<Self, ArgsValidationError> {
         Ok(Self {
             target,
-            grab,
+            validated_grab,
             validated_format,
             pretty,
             output_file,
@@ -40,8 +40,8 @@ impl ShootCmd {
         &self.target
     }
 
-    pub fn grab(&self) -> Grab {
-        self.grab
+    pub fn validated_grab(&self) -> ValidatedGrab {
+        self.validated_grab
     }
 
     pub fn validated_format(&self) -> ValidatedFormat {
@@ -63,10 +63,10 @@ impl TryFrom<RawShootArgs> for ShootCmd {
         let (target, raw_grab, raw_format, pretty, output_file) = value.into_parts();
         let validated_format =
             ValidatedFormat::new_validated(raw_format, pretty, output_file.as_deref())?;
-        let grab = Grab::new(raw_grab, validated_format)?;
+        let validated_grab = ValidatedGrab::new_validated(raw_grab, validated_format)?;
         Ok(Self {
             target,
-            grab,
+            validated_grab,
             validated_format,
             pretty,
             output_file,
@@ -94,7 +94,7 @@ impl ShootCmd {
             RawFormat::Http | RawFormat::Json => {
                 handle_string_output(
                     response_writer,
-                    self.grab,
+                    self.validated_grab,
                     self.validated_format,
                     self.pretty,
                     self.output_file(),
@@ -126,7 +126,7 @@ async fn handle_binary_output(
 #[inline]
 async fn handle_string_output(
     response_writer: ResponseWriter,
-    grab: Grab,
+    validated_grab: ValidatedGrab,
     validated_format: ValidatedFormat,
     pretty: bool,
     output_file: Option<&Path>,
@@ -134,12 +134,12 @@ async fn handle_string_output(
     let result = match output_file {
         Some(output_file) => {
             response_writer
-                .try_into_text_file(grab, validated_format, pretty, output_file)
+                .try_into_text_file(validated_grab, validated_format, pretty, output_file)
                 .await
         }
         None => {
             response_writer
-                .try_into_console(grab, validated_format, pretty)
+                .try_into_console(validated_grab, validated_format, pretty)
                 .await
         }
     };
