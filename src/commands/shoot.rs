@@ -6,7 +6,7 @@ use log::info;
 use std::path::Path;
 
 use crate::errors::ArgsValidationError;
-use crate::inputs::{Format, RawShootArgs};
+use crate::inputs::{RawShootArgs, ValidatedFormat};
 use crate::response::ResponseWriter;
 use std::path::PathBuf;
 
@@ -14,7 +14,7 @@ use std::path::PathBuf;
 pub struct ShootCmd {
     target: String,
     grab: Grab,
-    format: Format,
+    validated_format: ValidatedFormat,
     pretty: bool,
     output_file: Option<PathBuf>,
 }
@@ -23,14 +23,14 @@ impl ShootCmd {
     pub fn new(
         target: String,
         grab: Grab,
-        format: Format,
+        validated_format: ValidatedFormat,
         pretty: bool,
         output_file: Option<PathBuf>,
     ) -> Result<Self, ArgsValidationError> {
         Ok(Self {
             target,
             grab,
-            format,
+            validated_format,
             pretty,
             output_file,
         })
@@ -44,8 +44,8 @@ impl ShootCmd {
         self.grab
     }
 
-    pub fn format(&self) -> RawFormat {
-        self.format.into()
+    pub fn validated_format(&self) -> ValidatedFormat {
+        self.validated_format
     }
 
     pub fn pretty(&self) -> bool {
@@ -61,12 +61,13 @@ impl TryFrom<RawShootArgs> for ShootCmd {
     type Error = ArgsValidationError;
     fn try_from(value: RawShootArgs) -> Result<Self, Self::Error> {
         let (target, raw_grab, raw_format, pretty, output_file) = value.into_parts();
-        let format = Format::new(raw_format, pretty, output_file.as_deref())?;
-        let grab = Grab::new(raw_grab, format)?;
+        let validated_format =
+            ValidatedFormat::new_validated(raw_format, pretty, output_file.as_deref())?;
+        let grab = Grab::new(raw_grab, validated_format)?;
         Ok(Self {
             target,
             grab,
-            format,
+            validated_format,
             pretty,
             output_file,
         })
@@ -88,13 +89,13 @@ impl ShootCmd {
         let response_writer = ResponseWriter::new(response);
 
         info!("Outputting response");
-        match self.format {
-            Format::Binary => handle_binary_output(response_writer, self.output_file()).await,
-            Format::Http | Format::Json => {
+        match self.validated_format().raw_format() {
+            RawFormat::Binary => handle_binary_output(response_writer, self.output_file()).await,
+            RawFormat::Http | RawFormat::Json => {
                 handle_string_output(
                     response_writer,
                     self.grab,
-                    self.format(),
+                    self.validated_format,
                     self.pretty,
                     self.output_file(),
                 )
@@ -126,17 +127,21 @@ async fn handle_binary_output(
 async fn handle_string_output(
     response_writer: ResponseWriter,
     grab: Grab,
-    format: RawFormat,
+    validated_format: ValidatedFormat,
     pretty: bool,
     output_file: Option<&Path>,
 ) -> Result<(), RunError> {
     let result = match output_file {
         Some(output_file) => {
             response_writer
-                .try_into_text_file(grab, format, pretty, output_file)
+                .try_into_text_file(grab, validated_format, pretty, output_file)
                 .await
         }
-        None => response_writer.try_into_console(grab, format, pretty).await,
+        None => {
+            response_writer
+                .try_into_console(grab, validated_format, pretty)
+                .await
+        }
     };
 
     Ok(result?)

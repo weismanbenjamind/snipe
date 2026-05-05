@@ -10,46 +10,30 @@ pub enum RawFormat {
     Binary,
 }
 
-impl From<Format> for RawFormat {
-    fn from(value: Format) -> Self {
-        match value {
-            Format::Http => Self::Http,
-            Format::Json => Self::Json,
-            Format::Binary => Self::Binary,
-        }
-    }
-}
-
 #[derive(Clone, Copy, Debug)]
-pub enum Format {
-    Http,
-    Json,
-    Binary,
+pub struct ValidatedFormat {
+    raw_format: RawFormat,
 }
 
-impl Format {
-    // Use this new method to create a validated Format enum from pretty
-    pub fn new(
+impl ValidatedFormat {
+    pub fn raw_format(&self) -> RawFormat {
+        self.raw_format
+    }
+
+    pub fn new_validated(
         raw_format: RawFormat,
         pretty: bool,
         output_file: Option<&Path>,
     ) -> Result<Self, ArgsValidationError> {
-        let format = Self::init_format(raw_format, pretty)?;
-        format.validate_output_file_for_binary(output_file)?;
-        Ok(format)
+        Self::init_from_pretty(raw_format, pretty)?.validate_output_file_for_binary(output_file)
     }
 
     #[inline]
-    fn init_format(raw_format: RawFormat, pretty: bool) -> Result<Self, ArgsValidationError> {
+    fn init_from_pretty(raw_format: RawFormat, pretty: bool) -> Result<Self, ArgsValidationError> {
         match pretty {
-            false => match raw_format {
-                RawFormat::Json => Ok(Self::Json),
-                RawFormat::Http => Ok(Self::Http),
-                RawFormat::Binary => Ok(Self::Binary),
-            },
+            false => Ok(Self { raw_format }),
             true => match raw_format {
-                RawFormat::Json => Ok(Self::Json),
-                RawFormat::Http => Err(ArgsValidationError::PrettyWithHTTP),
+                RawFormat::Json | RawFormat::Http => Ok(Self { raw_format }),
                 RawFormat::Binary => Err(ArgsValidationError::PrettyWithBinary),
             },
         }
@@ -57,14 +41,14 @@ impl Format {
 
     #[inline]
     fn validate_output_file_for_binary(
-        &self,
+        self,
         output_file: Option<&Path>,
-    ) -> Result<(), ArgsValidationError> {
+    ) -> Result<Self, ArgsValidationError> {
         match output_file {
-            Some(_) => Ok(()),
-            None => match self {
-                Self::Binary => Err(ArgsValidationError::NoOutputFileWithBinary),
-                Self::Http | Self::Json => Ok(()),
+            Some(_) => Ok(self),
+            None => match self.raw_format {
+                RawFormat::Http | RawFormat::Json => Ok(self),
+                RawFormat::Binary => Err(ArgsValidationError::NoOutputFileWithBinary),
             },
         }
     }

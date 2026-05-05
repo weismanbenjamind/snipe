@@ -1,5 +1,5 @@
 use crate::errors::ArgsValidationError;
-use crate::inputs::Format;
+use crate::inputs::{RawFormat, ValidatedFormat};
 use clap::Args;
 
 #[derive(Args, Clone, Copy, Debug)]
@@ -104,15 +104,19 @@ pub struct Grab {
     int_status_code: bool,
 }
 
+// TODO - Might want a rename to ValidatedGrab here
 impl Grab {
     // New off grab ensures we only ever get a validated grab struct
     // Validation occurs at RawGrab level (for response component combos) and below for interaction with formatting
-    pub fn new(grab: RawGrab, format: Format) -> Result<Self, ArgsValidationError> {
+    pub fn new(
+        grab: RawGrab,
+        validated_format: ValidatedFormat,
+    ) -> Result<Self, ArgsValidationError> {
         let grab = Self::init_from_raw_grab(grab);
-        match format {
-            Format::Http => Ok(grab),
-            Format::Json => Ok(grab),
-            Format::Binary => match grab.only_body() {
+        match validated_format.raw_format() {
+            RawFormat::Http => Ok(grab),
+            RawFormat::Json => Ok(grab),
+            RawFormat::Binary => match grab.only_body() {
                 true => Ok(grab),
                 false => Err(ArgsValidationError::NonBodyWithBinary),
             },
