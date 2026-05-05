@@ -4,12 +4,17 @@ All relevant updates will be listed in this document
 
 ## Unreleased
 
+### Refactored
+
+- Internal code to use `ValidatedFormat` notation
+
 ### Updated
 
 - `README` file
 
 ### Added
 
+- Ability to write responses to binary files
 - `CODEOWNERS` file
 - `LICENSE` file
 
