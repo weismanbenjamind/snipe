@@ -4,6 +4,8 @@ All relevant updates will be listed in this document
 
 ## Unreleased
 
+- Fixed `.pre-commit` hooks not failing for warnings
+
 ### Refactored
 
 - Internal code to use `ValidatedGrab` notation
