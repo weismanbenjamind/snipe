@@ -1,3 +1,3 @@
 #!/bin/zsh
 
-cargo clippy --release
+RUSTFLAGS="-D warnings" cargo clippy --release

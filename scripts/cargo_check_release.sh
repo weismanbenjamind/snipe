@@ -1,3 +1,3 @@
 #!/bin/zsh
 
-cargo check --release
+RUSTFLAGS="-D warnings" cargo check --release

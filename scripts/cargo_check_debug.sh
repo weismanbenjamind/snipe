@@ -1,3 +1,3 @@
 #!/bin/zsh
 
-cargo check
+RUSTFLAGS="-D warnings" cargo check
