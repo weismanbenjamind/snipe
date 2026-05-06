@@ -104,9 +104,7 @@ pub struct ValidatedGrab {
     int_status_code: bool,
 }
 
-// TODO - Might want a rename to ValidatedGrab here
 impl ValidatedGrab {
-    // New off grab ensures we only ever get a validated grab struct
     // Validation occurs at RawGrab level (for response component combos) and below for interaction with formatting
     pub fn new_validated(
         grab: RawGrab,
