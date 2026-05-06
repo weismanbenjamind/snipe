@@ -78,6 +78,8 @@ impl ShootCmd {
     pub async fn run(&self, targets: &Targets) -> Result<(), RunError> {
         info!("Starting request process.");
 
+        let some_nonsense: &str = "1";
+
         let target = targets
             .get_target(self.target())
             .ok_or_else(|| RunError::Failure(format!("Failed to find target {}", self.target)))?;
