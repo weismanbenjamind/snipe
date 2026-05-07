@@ -1,0 +1,127 @@
+name: Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      mac-os-m1-version:
+        type: choice
+        default: macos-26
+        options:
+          - macos-14
+          - macos-15
+          - macos-26
+        description: M-Series macOS version to build Mac artifacts on.
+
+      mac-os-m1-target-architecture:
+        type: string
+        default: aarch64-apple-darwin
+        description: Target architecture to build M1 Mac Binary for.
+
+      mac-os-intel-version:
+        type: choice
+        default: macos-26-intel
+        options:
+          - macos-15-intel
+          - macos-26-intel
+        description: Intel macOS version to build Mac artifacts on.
+
+      mac-os-intel-target-architecture:
+        type: string
+        default: x86_64-apple-darwin
+        description: Target architecture to build Intel Mac Binary for.
+
+      ubuntu-version:
+        type: choice
+        default: ubuntu-24.04
+        options:
+          - ubuntu-24.04
+          - ubuntu-latest
+        description: Ubuntu version to build Linux artifacts on.
+
+      ubuntu-linux-target-architecture:
+        type: string
+        default: x86_64-unknown-linux-gnu
+        description: Target architecture to build Ubuntu Linux binary for.
+
+      windows-version:
+        type: choice
+        default: windows-2025
+        options:
+          - windows-2025
+          - windows-latest
+        description: Windows version to build Windows artifacts on.
+
+      windows-target-architecture:
+        type: string
+        default: x86_64-pc-windows-msvc
+        description: Target architecture to build Windows binary for.
+
+      rust-version:
+        type: string
+        default: stable
+        description: Rust toolchain version used to build the binary
+
+jobs:
+  build:
+    name: Build - ${{ matrix.os }} - ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ${{ inputs.mac-os-m1-version }}
+            target: ${{ inputs.mac-os-m1-target-architecture }}
+            binary: snipe
+          - os: ${{ inputs.mac-os-intel-version }}
+            target: ${{ inputs.mac-os-intel-target-architecture }}
+            binary: snipe
+          - os: ${{ inputs.ubuntu-version }}
+            target: ${{ inputs.ubuntu-linux-target-architecture }}
+            binary: snipe
+          - os: ${{ inputs.windows-version }}
+            target: ${{ inputs.windows-target-architecture }}
+            binary: snipe.exe
+
+    steps:
+      - name: Checkout Code
+        id: checkout-code
+        uses: actions/checkout@v4
+
+        # Rust toolchain should come pre-installed on runners
+        # Need to also install build tools for target architecture
+      - name: Install Rust and Add Target
+        id: install-rust-add-target
+        run: |
+          rustup update ${{ inputs.rust-version }}
+          rustup target add ${{ matrix.target }}
+
+      # Use --target to tell rust to build for the specifc architecture
+      # We installed the build tools for this architecture in the install-rust-add-target step
+      - name: Build Debug Binary
+        id: build-debug
+        run: cargo build --target ${{ matrix.target }}
+
+      # Use --target to tell rust to build for the specifc architecture
+      # We installed the build tools for this architecture in the install-rust-add-target step
+      - name: Build Release Binary
+        id: build-release
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Set Artifact Prefix
+        id: set-artifact-prefix
+        shell: bash
+        run: |
+          artifact_prefix=$(./target/${{ matrix.target }}/release/${{ matrix.binary }} --version | tr '[:upper:] ' '[:lower:]_')
+          echo Artifact prefix: $artifact_prefix
+          echo "artifact_prefix=$artifact_prefix" >> $GITHUB_OUTPUT
+
+      - name: Upload Debug Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.set-artifact-prefix.outputs.artifact_prefix }}-${{ matrix.target }}-debug
+          path: target/${{ matrix.target }}/debug/${{ matrix.binary }}
+
+      - name: Upload Release Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.set-artifact-prefix.outputs.artifact_prefix }}-${{ matrix.target }}-release
+          path: target/${{ matrix.target }}/release/${{ matrix.binary }}
