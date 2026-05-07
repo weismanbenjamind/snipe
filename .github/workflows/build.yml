@@ -36,7 +36,7 @@ on:
         options:
           - ubuntu-24.04
           - ubuntu-latest
-        description: Ubuntu version to build Linux artifacts on.
+        description: Ubuntu version to build Ubuntu Linux artifacts on.
 
       ubuntu-linux-target-architecture:
         type: string
