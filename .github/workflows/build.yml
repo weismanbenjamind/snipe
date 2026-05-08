@@ -14,6 +14,7 @@ on:
           - macos-14
           - macos-15
           - macos-26
+          - macos-latest
         description: M-Series macOS version to build Mac artifacts on.
 
       mac-os-m1-target-architecture:
@@ -39,6 +40,7 @@ on:
         default: ubuntu-24.04
         options:
           - ubuntu-24.04
+          - ubuntu-22.04
           - ubuntu-latest
         description: Ubuntu version to build Ubuntu Linux artifacts on.
 
@@ -52,6 +54,8 @@ on:
         default: windows-2025
         options:
           - windows-2025
+          - windows-2025-vs2026
+          - windows-2022
           - windows-latest
         description: Windows version to build Windows artifacts on.
 
