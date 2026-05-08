@@ -2,9 +2,13 @@
 
 All relevant updates will be listed in this document
 
+## Unreleased
+
 ## 1.1.0
 
-- Fixed `.pre-commit` hooks not failing for warnings
+### Fixed 
+
+- `.pre-commit` hooks not failing for warnings
 
 ### Refactored
 

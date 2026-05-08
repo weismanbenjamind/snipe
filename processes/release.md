@@ -18,5 +18,6 @@
 - [ ] Merge this `releases/v<release-version-number>` branch into `releases/latest`
 - [ ] Checkout the `master` branch
 - [ ]  Bump version in `cargo.toml` to `<version-number-bumped-by-minor>-dev.0`
+- [ ] Run `cargo update --package snipe` to ensure the `Cargo.lock` file gets update with the new version number
 - [ ] Add a new `## Unreleased` section in the `CHANGELOG.md` file
 - [ ] Commit these changes into `master`
