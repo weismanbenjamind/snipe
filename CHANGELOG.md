@@ -17,6 +17,7 @@ All relevant updates will be listed in this document
 
 ### Added
 
+- Better release pipeline
 - Ability to write responses to binary files
 - `CODEOWNERS` file
 - `LICENSE` file
