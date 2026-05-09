@@ -1,10 +1,6 @@
 name: Build
 
 on:
-  release:
-    types:
-      - created
-
   workflow_dispatch:
     inputs:
       mac-os-m1-version:
@@ -73,22 +69,20 @@ jobs:
   build:
     name: Build - ${{ matrix.os }} - ${{ matrix.target }}
     runs-on: ${{ matrix.os }}
-    permissions:
-      contents: write
     strategy:
       matrix:
         include:
-          - os: ${{ inputs.mac-os-m1-version || 'macos-26' }}
-            target: ${{ inputs.mac-os-m1-target-architecture || 'aarch64-apple-darwin' }}
+          - os: ${{ inputs.mac-os-m1-version }}
+            target: ${{ inputs.mac-os-m1-target-architecture }}
             binary: snipe
-          - os: ${{ inputs.mac-os-intel-version || 'macos-26-intel' }}
-            target: ${{ inputs.mac-os-intel-target-architecture || 'x86_64-apple-darwin' }}
+          - os: ${{ inputs.mac-os-intel-version }}
+            target: ${{ inputs.mac-os-intel-target-architecture }}
             binary: snipe
-          - os: ${{ inputs.ubuntu-version || 'ubuntu-24.04' }}
-            target: ${{ inputs.ubuntu-linux-target-architecture || 'x86_64-unknown-linux-gnu' }}
+          - os: ${{ inputs.ubuntu-version }}
+            target: ${{ inputs.ubuntu-linux-target-architecture }}
             binary: snipe
-          - os: ${{ inputs.windows-version || 'windows-2025' }}
-            target: ${{ inputs.windows-target-architecture || 'x86_64-pc-windows-msvc' }}
+          - os: ${{ inputs.windows-version }}
+            target: ${{ inputs.windows-target-architecture }}
             binary: snipe.exe
 
     steps:
@@ -101,7 +95,7 @@ jobs:
       - name: Install Rust and Add Target
         id: install-rust-add-target
         run: |
-          rustup update ${{ inputs.rust-version || 'stable' }}
+          rustup update ${{ inputs.rust-version }}
           rustup target add ${{ matrix.target }}
 
       # Use --target to tell rust to build for the specifc architecture
@@ -137,26 +131,3 @@ jobs:
         with:
           name: ${{ steps.set-artifact-prefix.outputs.artifact_prefix }}-${{ matrix.target }}-release
           path: target/${{ matrix.target }}/release/${{ matrix.binary }}
-
-      - name: Rename Debug Artifact for Release
-        id: rename-debug-artifact-for-release
-        if: github.event_name == 'release'
-        shell: bash
-        run: |
-          debug_binary=target/${{ matrix.target }}/debug/debug-${{ matrix.target }}-${{ matrix.binary }}
-          release_binary=target/${{ matrix.target }}/release/release-${{ matrix.target }}-${{ matrix.binary }}
-
-          cp target/${{ matrix.target }}/debug/${{ matrix.binary }} $debug_binary
-          cp target/${{ matrix.target }}/release/${{ matrix.binary }} $release_binary
-
-          echo "debug_binary=$debug_binary" >> $GITHUB_OUTPUT
-          echo "release_binary=$release_binary" >> $GITHUB_OUTPUT
-
-      - name: Add Artifacts to Release
-        id: add-artifacts-to-release
-        if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            ${{ steps.rename-debug-artifact-for-release.outputs.debug_binary }}
-            ${{ steps.rename-debug-artifact-for-release.outputs.release_binary }}
