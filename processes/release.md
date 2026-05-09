@@ -11,7 +11,6 @@
 - [ ] Create new branch at `releases/v<release-version-number>`.
 - [ ] Create tag this commit at `releases/v<release-version-number>` titled `v<release-version-number>`.
 - [ ] Create a new GitHub release titled `Version <release-version-number>` containing the contents of the `CHANGELOG.md` file for the target release.
-- [ ] The above command should cause the `build` workflow on the release tag and attach the build artifacts to the release. Ensure this behavior occurs properly.
 - [ ] Merge this `releases/v<release-version-number>` branch into `releases/latest`.
 - [ ] Checkout the `master` branch.
 - [ ]  Bump version in `cargo.toml` to `<version-number-bumped-by-minor>-dev.0`.
