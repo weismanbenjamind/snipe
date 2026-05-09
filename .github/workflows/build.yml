@@ -143,9 +143,14 @@ jobs:
         if: github.event_name == 'release'
         shell: bash
         run: |
-          debug_binary=target/${{ matrix.target }}/debug/debug-${{ matrix.binary }}
+          debug_binary=target/${{ matrix.target }}/debug/debug-${{ matrix.target }}-${{ matrix.binary }}
+          release_binary=target/${{ matrix.target }}/release/release-${{ matrix.target }}-${{ matrix.binary }}
+
           cp target/${{ matrix.target }}/debug/${{ matrix.binary }} $debug_binary
+          cp target/${{ matrix.target }}/release/${{ matrix.binary }} $release_binary
+
           echo "debug_binary=$debug_binary" >> $GITHUB_OUTPUT
+          echo "release_binary=$release_binary" >> $GITHUB_OUTPUT
 
       - name: Add Artifacts to Release
         id: add-artifacts-to-release
@@ -154,4 +159,4 @@ jobs:
         with:
           files: |
             ${{ steps.rename-debug-artifact-for-release.outputs.debug_binary }}
-            target/${{ matrix.target }}/release/${{ matrix.binary }}
+            ${{ steps.rename-debug-artifact-for-release.outputs.release_binary }}
