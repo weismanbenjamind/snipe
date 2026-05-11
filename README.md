@@ -151,10 +151,17 @@ snipe shoot --target request-id-from-cfg --full --format http --pretty # ERROR! 
 snipe shoot --target request-id-from-cfg --full --pretty # ERROR! => By default snipe uses --format http which is invalid with --pretty
 ```
 
-Lastly, `snipe` can output a response to a file using the `--output` argument. An example of writing a full response in pretty printed json to a file is shown below:
+`snipe` can output a response to a file using the `--outputfile` argument. An example of writing a full response in pretty printed json to a file is shown below:
 
 ```sh
 snipe shoot --target request-id-from-cfg --full --format json --pretty --output-file full-response.json
+```
+
+If the response body is binary, `snipe` can handle this situation using the `--format binary --output_file <OUTPUT_FILE>` args. The `--format binary` arg must be used with the `--output_file` flag and is only valid with the `--body` flag. An example for grabbing a zip file from a response body is shown below.
+
+```sh
+# Note --body is passed by default
+snipe shoot --target request-id-from-cfg --format binary --output-file some_file.zip
 ```
 
 ### Changing the Path to the Configuration File
