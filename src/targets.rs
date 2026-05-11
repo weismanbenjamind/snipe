@@ -1,9 +1,9 @@
 use crate::errors::TargetsError;
 use crate::var_replacement::resolve_vars;
-use log::info;
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use std::fs::read_to_string;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::{collections::HashMap, ffi::OsStr};
 use toml::Value;
 
@@ -96,10 +96,12 @@ pub struct Target {
     headers: Option<HashMap<String, String>>,
     auth: Option<Auth>,
     payload: Option<HashMap<String, Value>>,
+    beta_payload: Option<Payload>,
 }
 
 impl Target {
     #[allow(dead_code)]
+    #[allow(clippy::too_many_arguments)] // TODO - Remove this when swap out payload for beta payload
     pub fn new(
         name: &str,
         url: &str,
@@ -108,6 +110,7 @@ impl Target {
         headers: Option<HashMap<String, String>>,
         auth: Option<Auth>,
         payload: Option<HashMap<String, Value>>,
+        beta_payload: Option<Payload>,
     ) -> Self {
         Self {
             name: name.to_string(),
@@ -117,6 +120,7 @@ impl Target {
             headers,
             auth,
             payload,
+            beta_payload,
         }
     }
 
@@ -146,6 +150,10 @@ impl Target {
 
     pub fn payload(&self) -> &Option<HashMap<String, Value>> {
         &self.payload
+    }
+
+    pub fn beta_payload(&self) -> Option<&Payload> {
+        self.beta_payload.as_ref()
     }
 }
 
@@ -281,5 +289,43 @@ pub struct Vars {
 impl Vars {
     pub fn get(&self, value: &str) -> Option<&str> {
         self.vars.get(value).map(|val| val.as_str())
+    }
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct RawPayload {
+    file: Option<PathBuf>,
+
+    #[serde(flatten)]
+    params: Option<HashMap<String, Value>>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(try_from = "RawPayload")]
+pub enum Payload {
+    File(PathBuf),
+    Params(HashMap<String, Value>),
+}
+
+impl TryFrom<RawPayload> for Payload {
+    type Error = TargetsError;
+    fn try_from(value: RawPayload) -> Result<Self, Self::Error> {
+        debug!(
+            "Attempting to parse RawPayload with file {:?} and params {:?}",
+            value.file, value.params
+        );
+        match (value.file, value.params) {
+            (None, None) => Err(TargetsError::Dersialization(
+                "Must specify 'file' or manually specify request params in all request payloads bodies".to_string(),
+            )),
+            (Some(file), Some(params)) => match params.is_empty() {
+                true => Ok(Self::File(file)),
+                false => Err(TargetsError::Dersialization(
+                    "Can only specify 'file' or manually specify params in all request payloads. Not both".to_string(),
+                )),
+            }
+            (Some(file), None) => Ok(Self::File(file)),
+            (None, Some(params)) => Ok(Self::Params(params)),
+        }
     }
 }
