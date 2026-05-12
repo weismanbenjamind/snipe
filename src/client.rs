@@ -3,7 +3,7 @@ use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use reqwest::{RequestBuilder, Response};
 
 use crate::errors::ClientError;
-use crate::targets::{Auth, Method, Target};
+use crate::targets::{Auth, Method, Payload, Target};
 use log::{debug, info, warn};
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -53,9 +53,9 @@ impl Client {
         }
 
         if let Some(payload) = target.payload() {
-            info!("Adding payload.");
-            request_builder = request_builder.json(payload);
-            info!("Payload added.");
+            info!("Adding payload");
+            request_builder = build_payload(request_builder, payload)?;
+            info!("Payload added");
         }
 
         info!("Request built");
@@ -104,6 +104,23 @@ fn build_auth(request_builder: RequestBuilder, auth: &Auth) -> RequestBuilder {
         Auth::Bearer(bearer_auth) => request_builder.bearer_auth(bearer_auth.token()),
         Auth::Basic(basic_auth) => {
             request_builder.basic_auth(basic_auth.username(), Some(basic_auth.password()))
+        }
+    }
+}
+
+fn build_payload(
+    request_builder: RequestBuilder,
+    payload: &Payload,
+) -> Result<RequestBuilder, ClientError> {
+    match payload {
+        Payload::Params(json) => Ok(request_builder.json(json)),
+        Payload::File(path) => {
+            debug!("Reading payload at path {} into bytes", path.display());
+            let bytes = std::fs::read(path).map_err(|e| ClientError::BodyToBytes {
+                path: path.into(),
+                source: e,
+            })?;
+            Ok(request_builder.body(bytes))
         }
     }
 }

@@ -1,4 +1,4 @@
-use std::error::Error as StdErr;
+use std::{error::Error as StdErr, path::PathBuf};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -45,8 +45,18 @@ pub enum VarReplaceError {
 
 #[derive(Debug, Error)]
 pub enum TargetsError {
-    #[error("Failed to deserialize targets file. Error: {0}.")]
+    #[error("Failed to deserialize targets file. Error: {0}")]
     Dersialization(String),
+
+    #[error(
+        "Must specify 'file' or manually specify request params in all request payloads bodies."
+    )]
+    MissingPayloadFields,
+
+    #[error(
+        "Can only specify 'file' or manually specify params in all request payloads. Not both."
+    )]
+    OverspecifiedPayload,
 }
 
 impl TargetsError {
@@ -68,6 +78,14 @@ pub enum ClientError {
 
     #[error("{0}")]
     ResponseBuild(String),
+
+    #[error("Failed to request body as {path} into bytes. Error {source}")]
+    BodyToBytes {
+        path: PathBuf,
+
+        #[source]
+        source: std::io::Error,
+    },
 }
 
 #[derive(Debug, Error)]

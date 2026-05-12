@@ -95,13 +95,11 @@ pub struct Target {
     timeout_seconds: Option<u64>,
     headers: Option<HashMap<String, String>>,
     auth: Option<Auth>,
-    payload: Option<HashMap<String, Value>>,
-    beta_payload: Option<Payload>,
+    payload: Option<Payload>,
 }
 
 impl Target {
     #[allow(dead_code)]
-    #[allow(clippy::too_many_arguments)] // TODO - Remove this when swap out payload for beta payload
     pub fn new(
         name: &str,
         url: &str,
@@ -109,8 +107,7 @@ impl Target {
         timeout_seconds: Option<u64>,
         headers: Option<HashMap<String, String>>,
         auth: Option<Auth>,
-        payload: Option<HashMap<String, Value>>,
-        beta_payload: Option<Payload>,
+        payload: Option<Payload>,
     ) -> Self {
         Self {
             name: name.to_string(),
@@ -120,7 +117,6 @@ impl Target {
             headers,
             auth,
             payload,
-            beta_payload,
         }
     }
 
@@ -148,12 +144,8 @@ impl Target {
         &self.auth
     }
 
-    pub fn payload(&self) -> &Option<HashMap<String, Value>> {
-        &self.payload
-    }
-
-    pub fn beta_payload(&self) -> Option<&Payload> {
-        self.beta_payload.as_ref()
+    pub fn payload(&self) -> Option<&Payload> {
+        self.payload.as_ref()
     }
 }
 
@@ -315,15 +307,11 @@ impl TryFrom<RawPayload> for Payload {
             value.file, value.params
         );
         match (value.file, value.params) {
-            (None, None) => Err(TargetsError::Dersialization(
-                "Must specify 'file' or manually specify request params in all request payloads bodies".to_string(),
-            )),
+            (None, None) => Err(TargetsError::MissingPayloadFields),
             (Some(file), Some(params)) => match params.is_empty() {
                 true => Ok(Self::File(file)),
-                false => Err(TargetsError::Dersialization(
-                    "Can only specify 'file' or manually specify params in all request payloads. Not both".to_string(),
-                )),
-            }
+                false => Err(TargetsError::OverspecifiedPayload),
+            },
             (Some(file), None) => Ok(Self::File(file)),
             (None, Some(params)) => Ok(Self::Params(params)),
         }
