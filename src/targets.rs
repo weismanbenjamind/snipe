@@ -36,7 +36,7 @@ impl Targets {
         let resolved_toml = resolve_vars(toml_str, maybe_vars.as_ref(), None, None)
             .map_err(TargetsError::deserialization_from_err)?;
         info!("Variables replaced.");
-        toml::from_str(&resolved_toml).map_err(TargetsError::deserialization_from_err)
+        Ok(toml::from_str::<Self>(&resolved_toml)?)
     }
 
     pub fn get_target(&self, target: &str) -> Option<&Target> {
@@ -313,7 +313,10 @@ impl TryFrom<RawPayload> for Payload {
                 false => Err(TargetsError::OverspecifiedPayload),
             },
             (Some(file), None) => Ok(Self::File(file)),
-            (None, Some(params)) => Ok(Self::Params(params)),
+            (None, Some(params)) => match params.is_empty() {
+                true => Err(TargetsError::MissingPayloadFields),
+                false => Ok(Self::Params(params)),
+            },
         }
     }
 }

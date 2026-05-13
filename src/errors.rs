@@ -48,20 +48,22 @@ pub enum TargetsError {
     #[error("Failed to deserialize targets file. Error: {0}")]
     Dersialization(String),
 
-    #[error(
-        "Must specify 'file' or manually specify request params in all request payloads bodies."
-    )]
+    #[error("Must specify 'file' or manually specify request params in request payload body.")]
     MissingPayloadFields,
 
-    #[error(
-        "Can only specify 'file' or manually specify params in all request payloads. Not both."
-    )]
+    #[error("Can only specify 'file' or manually specify params in request payload. Not both.")]
     OverspecifiedPayload,
 }
 
 impl TargetsError {
     pub fn deserialization_from_err<T: StdErr>(err: T) -> Self {
         Self::Dersialization(err.to_string())
+    }
+}
+
+impl From<toml::de::Error> for TargetsError {
+    fn from(value: toml::de::Error) -> Self {
+        Self::Dersialization(value.to_string().trim_end_matches("\n").to_string())
     }
 }
 
