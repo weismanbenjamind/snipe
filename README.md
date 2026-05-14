@@ -168,7 +168,7 @@ snipe shoot --target request-id-from-cfg --format binary --output-file some_file
 
 `snipe` allows for appending a file as a response body. For example, using the `create-gist` target from the quickstart, the body could be stored in a `json` file that the snipe configuration file could be updated to look for. For example the `json` file could look like:
 
-```json
+```jsonc
 // create-gist.json
 {
   "description": "Test gist",
