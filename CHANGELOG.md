@@ -2,7 +2,11 @@
 
 All relevant updates will be listed in this document
 
-## Unreleased
+## 1.2.0
+
+### Added
+
+- Ability to upload files as response body
 
 ## Version 1.1.2
 
