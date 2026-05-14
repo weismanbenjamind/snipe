@@ -164,6 +164,64 @@ If the response body is binary, `snipe` can handle this situation using the `--f
 snipe shoot --target request-id-from-cfg --format binary --output-file some_file.zip
 ```
 
+### Uploading a File as the Response Body
+
+`snipe` allows for appending a file as a response body. For example, using the `create-gist` target from the quickstart, the body could be stored in a `json` file that the snipe configuration file could be updated to look for. For example the `json` file could look like:
+
+```json
+// create-gist.json
+{
+  "description": "Test gist",
+  "public": false,
+  "files": {
+    "test.txt": {
+      "content": "Testing Gist"
+    }
+  }
+}
+```
+
+Then the snipe configuration file could be pointed to this json (see the `[targets.create-gist.payload]` section):
+
+```toml
+[vars]  # Reusable variables
+github_base_url = "https://api.github.com"
+
+[targets.create-gist]  # Create an API request with id 'create-gist'
+name = "Create Gist"
+method = "POST"
+url = "${VARS.github_base_url}/gists"  # Reuse the variable github_base_url from [vars]
+timeout_seconds = 10  # Timeout of 10 seconds on the request
+
+[targets.create-gist.headers]  # Headers for 'create-gist' request
+User-Agent = "snipe"
+
+[targets.create-gist.auth]  # Auth for 'create-gist' request
+scheme = "bearer"
+token = "${ENV.GITHUB_PAT}"  # Use the value stored at the GITHUB_PAT env var for the API token
+
+[targets.create-gist.payload]  # Payload for 'create-gist` request
+file = "create-gist.json"  # Point to the create-gist file which will be added as the response body
+```
+
+Now the `create-gist.json` file will be used for the response body. Note - the files are uploaded as bytes allowing for any kind of file to be appened to the HTTP request not just JSON or text data.
+
+When configuring the response body, either a file can be used (seen above) or parameters can be specified in the `snipe` configuration file (like in the `Quickstart`) _but not both at the same time._ For example, the below configuration will produce an error:
+
+```toml
+#...Snipe configurations above omitted...
+
+[targets.create-gist.payload]  # Payload for 'create-gist` request
+
+# INVALID - CANNOT POINT TO A FILE AND CONFIGURE PARAMS IN THE TOML AT THE SAME TIME
+file = "create-gist.json"  # Point to the create-gist file which will be added as the response body
+
+# INVALID - CANNOT CONFIGURE PARAMS IN THE TOML AND POINT TO A FILE AT THE SAME TIME
+description = "Test gist"
+public = false
+files = {"test.txt" = {content = "Testing Gist"}}
+```
+
 ### Changing the Path to the Configuration File
 
 Use the the `--config` (`-c`) argument to change the path of the configuration file. As stated above by default `snipe` will look for a `.snipe_targets.toml` file in your present working directory. An example of using a different config looks something like the following:
