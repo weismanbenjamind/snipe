@@ -2,6 +2,8 @@
 
 All relevant updates will be listed in this document
 
+## Unreleased
+
 ## 1.2.0
 
 ### Added
