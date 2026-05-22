@@ -2,7 +2,9 @@
 
 All relevant updates will be listed in this document
 
-## Unreleased
+## 2.0.0
+
+- Slight tweaks to CLI ergonomics
 
 ## 1.2.0
 
