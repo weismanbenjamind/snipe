@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 #[derive(Args, Debug, Clone)]
 #[command(about = "Make a specific API request")]
 pub struct RawShootArgs {
-    #[arg(short, long, help = "Target HTTP request to send")]
+    #[arg(help = "Target HTTP request to send")]
     target: String,
 
     #[command(flatten)]

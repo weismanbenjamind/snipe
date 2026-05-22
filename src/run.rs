@@ -27,7 +27,7 @@ pub async fn run_cli(snipe_cli_args: SnipeCLIArgs) -> Result<(), RunError> {
     info!("Targets successfully created.");
 
     match snipe_cli_args.command() {
-        Command::ListTargets => run_list_targets_cmd(&targets),
+        Command::List => run_list_targets_cmd(&targets),
         Command::Shoot(cmd) => cmd.run(&targets).await,
     }
 }

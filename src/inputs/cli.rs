@@ -100,13 +100,13 @@ impl TryFrom<RawSnipeCLIArgs> for SnipeCLIArgs {
 #[derive(Clone, Debug, Subcommand)]
 pub enum RawCommand {
     /// List all potential API requests to make
-    ListTargets,
+    List,
     Shoot(RawShootArgs),
 }
 
 #[derive(Clone, Debug)]
 pub enum Command {
-    ListTargets,
+    List,
     Shoot(ShootCmd),
 }
 
@@ -114,7 +114,7 @@ impl TryFrom<RawCommand> for Command {
     type Error = ArgsValidationError;
     fn try_from(value: RawCommand) -> Result<Self, Self::Error> {
         match value {
-            RawCommand::ListTargets => Ok(Self::ListTargets),
+            RawCommand::List => Ok(Self::List),
             RawCommand::Shoot(raw_shoot_args) => {
                 Ok(Self::Shoot(ShootCmd::try_from(raw_shoot_args)?))
             }
