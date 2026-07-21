@@ -26,7 +26,11 @@ token = "${ENV.GITHUB_PAT}"  # Use the value stored at the GITHUB_PAT env var fo
 [targets.create-gist.payload]  # Payload for 'create-gist` request
 description = "Test gist"
 public = false
-files = {"test.txt" = {content = "Testing Gist"}}
+files = {
+    "test.txt" = {
+        content = "Testing Gist"
+    }
+}
 ```
 
 Once the configuration file is created in your present working directory the following command will show the potential HTTP requests to make:
@@ -221,7 +225,11 @@ file = "create-gist.json"  # Point to the create-gist file which will be added a
 # INVALID - CANNOT CONFIGURE PARAMS IN THE TOML AND POINT TO A FILE AT THE SAME TIME
 description = "Test gist"
 public = false
-files = {"test.txt" = {content = "Testing Gist"}}
+files = {
+    "test.txt" = {
+        content = "Testing Gist"
+    }
+}
 ```
 
 ### Changing the Path to the Configuration File
