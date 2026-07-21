@@ -33,13 +33,13 @@ Once the configuration file is created in your present working directory the fol
 
 ```sh
 # Outputs: create-gist
-snipe list-targets
+snipe list
 ```
 
 To make the `create-gist` request run:
 ```sh
 # Outputs the response body
-snipe shoot --target create-gist
+snipe shoot create-gist
 ```
 
 ## Example Usage
@@ -48,7 +48,7 @@ Below are some more detailed examples of `snipe` usage. Note - help for these se
 
 ```sh
 snipe --help  # Help for snipe
-snipe list-targets --help  # Help for the `list-targets` command
+snipe list --help  # Help for the `list` command
 snipe shoot --help  # Help for `shoot` command - Note this is the command used for actually making HTTP requests
 ```
 
@@ -62,29 +62,30 @@ By default snipe will display the response body to `stdout`. However, flags can 
 
 ```sh
 # Valid args
-snipe shoot --target request-id-from-cfg --status-code  # Only status code (e.g. 200 OK)
-snipe shoot --target request-id-from-cfg --headers  # Only headers
-snipe shoot --target request-id-from-cfg --body  # Only body (default)
-snipe shoot --target request-id-from-cfg --int-status-code  # Status code integer. (e.g just 200)
-snipe shoot --target request-id-from-cfg --full  # Status code (e.g. 200 OK), headers, body
-snipe shoot --target request-id-from-cfg --status-code --headers  # Status code (e.g. 200 OK) and headers
-snipe shoot --target request-id-from-cfg --status-code --body  # Status code (e.g. 200 OK) and body
-snipe shoot --target request-id-from-cfg --headers --body  # Headers and body
+snipe shoot request-id-from-cfg --status-code  # Only status code (e.g. 200 OK)
+snipe shoot request-id-from-cfg --headers  # Only headers
+snipe shoot request-id-from-cfg --body  # Only body (default)
+snipe shoot request-id-from-cfg --int-status-code  # Status code integer. (e.g just 200)
+snipe shoot request-id-from-cfg --full  # Status code (e.g. 200 OK), headers, body
+snipe shoot request-id-from-cfg --status-code --headers  # Status code (e.g. 200 OK) and headers
+snipe shoot request-id-from-cfg --status-code --body  # Status code (e.g. 200 OK) and body
+snipe shoot request-id-from-cfg --headers --body  # Headers and body
 
 # Invalid args
-snipe shoot --target request-id-from-cfg --status-code --full  # ERROR! => --full cannot be passed with any other flags
-snipe shoot --target request-id-from-cfg --status-code --int-status-code  # ERROR! => --int-status-code cannot be passed with any other flags
+snipe shoot request-id-from-cfg --status-code --full  # ERROR! => --full cannot be passed with any other flags
+snipe shoot request-id-from-cfg --status-code --int-status-code  # ERROR! => --int-status-code cannot be passed with any other flags
 ```
 
 If no formatting args are passed after the desired target, the response body is grabbed. For example the following will return only the response body:
 
 ```sh
-snipe shoot --target request-id-from-cfg
+# Returns only response body
+snipe shoot request-id-from-cfg
 ```
 
 #### Tweaking response format
 
-The `--format` argument allows for changing response output format. Currently there are two options `http` (default) and `json`. The `http` return the output as an `http` string in the format:
+The `--format` argument allows for changing response output format. Currently there are three options `http` (default), `json`, and binary. The `http` return the output as an `http` string in the format:
 
 ```sh
 status_code
@@ -93,7 +94,7 @@ headers
 body
 ```
 
-Combos will follow a similar format. For example `snipe shoot --target request-id-from-cfg --status-code --body` will return:
+Combos will follow a similar format. For example `snipe shoot request-id-from-cfg --status-code --body` will return:
 
 ```sh
 status_code
@@ -101,7 +102,7 @@ status_code
 body
 ```
 
-While the combo `snipe shoot --target request-id-from-cfg --status-code --headers` will return:
+While the combo `snipe shoot request-id-from-cfg --status-code --headers` will return:
 
 ```sh
 status_code
@@ -120,7 +121,7 @@ The `json` format will attempt to parse the response into a json string. The out
 }
 ```
 
-Similarly - combos can be used. For example `snipe shoot --target request-id-from-cfg --status-code --body --format json` will return:
+Similarly - combos can be used. For example `snipe shoot request-id-from-cfg --status-code --body --format json` will return:
 
 ```json
 {
@@ -129,7 +130,7 @@ Similarly - combos can be used. For example `snipe shoot --target request-id-fro
 }
 ```
 
-While the combo `snipe shoot --target request-id-from-cfg --status-code --headers --format json` will return:
+While the combo `snipe shoot request-id-from-cfg --status-code --headers --format json` will return:
 
 ```json
 {
@@ -140,28 +141,29 @@ While the combo `snipe shoot --target request-id-from-cfg --status-code --header
 
 ***Note - if the the response cannot be parsed into a json string snipe will emit an error.***
 
-Parsing to json also has a `--pretty` flag which can be used to make the output more readable. `--pretty` is not valid with `--format http` and if this combination is passed snipe will emit an error. An examples of using `--pretty` are shown below:
+Parsing to json also has a `--pretty` flag which can be used to make the output more readable. `--pretty` is not valid with `--format http` or `--format binary` and if one of these combinations is passed snipe will emit an error. An examples of using `--pretty` are shown below:
 
 ```sh
 # Valid args
-snipe shoot --target request-id-from-cfg --full --format json --pretty
+snipe shoot request-id-from-cfg --full --format json --pretty
 
 # Invalid args
-snipe shoot --target request-id-from-cfg --full --format http --pretty # ERROR! => Can't pass --format http with --pretty
-snipe shoot --target request-id-from-cfg --full --pretty # ERROR! => By default snipe uses --format http which is invalid with --pretty
+snipe shoot request-id-from-cfg --full --format http --pretty # ERROR! => Can't pass --format http with --pretty
+snipe shoot request-id-from-cfg --format binary --pretty # ERROR! => Can't pass --format binary with --pretty
+snipe shoot request-id-from-cfg --full --pretty # ERROR! => By default snipe uses --format http which is invalid with --pretty
 ```
 
-`snipe` can output a response to a file using the `--outputfile` argument. An example of writing a full response in pretty printed json to a file is shown below:
+`snipe` can output a response to a file using the `--output-file` argument. An example of writing a full response in pretty printed json to a file is shown below:
 
 ```sh
-snipe shoot --target request-id-from-cfg --full --format json --pretty --output-file full-response.json
+snipe shoot request-id-from-cfg --full --format json --pretty --output-file full-response.json
 ```
 
-If the response body is binary, `snipe` can handle this situation using the `--format binary --output_file <OUTPUT_FILE>` args. The `--format binary` arg must be used with the `--output_file` flag and is only valid with the `--body` flag. An example for grabbing a zip file from a response body is shown below.
+If the response body is binary, `snipe` can handle this situation using the `--format binary --output_file <OUTPUT_FILE>` args. The `--format binary` arg must be used with the `--output-file` flag and is only valid with the `--body` flag. An example for grabbing a zip file from a response body is shown below.
 
 ```sh
 # Note --body is passed by default
-snipe shoot --target request-id-from-cfg --format binary --output-file some_file.zip
+snipe shoot request-id-from-cfg --format binary --output-file some_file.zip
 ```
 
 ### Uploading a File as the Response Body
@@ -227,15 +229,15 @@ files = {"test.txt" = {content = "Testing Gist"}}
 Use the the `--config` (`-c`) argument to change the path of the configuration file. As stated above by default `snipe` will look for a `.snipe_targets.toml` file in your present working directory. An example of using a different config looks something like the following:
 
 ```sh
-snipe --config ~/.config/snipe/snipe_targets.toml shoot --target request-id-from-cfg
+snipe --config ~/.config/snipe/snipe_targets.toml shoot request-id-from-cfg
 ```
 
 If the config cannot be found, snipe will fall back to attempting to read the `SNIPE_TARGETS` environment variable which houses the path to the config. The environment variable to look for can be tweaked with the `--cfg-env` (`-e`) arg. Searching for the environment variable can be skipped entirely by passing `skip` for this argument. For example:
 
 ```sh
-snipe --cfg-env SNIPE_CONFIG shoot --target request-id-from-cfg  # If can't find the config at ./.snipe_targets.toml use the value at the environment variable SNIPE_CONFIG
-snipe --config ~/.config/snipe/snipe_targets.toml --cfg-env SNIPE_CONFIG shoot --target request-id-from-cfg  # If can't find the config at ~/.config/snipe/snipe_targets.toml use the value at the environment variable SNIPE_CONFIG
-snipe --cfg-env skip shoot --target request-id-from-cfg  # Skip an environment variable to identify the config
+snipe --cfg-env SNIPE_CONFIG shoot request-id-from-cfg  # If can't find the config at ./.snipe_targets.toml use the value at the environment variable SNIPE_CONFIG
+snipe --config ~/.config/snipe/snipe_targets.toml --cfg-env SNIPE_CONFIG shoot request-id-from-cfg  # If can't find the config at ~/.config/snipe/snipe_targets.toml use the value at the environment variable SNIPE_CONFIG
+snipe --cfg-env skip shoot request-id-from-cfg  # Skip an environment variable to identify the config
 ```
 
 ### Verbosity
@@ -243,9 +245,9 @@ snipe --cfg-env skip shoot --target request-id-from-cfg  # Skip an environment v
 Use `--verbose` (`-v`) for verbose mode. This mode will set the log level to info. Use `-vv` to set the log level to debug. Note, any number of `v` arguments can be passed. However, two or more arguments will simply set the log level to debug. For example:
 
 ```sh
-snipe --verbose shoot --target request-id-from-cfg  # Log level at info
-snipe -v shoot --target request-id-from-cfg  # Log level at info
-snipe -vv shoot --target request-id-from-cfg  # Log level at debug
-snipe -vvv shoot --target request-id-from-cfg  # Log level at debug
-snipe -vvvvv shoot --target request-id-from-cfg  # Log level at debug
+snipe --verbose shoot request-id-from-cfg  # Log level at info
+snipe -v shoot request-id-from-cfg  # Log level at info
+snipe -vv shoot request-id-from-cfg  # Log level at debug
+snipe -vvv shoot request-id-from-cfg  # Log level at debug
+snipe -vvvvv shoot request-id-from-cfg  # Log level at debug
 ```
