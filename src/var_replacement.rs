@@ -1,6 +1,7 @@
 use crate::targets::Vars;
 use log::debug;
 use regex::{Captures, Regex};
+use std::collections::HashSet;
 use std::env;
 
 use crate::errors::VarReplaceError;
@@ -60,7 +61,7 @@ fn replace_vars(
             &captures[0]
         );
         vars.get(target_var).unwrap_or_else(|| {
-            missing_vars.push(target_var.to_string());
+            missing_vars.insert(target_var.to_string());
             MISSING
         })
     });
@@ -79,7 +80,7 @@ fn replace_env_vars(input: &str, env_pattern: Option<&str>) -> Result<String, Va
             &captures[0], &captures[1]
         );
         env::var(&captures[1]).unwrap_or_else(|_| {
-            missing_vars.push((captures[1]).to_string());
+            missing_vars.insert((captures[1]).to_string());
             String::from(MISSING)
         })
     });
@@ -88,10 +89,10 @@ fn replace_env_vars(input: &str, env_pattern: Option<&str>) -> Result<String, Va
 }
 
 #[inline]
-fn init_for_replace(pattern: &str) -> Result<(Regex, Vec<String>), VarReplaceError> {
+fn init_for_replace(pattern: &str) -> Result<(Regex, HashSet<String>), VarReplaceError> {
     Ok((
         Regex::new(pattern).map_err(get_regex_err)?,
-        Vec::<String>::new(),
+        HashSet::<String>::new(),
     ))
 }
 
@@ -104,27 +105,31 @@ fn get_regex_err(e: regex::Error) -> VarReplaceError {
 
 fn finalize_replace(
     replaced: &str,
-    missing_vars: &[String],
-    err_func: fn(&[String]) -> Result<String, VarReplaceError>,
+    missing_vars: &HashSet<String>,
+    err_func: fn(&[&str]) -> Result<String, VarReplaceError>,
 ) -> Result<String, VarReplaceError> {
     match missing_vars.is_empty() {
         true => Ok(replaced.to_string()),
-        false => err_func(missing_vars),
+        false => {
+            let mut missing_vars: Vec<&str> = missing_vars.iter().map(|ele| ele.as_str()).collect();
+            missing_vars.sort();
+            err_func(&missing_vars)
+        }
     }
 }
 
 #[inline]
-fn get_missing_env_vars_err<T>(missing_env_vars: &[String]) -> Result<T, VarReplaceError> {
+fn get_missing_env_vars_err<T>(missing_env_vars: &[&str]) -> Result<T, VarReplaceError> {
     Err(VarReplaceError::Base(format!(
-        "Env vars {} not set for injection into request.",
+        "Env var(s) {} not set for injection into request.",
         missing_env_vars.join(", ")
     )))
 }
 
 #[inline]
-fn get_missing_vars_err<T>(missing_vars: &[String]) -> Result<T, VarReplaceError> {
+fn get_missing_vars_err<T>(missing_vars: &[&str]) -> Result<T, VarReplaceError> {
     Err(VarReplaceError::Base(format!(
-        "Vars {} could not be found in configuaration file.",
+        "Var(s) {} could not be found in configuaration file.",
         missing_vars.join(", ")
     )))
 }
