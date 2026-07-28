@@ -6,6 +6,7 @@ All relevant updates will be listed in this document
 
 ### Added
 
+- Logic to ignore comments in configuration file when doing variable interpolation
 - Sorting for `list` command
 
 ## 2.0.0
