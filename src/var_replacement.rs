@@ -66,7 +66,12 @@ fn replace_vars(
         })
     });
 
-    finalize_replace(replaced.as_ref(), &missing_vars, get_missing_vars_err)
+    finalize_replace(replaced.as_ref(), &missing_vars, |vars| {
+        VarReplaceError::Base(format!(
+            "Var(s) [{}] could not be found in configuaration file.",
+            vars.join(", ")
+        ))
+    })
 }
 
 fn replace_env_vars(input: &str, env_pattern: Option<&str>) -> Result<String, VarReplaceError> {
@@ -85,7 +90,12 @@ fn replace_env_vars(input: &str, env_pattern: Option<&str>) -> Result<String, Va
         })
     });
 
-    finalize_replace(replaced.as_ref(), &missing_vars, get_missing_env_vars_err)
+    finalize_replace(replaced.as_ref(), &missing_vars, |vars| {
+        VarReplaceError::Base(format!(
+            "Env var(s) [{}] not set for injection into request.",
+            vars.join(", ")
+        ))
+    })
 }
 
 #[inline]
@@ -106,30 +116,14 @@ fn get_regex_err(e: regex::Error) -> VarReplaceError {
 fn finalize_replace(
     replaced: &str,
     missing_vars: &HashSet<String>,
-    err_func: fn(&[&str]) -> Result<String, VarReplaceError>,
+    err_factory: impl Fn(&[&str]) -> VarReplaceError,
 ) -> Result<String, VarReplaceError> {
     match missing_vars.is_empty() {
         true => Ok(replaced.to_string()),
         false => {
             let mut missing_vars: Vec<&str> = missing_vars.iter().map(|ele| ele.as_str()).collect();
             missing_vars.sort();
-            err_func(&missing_vars)
+            Err(err_factory(&missing_vars))
         }
     }
-}
-
-#[inline]
-fn get_missing_env_vars_err<T>(missing_env_vars: &[&str]) -> Result<T, VarReplaceError> {
-    Err(VarReplaceError::Base(format!(
-        "Env var(s) {} not set for injection into request.",
-        missing_env_vars.join(", ")
-    )))
-}
-
-#[inline]
-fn get_missing_vars_err<T>(missing_vars: &[&str]) -> Result<T, VarReplaceError> {
-    Err(VarReplaceError::Base(format!(
-        "Var(s) {} could not be found in configuaration file.",
-        missing_vars.join(", ")
-    )))
 }
