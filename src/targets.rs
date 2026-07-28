@@ -24,19 +24,25 @@ impl Targets {
             path.as_ref().display()
         );
         validate_toml_path(&path)?;
-        let toml_str = read_toml(&path)?;
+        let raw = read_toml(&path)?;
         info!("Toml file successfully read.");
-
-        Self::from_toml(&toml_str)
+        Self::from_toml(&raw)
     }
 
-    pub fn from_toml(toml_str: &str) -> Result<Self, TargetsError> {
+    pub fn from_toml(raw: &str) -> Result<Self, TargetsError> {
         info!("Attempting to replace user defined variables and environment varables in toml.");
-        let maybe_vars: Option<Vars> = toml::from_str(toml_str).ok();
-        let resolved_toml = resolve_vars(toml_str, maybe_vars.as_ref(), None, None)
+        let toml_str = Self::as_string(raw)?;
+        let maybe_vars: Option<Vars> = toml::from_str(raw).ok();
+        let resolved_toml = resolve_vars(&toml_str, maybe_vars.as_ref(), None, None)
             .map_err(TargetsError::deserialization_from_err)?;
         info!("Variables replaced.");
         Ok(toml::from_str::<Self>(&resolved_toml)?)
+    }
+
+    fn as_string(raw: &str) -> Result<String, TargetsError> {
+        // Need to parse into struct then back to string to get rid of comments
+        let as_struct = toml::from_str::<Self>(raw)?;
+        toml::to_string(&as_struct).map_err(TargetsError::from)
     }
 
     pub fn get_target(&self, target: &str) -> Option<&Target> {

@@ -53,6 +53,9 @@ pub enum TargetsError {
 
     #[error("Can only specify 'file' or manually specify params in request payload. Not both.")]
     OverspecifiedPayload,
+
+    #[error("Failed to write target to string. Error: {0}")]
+    FailedToString(#[from] toml::ser::Error),
 }
 
 impl TargetsError {
