@@ -4,6 +4,10 @@ All relevant updates will be listed in this document
 
 ## Unreleased
 
+### Added
+
+- Sorting for `list` command
+
 ## 2.0.0
 
 ### Added
