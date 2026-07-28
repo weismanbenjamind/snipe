@@ -4,6 +4,10 @@ All relevant updates will be listed in this document
 
 ## Unreleased
 
+### Fixed
+
+- Bug where missing variables and environment variables can be displayed more than once in error messages
+
 ### Added
 
 - Logic to ignore comments in configuration file when doing variable interpolation
