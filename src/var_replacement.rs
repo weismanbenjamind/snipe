@@ -67,11 +67,10 @@ fn replace_vars(
     });
 
     finalize_replace(replaced.as_ref(), &missing_vars, |vars| {
-        let msg = format!(
+        format!(
             "Var(s) [{}] could not be found in configuaration file.",
             vars.join(", ")
-        );
-        VarReplaceError::Base(msg)
+        )
     })
 }
 
@@ -92,11 +91,10 @@ fn replace_env_vars(input: &str, env_pattern: Option<&str>) -> Result<String, Va
     });
 
     finalize_replace(replaced.as_ref(), &missing_vars, |vars| {
-        let msg = format!(
+        format!(
             "Env var(s) [{}] not set for injection into request.",
             vars.join(", ")
-        );
-        VarReplaceError::Base(msg)
+        )
     })
 }
 
@@ -118,14 +116,14 @@ fn get_regex_err(e: regex::Error) -> VarReplaceError {
 fn finalize_replace(
     replaced: &str,
     missing_vars: &HashSet<String>,
-    err_factory: impl Fn(&[&str]) -> VarReplaceError,
+    err_msg_factory: impl Fn(&[&str]) -> String,
 ) -> Result<String, VarReplaceError> {
     match missing_vars.is_empty() {
         true => Ok(replaced.to_string()),
         false => {
             let mut missing_vars: Vec<&str> = missing_vars.iter().map(|ele| ele.as_str()).collect();
             missing_vars.sort();
-            Err(err_factory(&missing_vars))
+            Err(VarReplaceError::Base(err_msg_factory(&missing_vars)))
         }
     }
 }
