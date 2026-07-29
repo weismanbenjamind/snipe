@@ -4,6 +4,10 @@ All relevant updates will be listed in this document
 
 ## Unreleased
 
+### Updated
+
+- Name to be an optional value in the snipe targets configuration file
+
 ### Fixed
 
 - Bug where missing variables and environment variables can be displayed more than once in error messages
