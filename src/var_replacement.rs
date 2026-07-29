@@ -67,10 +67,11 @@ fn replace_vars(
     });
 
     finalize_replace(replaced.as_ref(), &missing_vars, |vars| {
-        VarReplaceError::Base(format!(
+        let msg = format!(
             "Var(s) [{}] could not be found in configuaration file.",
             vars.join(", ")
-        ))
+        );
+        VarReplaceError::Base(msg)
     })
 }
 
@@ -91,10 +92,11 @@ fn replace_env_vars(input: &str, env_pattern: Option<&str>) -> Result<String, Va
     });
 
     finalize_replace(replaced.as_ref(), &missing_vars, |vars| {
-        VarReplaceError::Base(format!(
+        let msg = format!(
             "Env var(s) [{}] not set for injection into request.",
             vars.join(", ")
-        ))
+        );
+        VarReplaceError::Base(msg)
     })
 }
 
