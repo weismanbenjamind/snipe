@@ -95,7 +95,7 @@ fn read_toml<P: AsRef<Path>>(path: P) -> Result<String, TargetsError> {
 
 #[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct Target {
-    name: String,
+    name: Option<String>,
     url: String,
     method: Method,
     timeout_seconds: Option<u64>,
@@ -107,7 +107,7 @@ pub struct Target {
 impl Target {
     #[allow(dead_code)]
     pub fn new(
-        name: &str,
+        name: Option<String>,
         url: &str,
         method: Method,
         timeout_seconds: Option<u64>,
@@ -116,7 +116,7 @@ impl Target {
         payload: Option<Payload>,
     ) -> Self {
         Self {
-            name: name.to_string(),
+            name,
             url: url.to_string(),
             method,
             timeout_seconds,
@@ -126,8 +126,8 @@ impl Target {
         }
     }
 
-    pub fn name(&self) -> &str {
-        &self.name
+    pub fn name(&self) -> Option<&str> {
+        self.name.as_deref()
     }
 
     pub fn method(&self) -> Method {

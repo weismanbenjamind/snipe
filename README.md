@@ -11,7 +11,7 @@ By default `snipe` will look for a `.snipe_targets.toml` file in your present wo
 github_base_url = "https://api.github.com"
 
 [targets.create-gist]  # Create an API request with id 'create-gist'
-name = "Create Gist"
+name = "Create Gist"  # Name field is optional
 method = "POST"
 url = "${VARS.github_base_url}/gists"  # Reuse the variable github_base_url from [vars]
 timeout_seconds = 10  # Timeout of 10 seconds on the request

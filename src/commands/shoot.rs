@@ -82,7 +82,10 @@ impl ShootCmd {
             .get_target(self.target())
             .ok_or_else(|| RunError::Failure(format!("Failed to find target {}", self.target)))?;
 
-        info!("Sending request for target '{}'.", target.name());
+        info!(
+            "Sending request for target '{}'.",
+            target.name().unwrap_or(&self.target)
+        );
         let response = Client::new()?.send_request(target).await?;
         info!("Response recieved");
 
