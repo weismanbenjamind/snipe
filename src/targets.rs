@@ -155,12 +155,35 @@ impl Target {
     }
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub(crate) struct SecretString(String);
+
+impl SecretString {
+    pub(crate) fn value(&self) -> &str {
+        &self.0
+    }
+}
+
+impl From<String> for SecretString {
+    fn from(value: String) -> Self {
+        SecretString(value)
+    }
+}
+
+impl std::fmt::Display for SecretString {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", "*".repeat(self.0.len()))
+    }
+}
+
+// TODO - Derive custom debug on Secret String
+
 #[derive(Debug, Deserialize, Clone)]
 struct RawAuth {
     scheme: String,
-    token: Option<String>,
+    token: Option<SecretString>,
     username: Option<String>,
-    password: Option<String>,
+    password: Option<SecretString>,
 }
 
 #[derive(Debug, Deserialize, Clone, Serialize)]
@@ -179,7 +202,9 @@ impl TryFrom<RawAuth> for Auth {
                 let token = value
                     .token
                     .ok_or_else(|| get_missing_auth_field_err("token", "bearer"))?;
-                Ok(Self::Bearer(BearerAuth { token }))
+                Ok(Self::Bearer(BearerAuth {
+                    token: SecretString::from(token),
+                }))
             }
             "basic" => {
                 let username = value
@@ -188,7 +213,10 @@ impl TryFrom<RawAuth> for Auth {
                 let password = value
                     .password
                     .ok_or_else(|| get_missing_basic_auth_field_error("password"))?;
-                Ok(Self::Basic(BasicAuth { username, password }))
+                Ok(Self::Basic(BasicAuth {
+                    username,
+                    password: SecretString::from(password),
+                }))
             }
             _ => Err(TargetsError::Dersialization(format!(
                 "Invalud auth scheme {}.",
@@ -212,18 +240,16 @@ fn get_missing_auth_field_err(field_name: &str, auth_type: &str) -> TargetsError
 
 #[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct BearerAuth {
-    token: String,
+    token: SecretString,
 }
 
 impl BearerAuth {
     #[allow(dead_code)]
-    pub fn new(token: &str) -> Self {
-        Self {
-            token: token.to_string(),
-        }
+    pub(crate) fn new(token: SecretString) -> Self {
+        Self { token }
     }
 
-    pub fn token(&self) -> &str {
+    pub(crate) fn token(&self) -> &SecretString {
         &self.token
     }
 }
@@ -231,23 +257,23 @@ impl BearerAuth {
 #[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct BasicAuth {
     username: String,
-    password: String,
+    password: SecretString,
 }
 
 impl BasicAuth {
     #[allow(dead_code)]
-    pub fn new(username: &str, password: &str) -> Self {
+    pub(crate) fn new(username: &str, password: SecretString) -> Self {
         Self {
             username: username.to_string(),
-            password: password.to_string(),
+            password,
         }
     }
 
-    pub fn username(&self) -> &str {
+    pub(crate) fn username(&self) -> &str {
         &self.username
     }
 
-    pub fn password(&self) -> &str {
+    pub(crate) fn password(&self) -> &SecretString {
         &self.password
     }
 }

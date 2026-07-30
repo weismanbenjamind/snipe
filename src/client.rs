@@ -101,9 +101,9 @@ fn get_header_value(header_value: &str) -> Result<HeaderValue, ClientError> {
 
 fn build_auth(request_builder: RequestBuilder, auth: &Auth) -> RequestBuilder {
     match auth {
-        Auth::Bearer(bearer_auth) => request_builder.bearer_auth(bearer_auth.token()),
+        Auth::Bearer(bearer_auth) => request_builder.bearer_auth(bearer_auth.token().value()),
         Auth::Basic(basic_auth) => {
-            request_builder.basic_auth(basic_auth.username(), Some(basic_auth.password()))
+            request_builder.basic_auth(basic_auth.username(), Some(basic_auth.password().value()))
         }
     }
 }
