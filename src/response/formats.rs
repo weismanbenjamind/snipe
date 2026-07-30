@@ -43,9 +43,10 @@ impl<'a> JsonFormat<'a> {
     }
 
     pub fn into_json_string(self, pretty: bool) -> Result<String, SerdeJsonError> {
+        let serializer = JsonSerializer::from(self);
         match pretty {
-            true => serde_json::to_string_pretty(&self),
-            false => serde_json::to_string(&self),
+            true => serializer.into_string_pretty(),
+            false => serializer.into_string(),
         }
     }
 }
@@ -62,6 +63,65 @@ impl<'a> From<&'a str> for Body<'a> {
         match serde_json::from_str::<Value>(value) {
             Ok(json) => Self::Json(json),
             Err(_) => Self::RawStr(value),
+        }
+    }
+}
+
+enum JsonSerializer<'a> {
+    StatusCode(u16),
+    Headers(&'a HashMap<String, String>),
+    Body(Body<'a>),
+    Multi(JsonFormat<'a>),
+}
+
+impl<'a> JsonSerializer<'a> {
+    fn into_string_pretty(self) -> Result<String, SerdeJsonError> {
+        match self {
+            Self::StatusCode(status_code) => {
+                let map = Self::build_status_code_map(status_code);
+                serde_json::to_string_pretty(&map)
+            }
+            Self::Headers(headers) => serde_json::to_string_pretty(headers),
+            Self::Body(body) => serde_json::to_string_pretty(&body),
+            Self::Multi(json_format) => serde_json::to_string_pretty(&json_format),
+        }
+    }
+
+    fn into_string(self) -> Result<String, SerdeJsonError> {
+        match self {
+            Self::StatusCode(status_code) => {
+                let map = Self::build_status_code_map(status_code);
+                serde_json::to_string(&map)
+            }
+            Self::Headers(headers) => serde_json::to_string(headers),
+            Self::Body(body) => serde_json::to_string(&body),
+            Self::Multi(json_format) => serde_json::to_string(&json_format),
+        }
+    }
+
+    fn build_status_code_map(status_code: u16) -> HashMap<&'static str, u16> {
+        let mut map: HashMap<&'static str, u16> = HashMap::with_capacity(1);
+        map.insert("status_code", status_code);
+        map
+    }
+}
+
+impl<'a> From<JsonFormat<'a>> for JsonSerializer<'a> {
+    fn from(value: JsonFormat<'a>) -> Self {
+        let to_match = (value.status_code, value.headers, value.body);
+        match to_match {
+            (Some(status_code), None, None) => Self::StatusCode(status_code),
+            (None, Some(headers), None) => Self::Headers(headers),
+            (None, None, Some(body)) => Self::Body(body),
+            (Some(_), Some(_), Some(_))
+            | (Some(_), Some(_), None)
+            | (Some(_), None, Some(_))
+            | (None, Some(_), Some(_))
+            | (None, None, None) => Self::Multi(JsonFormat {
+                status_code: to_match.0,
+                headers: to_match.1,
+                body: to_match.2,
+            }),
         }
     }
 }
