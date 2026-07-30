@@ -18,6 +18,8 @@ impl Targets {
         Self { targets }
     }
 
+    // Note Targets is never meant to be written back to a toml file
+    // It's a runtime artifact full of replaced variables, environment variables, potential secrets, etc.
     pub fn from_toml_file<P: AsRef<Path>>(path: P) -> Result<Self, TargetsError> {
         info!(
             "Attempting to read toml file at path {}.",
@@ -26,7 +28,9 @@ impl Targets {
         validate_toml_path(&path)?;
         let raw = read_toml(&path)?;
         info!("Toml file successfully read.");
-        Self::from_toml(&raw)
+        let targets = Self::from_toml(&raw)?;
+        debug!("Parsed targets file as: {:#?}", targets);
+        Ok(targets)
     }
 
     pub fn from_toml(raw: &str) -> Result<Self, TargetsError> {
@@ -41,6 +45,7 @@ impl Targets {
 
     fn as_string(raw: &str) -> Result<String, TargetsError> {
         // Need to parse into struct then back to string to get rid of comments
+        // Note - this will parse the actual secret values to the string (not redact them)
         let as_struct = toml::from_str::<Self>(raw)?;
         toml::to_string(&as_struct).map_err(TargetsError::from)
     }
@@ -93,13 +98,44 @@ fn read_toml<P: AsRef<Path>>(path: P) -> Result<String, TargetsError> {
     })
 }
 
+#[derive(Clone, Deserialize, Serialize)]
+pub struct SecretString(String);
+
+impl SecretString {
+    pub fn value(&self) -> &str {
+        &self.0
+    }
+
+    fn redacted_delimiter() -> &'static str {
+        "*****"
+    }
+}
+
+impl From<String> for SecretString {
+    fn from(value: String) -> Self {
+        SecretString(value)
+    }
+}
+
+impl std::fmt::Display for SecretString {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", Self::redacted_delimiter())
+    }
+}
+
+impl std::fmt::Debug for SecretString {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", Self::redacted_delimiter())
+    }
+}
+
 #[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct Target {
     name: Option<String>,
     url: String,
     method: Method,
     timeout_seconds: Option<u64>,
-    headers: Option<HashMap<String, String>>,
+    headers: Option<HashMap<String, SecretString>>,
     auth: Option<Auth>,
     payload: Option<Payload>,
 }
@@ -111,7 +147,7 @@ impl Target {
         url: &str,
         method: Method,
         timeout_seconds: Option<u64>,
-        headers: Option<HashMap<String, String>>,
+        headers: Option<HashMap<String, SecretString>>,
         auth: Option<Auth>,
         payload: Option<Payload>,
     ) -> Self {
@@ -142,7 +178,7 @@ impl Target {
         self.timeout_seconds
     }
 
-    pub fn headers(&self) -> &Option<HashMap<String, String>> {
+    pub fn headers(&self) -> &Option<HashMap<String, SecretString>> {
         &self.headers
     }
 
@@ -154,29 +190,6 @@ impl Target {
         self.payload.as_ref()
     }
 }
-
-#[derive(Debug, Deserialize, Serialize, Clone)]
-pub(crate) struct SecretString(String);
-
-impl SecretString {
-    pub(crate) fn value(&self) -> &str {
-        &self.0
-    }
-}
-
-impl From<String> for SecretString {
-    fn from(value: String) -> Self {
-        SecretString(value)
-    }
-}
-
-impl std::fmt::Display for SecretString {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", "*".repeat(self.0.len()))
-    }
-}
-
-// TODO - Derive custom debug on Secret String
 
 #[derive(Debug, Deserialize, Clone)]
 struct RawAuth {
@@ -202,9 +215,7 @@ impl TryFrom<RawAuth> for Auth {
                 let token = value
                     .token
                     .ok_or_else(|| get_missing_auth_field_err("token", "bearer"))?;
-                Ok(Self::Bearer(BearerAuth {
-                    token: SecretString::from(token),
-                }))
+                Ok(Self::Bearer(BearerAuth { token }))
             }
             "basic" => {
                 let username = value
@@ -213,10 +224,7 @@ impl TryFrom<RawAuth> for Auth {
                 let password = value
                     .password
                     .ok_or_else(|| get_missing_basic_auth_field_error("password"))?;
-                Ok(Self::Basic(BasicAuth {
-                    username,
-                    password: SecretString::from(password),
-                }))
+                Ok(Self::Basic(BasicAuth { username, password }))
             }
             _ => Err(TargetsError::Dersialization(format!(
                 "Invalud auth scheme {}.",
@@ -324,7 +332,7 @@ pub struct RawPayload {
     params: Option<HashMap<String, Value>>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(try_from = "RawPayload")]
 pub enum Payload {
     File(PathBuf),
@@ -334,10 +342,8 @@ pub enum Payload {
 impl TryFrom<RawPayload> for Payload {
     type Error = TargetsError;
     fn try_from(value: RawPayload) -> Result<Self, Self::Error> {
-        debug!(
-            "Attempting to parse RawPayload with file {:?} and params {:?}",
-            value.file, value.params
-        );
+        // TODO - Raw payload should redact then can be logged here to see what is trying to be converted
+        debug!("Attempting to parse RawPayload into Payload");
         match (value.file, value.params) {
             (None, None) => Err(TargetsError::MissingPayloadFields),
             (Some(file), Some(params)) => match params.is_empty() {
