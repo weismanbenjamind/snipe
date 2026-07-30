@@ -115,7 +115,7 @@ headers
 
 ***Note - if the the response cannot be parsed into a string the snipe will emit an error.***
 
-The `json` format will attempt to parse the response into a json string. The output is formatted something like:
+The `json` format will attempt to parse the response into a json string. If multiple response fields are requested the output is formatted something like:
 
 ```json
 {
@@ -134,12 +134,11 @@ Similarly - combos can be used. For example `snipe shoot request-id-from-cfg --s
 }
 ```
 
-While the combo `snipe shoot request-id-from-cfg --status-code --headers --format json` will return:
+If a single response field is requested, the key indicating the field is omitted. For example, the combo `snipe shoot request-id-from-cfg --format json` will return (remember by default only the response body is returned):
 
 ```json
 {
-  "status_code": "<response_status_code>",
-  "headers": "<response_headers>",
+  "<response_body>"
 }
 ```
 
