@@ -1,7 +1,7 @@
 use crate::client::Client;
+use crate::containers::Targets;
 use crate::errors::RunError;
 use crate::inputs::{RawFormat, ValidatedGrab};
-use crate::targets::Targets;
 use log::info;
 use std::path::Path;
 

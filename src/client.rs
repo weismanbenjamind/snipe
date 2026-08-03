@@ -2,8 +2,8 @@ use reqwest::Client as Client_;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use reqwest::{RequestBuilder, Response};
 
+use crate::containers::{Auth, Method, Payload, SecretString, Target};
 use crate::errors::ClientError;
-use crate::targets::{Auth, Method, Payload, Target};
 use log::{debug, info, warn};
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -35,30 +35,30 @@ impl Client {
         let mut request_builder = self.init_request_builder(target);
 
         if let Some(timeout) = target.timeout_seconds() {
-            info!("Adding timeout of {timeout} seconds.");
+            debug!("Adding timeout of {timeout} seconds.");
             request_builder = request_builder.timeout(Duration::from_secs(timeout));
-            info!("Timeout added.")
+            debug!("Timeout added.")
         }
 
         if let Some(headers) = target.headers() {
-            info!("Adding headers");
+            debug!("Adding headers:\n{headers:#?}");
             request_builder = request_builder.headers(build_headers(headers)?);
-            info!("Headers added.")
+            debug!("Headers added.")
         }
 
         if let Some(auth) = target.auth() {
-            info!("Adding auth.");
+            debug!("Adding auth:\n{auth:#?}");
             request_builder = build_auth(request_builder, auth);
-            info!("Auth added.")
+            debug!("Auth added.")
         }
 
         if let Some(payload) = target.payload() {
-            info!("Adding payload");
+            debug!("Adding payload:\n{payload:#?}");
             request_builder = build_payload(request_builder, payload)?;
-            info!("Payload added");
+            debug!("Payload added.");
         }
 
-        info!("Request built");
+        info!("Request built.");
         Ok(request_builder)
     }
 
@@ -76,14 +76,14 @@ impl Client {
     }
 }
 
-fn build_headers(headers: &HashMap<String, String>) -> Result<HeaderMap, ClientError> {
+fn build_headers(headers: &HashMap<String, SecretString>) -> Result<HeaderMap, ClientError> {
     let mut header_map = HeaderMap::new();
     let mut header_name: HeaderName;
     let mut header_value: HeaderValue;
 
-    for (name, value) in headers {
+    for (name, secret_string) in headers {
         header_name = get_header_name(name)?;
-        header_value = get_header_value(value)?;
+        header_value = get_header_value(secret_string.value())?;
         if let Some(prev_header_name) = header_map.insert(header_name, header_value) {
             warn!("Overriding header {:?}", prev_header_name);
         }
@@ -101,9 +101,9 @@ fn get_header_value(header_value: &str) -> Result<HeaderValue, ClientError> {
 
 fn build_auth(request_builder: RequestBuilder, auth: &Auth) -> RequestBuilder {
     match auth {
-        Auth::Bearer(bearer_auth) => request_builder.bearer_auth(bearer_auth.token()),
+        Auth::Bearer(bearer_auth) => request_builder.bearer_auth(bearer_auth.token().value()),
         Auth::Basic(basic_auth) => {
-            request_builder.basic_auth(basic_auth.username(), Some(basic_auth.password()))
+            request_builder.basic_auth(basic_auth.username(), Some(basic_auth.password().value()))
         }
     }
 }

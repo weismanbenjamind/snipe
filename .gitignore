@@ -6,3 +6,4 @@ TODO
 snipe_targets*
 snipe
 .old/*
+.env
