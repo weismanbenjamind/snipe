@@ -2,16 +2,14 @@ use serde::{Deserialize, Serialize};
 use toml::Value as TomlValue;
 use toml::map::Map as TomlMap;
 
+const REDACTED_DELIMITER: &str = "*****";
+
 #[derive(Clone, Deserialize, Serialize)]
 pub struct SecretString(String);
 
 impl SecretString {
     pub fn value(&self) -> &str {
         &self.0
-    }
-
-    pub(super) fn redacted_delimiter() -> &'static str {
-        "*****"
     }
 }
 
@@ -23,13 +21,13 @@ impl From<String> for SecretString {
 
 impl std::fmt::Display for SecretString {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", Self::redacted_delimiter())
+        write!(f, "{}", REDACTED_DELIMITER)
     }
 }
 
 impl std::fmt::Debug for SecretString {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", Self::redacted_delimiter())
+        write!(f, "{}", REDACTED_DELIMITER)
     }
 }
 
@@ -45,7 +43,7 @@ impl SecretTomlValue {
             | TomlValue::Datetime(_) => {
                 write!(f, "{val}")
             }
-            TomlValue::String(_) => write!(f, "{}", SecretString::redacted_delimiter()),
+            TomlValue::String(_) => write!(f, "{}", REDACTED_DELIMITER),
             TomlValue::Array(a) => Self::fmt_array(a, f),
             TomlValue::Table(t) => Self::fmt_table(t, f),
         }
@@ -89,7 +87,7 @@ impl SecretTomlValue {
             | TomlValue::Datetime(_) => {
                 write!(f, "{val:?}")
             }
-            TomlValue::String(_) => write!(f, "String({})", SecretString::redacted_delimiter()),
+            TomlValue::String(_) => write!(f, "String({})", REDACTED_DELIMITER),
             TomlValue::Array(a) => Self::debug_array(a, f),
             TomlValue::Table(t) => Self::debug_table(t, f),
         }

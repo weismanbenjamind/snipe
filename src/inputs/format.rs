@@ -7,6 +7,7 @@ use std::path::Path;
 pub enum RawFormat {
     Http,
     Json,
+    PrettyJson,
     Binary,
 }
 
@@ -33,7 +34,9 @@ impl ValidatedFormat {
         match pretty {
             false => Ok(Self { raw_format }),
             true => match raw_format {
-                RawFormat::Json | RawFormat::Http => Ok(Self { raw_format }),
+                RawFormat::Json | RawFormat::Http | RawFormat::PrettyJson => {
+                    Ok(Self { raw_format })
+                }
                 RawFormat::Binary => Err(ArgsValidationError::PrettyWithBinary),
             },
         }
@@ -47,7 +50,7 @@ impl ValidatedFormat {
         match output_file {
             Some(_) => Ok(self),
             None => match self.raw_format {
-                RawFormat::Http | RawFormat::Json => Ok(self),
+                RawFormat::Http | RawFormat::Json | RawFormat::PrettyJson => Ok(self),
                 RawFormat::Binary => Err(ArgsValidationError::NoOutputFileWithBinary),
             },
         }

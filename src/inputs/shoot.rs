@@ -24,7 +24,7 @@ pub struct RawShootArgs {
         short,
         long,
         default_value = "false",
-        help = "If the output should be pretty printed. Only valid is the `--format json` (`-f json`) option is passed"
+        help = "If the output should be pretty printed. Only valid is the `--format json` (`-f json`) option is passed. No-op if `--format pretty-json` (`-f pretty-json`) is passed"
     )]
     pretty: bool,
 

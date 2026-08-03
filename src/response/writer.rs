@@ -178,6 +178,15 @@ fn handle_string_formatted_output(
                 pretty,
             )
         }
+        RawFormat::PrettyJson => {
+            info!("Writing response to pretty JSON string.");
+            response_formatter.get_json_string(
+                validated_grab.status_code(),
+                validated_grab.headers(),
+                validated_grab.body(),
+                true,
+            )
+        }
         RawFormat::Binary => Err(ResponseFormatterError::BinaryToString),
     }
 }

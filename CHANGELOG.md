@@ -14,6 +14,7 @@ All relevant updates will be listed in this document
 
 ### Added
 
+- Shortcut to pretty print JSON output
 - Redaction of of potential sensitive varaiables
 - Better logging
 - Better formatting for single field responses
