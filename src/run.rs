@@ -2,9 +2,9 @@ use log::info;
 
 use crate::cfg_resolver::CfgResolver;
 use crate::commands::run_list_targets_cmd;
+use crate::containers::Targets;
 use crate::errors::RunError;
 use crate::inputs::{Command, SnipeCLIArgs};
-use crate::targets::Targets;
 use std::env;
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::fmt as tracing_subscriber_fmt;
@@ -60,7 +60,6 @@ fn get_log_level(verbosity: u8) -> Option<String> {
 #[inline]
 fn init_tracing_subscriber(log_level: &str) -> Result<(), RunError> {
     tracing_subscriber_fmt()
-        .without_time()
         .with_env_filter(EnvFilter::new(log_level))
         .try_init()
         .map_err(|e| RunError::Failure(format!("Failed to set verbosity. Error: {e}.")))

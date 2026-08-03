@@ -2,8 +2,8 @@ use reqwest::Client as Client_;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use reqwest::{RequestBuilder, Response};
 
+use crate::containers::{Auth, Method, Payload, SecretString, Target};
 use crate::errors::ClientError;
-use crate::targets::{Auth, Method, Payload, SecretString, Target};
 use log::{debug, info, warn};
 use std::collections::HashMap;
 use std::str::FromStr;
@@ -41,24 +41,24 @@ impl Client {
         }
 
         if let Some(headers) = target.headers() {
-            debug!("Adding headers: {:#?}", headers);
+            debug!("Adding headers:\n{headers:#?}");
             request_builder = request_builder.headers(build_headers(headers)?);
             debug!("Headers added.")
         }
 
         if let Some(auth) = target.auth() {
-            debug!("Adding auth {:#?}", auth);
+            debug!("Adding auth:\n{auth:#?}");
             request_builder = build_auth(request_builder, auth);
             debug!("Auth added.")
         }
 
         if let Some(payload) = target.payload() {
-            debug!("Adding payload");
+            debug!("Adding payload:\n{payload:#?}");
             request_builder = build_payload(request_builder, payload)?;
-            debug!("Payload added");
+            debug!("Payload added.");
         }
 
-        info!("Request built");
+        info!("Request built.");
         Ok(request_builder)
     }
 

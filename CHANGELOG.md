@@ -14,6 +14,8 @@ All relevant updates will be listed in this document
 
 ### Added
 
+- Redaction of of potential sensitive varaiables
+- Better logging
 - Better formatting for single field responses
 - Logic to ignore comments in configuration file when doing variable interpolation
 - Sorting for `list` command
