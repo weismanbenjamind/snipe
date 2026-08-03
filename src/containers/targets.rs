@@ -29,7 +29,7 @@ impl Targets {
         let raw = read_toml(&path)?;
         info!("Toml file successfully read.");
         let targets = Self::from_toml(&raw)?;
-        debug!("Parsed targets file as: {:#?}", targets);
+        debug!("Parsed targets file as:\n{targets:#?}");
         Ok(targets)
     }
 
