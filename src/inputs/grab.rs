@@ -114,6 +114,7 @@ impl ValidatedGrab {
         match validated_format.raw_format() {
             RawFormat::Http => Ok(grab),
             RawFormat::Json => Ok(grab),
+            RawFormat::PrettyJson => Ok(grab),
             RawFormat::Binary => match grab.only_body() {
                 true => Ok(grab),
                 false => Err(ArgsValidationError::NonBodyWithBinary),

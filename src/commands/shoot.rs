@@ -94,7 +94,7 @@ impl ShootCmd {
         info!("Outputting response");
         match self.validated_format().raw_format() {
             RawFormat::Binary => handle_binary_output(response_writer, self.output_file()).await,
-            RawFormat::Http | RawFormat::Json => {
+            RawFormat::Http | RawFormat::Json | RawFormat::PrettyJson => {
                 handle_string_output(
                     response_writer,
                     self.validated_grab,
