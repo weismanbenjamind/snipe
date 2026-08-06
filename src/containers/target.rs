@@ -1,9 +1,18 @@
-use crate::containers::{
-    Auth, GlobalReplaceable, Method, Payload, SecretString,
-    global_replaceable::{GlobalReplaceableError, Globals},
-};
+use crate::containers::global_replaceable::{GlobalReplaceableError, Globals};
+use crate::containers::{Auth, GlobalReplaceable, Method, Payload, SecretString};
+use log::debug;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use thiserror::Error;
+
+#[derive(Clone, Debug, Error)]
+pub enum TargetError {
+    #[error("{0}")]
+    GlobalReplaceable(#[from] GlobalReplaceableError),
+
+    #[error("Found global key {0} but no global variables set for this key.")]
+    GlobalsNotSet(String),
+}
 
 #[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct Target {
@@ -80,46 +89,47 @@ pub(crate) struct GlobalReplaceableTarget {
 
 impl GlobalReplaceableTarget {
     // TODO - remove unwraps
-    fn replace_globals(self, globals: &Globals) -> Target {
-        let auth = replace_global(self.auth, globals.auth.as_ref()).unwrap();
-        let headers = replace_global(self.headers, globals.headers.as_ref()).unwrap();
-        let payload = replace_global(self.payload, globals.payload.as_ref()).unwrap();
-        let timeout_seconds =
-            replace_global(self.timeout_seconds, globals.timeout_seconds.as_ref()).unwrap();
-
-        Target {
+    pub(crate) fn into_target(self, globals: &Globals) -> Result<Target, TargetError> {
+        Ok(Target {
             name: self.name,
             url: self.url,
             method: self.method,
-            timeout_seconds,
-            headers,
-            auth,
-            payload,
-        }
+            headers: replace_global(self.headers, globals.headers.as_ref())?,
+            auth: replace_global(self.auth, globals.auth.as_ref())?,
+            payload: replace_global(self.payload, globals.payload.as_ref())?,
+            timeout_seconds: replace_global(
+                self.timeout_seconds,
+                globals.timeout_seconds.as_ref(),
+            )?,
+        })
     }
 }
 
 fn replace_global<T: Clone>(
     to_replace: Option<GlobalReplaceable<T>>,
     globals: Option<&HashMap<String, T>>,
-) -> Result<Option<T>, GlobalReplaceableError> {
-    let result = match to_replace {
-        // If have a variable to replace - replace it if globals exist
-        // If globals do no exist - return the local value
-        Some(to_replace) => match globals {
-            Some(globals) => Some(to_replace.into_concrete(globals)?),
-            None => {
-                // TODO - Handle global and local case - maybe fallback to locals with a log
-                if let Some(key) = to_replace.global {
-                    panic!("Found global key {key} but no global variables set for this key.")
-                } else {
-                    to_replace.local
-                }
-            }
-        },
-        // If variable to replace is not present - simply return None
-        None => None,
-    };
+) -> Result<Option<T>, TargetError> {
+    to_replace
+        .map(|tr| replace_global_some(tr, globals))
+        .transpose()
+}
 
-    Ok(result)
+fn replace_global_some<T: Clone>(
+    to_replace: GlobalReplaceable<T>,
+    globals: Option<&HashMap<String, T>>,
+) -> Result<T, TargetError> {
+    match globals {
+        Some(gbls) => Ok(to_replace.into_concrete(gbls)?),
+        None => match (to_replace.local, to_replace.global) {
+            (Some(local), None) => Ok(local),
+            (Some(local), Some(global)) => {
+                debug!(
+                    "Found local and global key {global} bug global variables not set for key. Using local."
+                );
+                Ok(local)
+            }
+            (None, Some(global)) => Err(TargetError::GlobalsNotSet(global)),
+            (None, None) => Err(GlobalReplaceableError::Underspecified)?,
+        },
+    }
 }

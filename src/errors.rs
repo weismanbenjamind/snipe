@@ -1,3 +1,4 @@
+use crate::containers::TargetError;
 use std::{error::Error as StdErr, path::PathBuf};
 use thiserror::Error;
 
@@ -56,6 +57,9 @@ pub enum TargetsError {
 
     #[error("Failed to write target to string. Error: {0}")]
     FailedToString(#[from] toml::ser::Error),
+
+    #[error("{0}")]
+    Target(#[from] TargetError),
 }
 
 impl TargetsError {

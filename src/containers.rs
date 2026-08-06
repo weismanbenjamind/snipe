@@ -12,6 +12,6 @@ use global_replaceable::GlobalReplaceable;
 pub use method::Method;
 pub use payload::Payload;
 pub use secrets::SecretString;
-pub use target::Target;
+pub use target::{Target, TargetError};
 pub use targets::Targets;
 pub use vars::Vars;
