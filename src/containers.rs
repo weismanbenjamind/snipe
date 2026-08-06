@@ -1,4 +1,5 @@
 mod auth;
+mod global_replaceable;
 mod method;
 mod payload;
 mod secrets;
@@ -7,6 +8,7 @@ mod targets;
 mod vars;
 
 pub use auth::Auth;
+use global_replaceable::GlobalReplaceable;
 pub use method::Method;
 pub use payload::Payload;
 pub use secrets::SecretString;
