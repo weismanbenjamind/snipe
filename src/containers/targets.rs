@@ -23,11 +23,25 @@ impl Targets {
 
     // Note Targets is never meant to be written back to a toml file
     // It's a runtime artifact full of replaced variables, environment variables, potential secrets, etc.
-    pub fn from_toml_file<P: AsRef<Path>>(path: P) -> Result<Self, TargetsError> {
-        // TODO - adjust downstream functions so string read happens once
-        let toml_string = read_toml(&path)?;
-        let globals: Globals = toml::from_str(&toml_string)?;
-        GlobalReplaceableTargets::from_toml_file(path)?.into_targets(&globals)
+    pub fn from_toml_file<P: AsRef<Path>>(path: &P) -> Result<Self, TargetsError> {
+        info!(
+            "Generating Targets from .toml file at {}",
+            path.as_ref().display()
+        );
+
+        let raw = read_toml(&path)?;
+        let to_replace = GlobalReplaceableTargets::from_toml(&raw)?;
+        let globals: Option<Globals> = toml::from_str(&raw)?;
+
+        info!("Replacing globals in targets file.");
+        let replaced = to_replace.into_targets(globals.as_ref())?;
+        info!("Succesfully replaced globals in targets file.");
+
+        info!(
+            "Succesfully generated targets from .toml file at {}",
+            path.as_ref().display()
+        );
+        Ok(replaced)
     }
 
     pub fn get_target(&self, target: &str) -> Option<&Target> {
@@ -39,57 +53,49 @@ impl Targets {
     }
 }
 
+type GlobalReplaceableTargetsType = HashMap<String, GlobalReplaceableTarget>;
+
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub(crate) struct GlobalReplaceableTargets {
-    targets: HashMap<String, GlobalReplaceableTarget>,
+    targets: GlobalReplaceableTargetsType,
 }
 
 impl GlobalReplaceableTargets {
-    fn into_targets(self, globals: &Globals) -> Result<Targets, TargetsError> {
+    fn into_targets(self, globals: Option<&Globals>) -> Result<Targets, TargetsError> {
         self.targets
             .into_iter()
             .map(|(k, v)| Ok((k, v.into_target(globals)?)))
             .collect::<Result<HashMap<String, Target>, TargetError>>()
             .map_err(TargetsError::from)
-            .map(|map| Targets { targets: map })
-    }
-
-    // Note Targets is never meant to be written back to a toml file
-    // It's a runtime artifact full of replaced variables, environment variables, potential secrets, etc.
-    pub fn from_toml_file<P: AsRef<Path>>(path: P) -> Result<Self, TargetsError> {
-        info!(
-            "Attempting to read replaceable targets toml file at path {}.",
-            path.as_ref().display()
-        );
-        validate_toml_path(&path)?;
-        let raw = read_toml(&path)?;
-        info!("Replaceable targets successfully read.");
-        let replaceable_targets = Self::from_toml(&raw)?;
-        debug!("Parsed replaceable targets file as:\n{replaceable_targets:#?}");
-        Ok(replaceable_targets)
+            .map(Targets::new)
     }
 
     pub fn from_toml(raw: &str) -> Result<Self, TargetsError> {
-        info!(
-            "Attempting to replace user defined variables and environment varables in global replaceable toml."
-        );
-        let toml_str = Self::as_string(raw)?;
-        let maybe_vars: Option<Vars> = toml::from_str(raw).ok();
-        let resolved_toml = resolve_vars(&toml_str, maybe_vars.as_ref(), None, None)
-            .map_err(TargetsError::deserialization_from_err)?;
-        info!("Variables replaced.");
-        Ok(toml::from_str::<Self>(&resolved_toml)?)
-    }
-
-    fn as_string(raw: &str) -> Result<String, TargetsError> {
-        // Need to parse into struct then back to string to get rid of comments
-        // Note - this will parse the actual secret values to the string (not redact them)
-        let as_struct = toml::from_str::<Self>(raw)?;
-        toml::to_string(&as_struct).map_err(TargetsError::from)
+        debug!("Generating GlobalReplaceableTargets from toml string.");
+        let resolved_toml = replace_vars(raw)?;
+        let from_toml: Self = toml::from_str(&resolved_toml)?;
+        debug!("Succesfully GlobalReplaceableTargets from toml string.");
+        Ok(from_toml)
     }
 }
 
-fn validate_toml_path<P: AsRef<Path>>(path: P) -> Result<(), TargetsError> {
+fn read_toml<P: AsRef<Path>>(path: &P) -> Result<String, TargetsError> {
+    debug!(
+        "Attempting to read .toml file at {}",
+        path.as_ref().display()
+    );
+    validate_toml_path(path)?;
+    let result = read_to_string(path).map_err(|e| {
+        TargetsError::Dersialization(format!("Failed to read toml to string. Error: {e}",))
+    })?;
+    debug!(
+        "Successfully read .toml file at {}",
+        path.as_ref().display()
+    );
+    Ok(result)
+}
+
+fn validate_toml_path<P: AsRef<Path>>(path: &P) -> Result<(), TargetsError> {
     let path = path.as_ref();
     if !path.exists() {
         return Err(TargetsError::Dersialization(format!(
@@ -122,8 +128,27 @@ fn get_toml_extension_err(path: &Path) -> TargetsError {
     TargetsError::Dersialization(format!("Expected toml file, found {}", path.display()))
 }
 
-fn read_toml<P: AsRef<Path>>(path: P) -> Result<String, TargetsError> {
-    read_to_string(path).map_err(|e| {
-        TargetsError::Dersialization(format!("Failed to read toml to string. Error: {e}",))
-    })
+fn replace_vars(raw: &str) -> Result<String, TargetsError> {
+    info!(
+        "Attempting to replace user defined variables and environment varables in global replaceable toml."
+    );
+    let toml_str = get_replacement_string(raw)?;
+    let maybe_vars: Option<Vars> = toml::from_str(raw).ok();
+    let resolved_toml = resolve_vars(&toml_str, maybe_vars.as_ref(), None, None)
+        .map_err(TargetsError::deserialization_from_err)?;
+    info!("Variables replaced.");
+    Ok(resolved_toml)
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+struct VarReplaceTarget {
+    globals: Option<Globals>,
+    targets: GlobalReplaceableTargetsType,
+}
+
+fn get_replacement_string(raw: &str) -> Result<String, TargetsError> {
+    // Need to parse into struct then back to string to get rid of comments
+    // Note - this will parse the actual secret values to the string (not redact them)
+    let as_struct = toml::from_str::<VarReplaceTarget>(raw)?;
+    toml::to_string(&as_struct).map_err(TargetsError::from)
 }

@@ -1,6 +1,5 @@
-use crate::containers::global_replaceable::{GlobalReplaceableError, Globals};
-use crate::containers::{Auth, GlobalReplaceable, Method, Payload, SecretString};
-use log::debug;
+use crate::containers::global_replaceable::{GlobalReplaceable, GlobalReplaceableError, Globals};
+use crate::containers::{Auth, GlobalReplaceableCfg, Method, Payload, SecretString};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use thiserror::Error;
@@ -81,32 +80,28 @@ pub(crate) struct GlobalReplaceableTarget {
     pub(crate) name: Option<String>,
     pub(crate) url: String,
     pub(crate) method: Method,
-    pub(crate) auth: Option<GlobalReplaceable<Auth>>,
-    pub(crate) headers: Option<GlobalReplaceable<HashMap<String, SecretString>>>,
-    pub(crate) payload: Option<GlobalReplaceable<Payload>>,
-    pub(crate) timeout_seconds: Option<GlobalReplaceable<u64>>,
+    pub(crate) timeout_seconds: Option<u64>, // TODO - Figure out timeout
+    pub(crate) auth: Option<GlobalReplaceableCfg<Auth>>,
+    pub(crate) headers: Option<GlobalReplaceableCfg<HashMap<String, SecretString>>>,
+    pub(crate) payload: Option<GlobalReplaceableCfg<Payload>>,
 }
 
 impl GlobalReplaceableTarget {
-    // TODO - remove unwraps
-    pub(crate) fn into_target(self, globals: &Globals) -> Result<Target, TargetError> {
+    pub(crate) fn into_target(self, globals: Option<&Globals>) -> Result<Target, TargetError> {
         Ok(Target {
             name: self.name,
             url: self.url,
             method: self.method,
-            headers: replace_global(self.headers, globals.headers.as_ref())?,
-            auth: replace_global(self.auth, globals.auth.as_ref())?,
-            payload: replace_global(self.payload, globals.payload.as_ref())?,
-            timeout_seconds: replace_global(
-                self.timeout_seconds,
-                globals.timeout_seconds.as_ref(),
-            )?,
+            timeout_seconds: self.timeout_seconds,
+            headers: replace_global(self.headers, globals.and_then(|g| g.headers.as_ref()))?,
+            auth: replace_global(self.auth, globals.and_then(|g| g.auth.as_ref()))?,
+            payload: replace_global(self.payload, globals.and_then(|g| g.payload.as_ref()))?,
         })
     }
 }
 
 fn replace_global<T: Clone>(
-    to_replace: Option<GlobalReplaceable<T>>,
+    to_replace: Option<GlobalReplaceableCfg<T>>,
     globals: Option<&HashMap<String, T>>,
 ) -> Result<Option<T>, TargetError> {
     to_replace
@@ -115,21 +110,15 @@ fn replace_global<T: Clone>(
 }
 
 fn replace_global_some<T: Clone>(
-    to_replace: GlobalReplaceable<T>,
+    to_replace: GlobalReplaceableCfg<T>,
     globals: Option<&HashMap<String, T>>,
 ) -> Result<T, TargetError> {
+    let global_replaceable: GlobalReplaceable<T> = to_replace.try_into()?;
     match globals {
-        Some(gbls) => Ok(to_replace.into_concrete(gbls)?),
-        None => match (to_replace.local, to_replace.global) {
-            (Some(local), None) => Ok(local),
-            (Some(local), Some(global)) => {
-                debug!(
-                    "Found local and global key {global} bug global variables not set for key. Using local."
-                );
-                Ok(local)
-            }
-            (None, Some(global)) => Err(TargetError::GlobalsNotSet(global)),
-            (None, None) => Err(GlobalReplaceableError::Underspecified)?,
+        Some(gbls) => Ok(global_replaceable.into_concrete(gbls)?),
+        None => match global_replaceable {
+            GlobalReplaceable::Local(local) => Ok(local),
+            GlobalReplaceable::Global(global) => Err(TargetError::GlobalsNotSet(global)),
         },
     }
 }

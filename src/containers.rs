@@ -8,7 +8,7 @@ mod targets;
 mod vars;
 
 pub use auth::Auth;
-use global_replaceable::GlobalReplaceable;
+use global_replaceable::GlobalReplaceableCfg;
 pub use method::Method;
 pub use payload::Payload;
 pub use secrets::SecretString;
