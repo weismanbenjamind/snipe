@@ -1,4 +1,6 @@
-use crate::containers::global_replaceable::{GlobalReplaceable, GlobalReplaceableError, Globals};
+use crate::containers::global_replaceable::{
+    GlobalReplaceable, GlobalReplaceableError, GlobalReplaceableLocal, Globals,
+};
 use crate::containers::{Auth, GlobalReplaceableCfg, Method, Payload, SecretString};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -86,6 +88,12 @@ pub(crate) struct GlobalReplaceableTarget {
     pub(crate) payload: Option<GlobalReplaceableCfg<Payload>>,
 }
 
+impl GlobalReplaceableLocal for HashMap<String, SecretString> {
+    fn has_local(&self) -> bool {
+        !self.is_empty()
+    }
+}
+
 impl GlobalReplaceableTarget {
     pub(crate) fn into_target(self, globals: Option<&Globals>) -> Result<Target, TargetError> {
         Ok(Target {
@@ -100,7 +108,7 @@ impl GlobalReplaceableTarget {
     }
 }
 
-fn replace_global<T: Clone>(
+fn replace_global<T: Clone + GlobalReplaceableLocal>(
     to_replace: Option<GlobalReplaceableCfg<T>>,
     globals: Option<&HashMap<String, T>>,
 ) -> Result<Option<T>, TargetError> {
@@ -109,7 +117,7 @@ fn replace_global<T: Clone>(
         .transpose()
 }
 
-fn replace_global_some<T: Clone>(
+fn replace_global_some<T: Clone + GlobalReplaceableLocal>(
     to_replace: GlobalReplaceableCfg<T>,
     globals: Option<&HashMap<String, T>>,
 ) -> Result<T, TargetError> {

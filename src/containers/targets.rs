@@ -1,4 +1,5 @@
 use crate::containers::global_replaceable::Globals;
+use crate::containers::global_replaceable::GlobalsCfg;
 use crate::containers::target::GlobalReplaceableTarget;
 use crate::containers::target::TargetError;
 use crate::containers::{Target, Vars};
@@ -31,7 +32,8 @@ impl Targets {
 
         let raw = read_toml(&path)?;
         let to_replace = GlobalReplaceableTargets::from_toml(&raw)?;
-        let globals: Option<Globals> = toml::from_str(&raw)?;
+        let globals: Option<Globals> =
+            toml::from_str::<Option<GlobalsCfg>>(&raw)?.map(|cfg| cfg.into());
 
         info!("Replacing globals in targets file.");
         let replaced = to_replace.into_targets(globals.as_ref())?;
@@ -41,6 +43,8 @@ impl Targets {
             "Succesfully generated targets from .toml file at {}",
             path.as_ref().display()
         );
+        debug!("Parsed targets file as:\n{replaced:#?}");
+
         Ok(replaced)
     }
 

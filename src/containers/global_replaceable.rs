@@ -18,6 +18,12 @@ pub enum GlobalReplaceableError {
     Underspecified,
 }
 
+pub(crate) trait GlobalReplaceableLocal {
+    fn has_local(&self) -> bool;
+}
+
+// * Since I flatten local if the leftovers can't be parsed to local they just get parsed as None
+// TODO - Try untagged here to try to force the serialize into T and error otherwise. Note the error will probably be bad
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(bound(serialize = "T: Serialize", deserialize = "T: DeserializeOwned"))]
 pub(crate) struct GlobalReplaceableCfg<T> {
@@ -32,13 +38,19 @@ pub(crate) enum GlobalReplaceable<T> {
     Local(T),
 }
 
-impl<T> TryFrom<GlobalReplaceableCfg<T>> for GlobalReplaceable<T> {
+impl<T: GlobalReplaceableLocal> TryFrom<GlobalReplaceableCfg<T>> for GlobalReplaceable<T> {
     type Error = GlobalReplaceableError;
     fn try_from(value: GlobalReplaceableCfg<T>) -> Result<Self, Self::Error> {
         match (value.local, value.global) {
-            (Some(local), None) => Ok(Self::Local(local)),
+            (Some(local), None) => match local.has_local() {
+                true => Ok(Self::Local(local)),
+                false => Err(GlobalReplaceableError::Underspecified),
+            },
             (None, Some(global)) => Ok(Self::Global(global)),
-            (Some(_), Some(_)) => Err(GlobalReplaceableError::Overspecified),
+            (Some(local), Some(global)) => match local.has_local() {
+                true => Err(GlobalReplaceableError::Overspecified),
+                false => Ok(Self::Global(global)),
+            },
             (None, None) => Err(GlobalReplaceableError::Underspecified),
         }
     }
@@ -65,4 +77,15 @@ pub(crate) struct Globals {
     pub(crate) auth: Option<HashMap<String, Auth>>,
     pub(crate) headers: Option<HashMap<String, HashMap<String, SecretString>>>,
     pub(crate) payload: Option<HashMap<String, Payload>>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub(crate) struct GlobalsCfg {
+    pub(crate) globals: Globals,
+}
+
+impl From<GlobalsCfg> for Globals {
+    fn from(value: GlobalsCfg) -> Self {
+        value.globals
+    }
 }

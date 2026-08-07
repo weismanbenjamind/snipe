@@ -1,3 +1,4 @@
+use crate::containers::global_replaceable::GlobalReplaceableLocal;
 use crate::containers::secrets::SecretTomlValue;
 use crate::errors::TargetsError;
 use log::debug;
@@ -18,6 +19,13 @@ pub struct RawPayload {
 pub enum Payload {
     File(PathBuf),
     Params(HashMap<String, SecretTomlValue>),
+}
+
+// TODO - test this
+impl GlobalReplaceableLocal for Payload {
+    fn has_local(&self) -> bool {
+        true
+    }
 }
 
 impl TryFrom<RawPayload> for Payload {
