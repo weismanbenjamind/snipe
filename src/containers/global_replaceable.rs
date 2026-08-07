@@ -59,10 +59,10 @@ impl<T: Clone> GlobalReplaceable<T> {
     }
 }
 
+// TODO - Add timeout
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct Globals {
     pub(crate) auth: Option<HashMap<String, Auth>>,
     pub(crate) headers: Option<HashMap<String, HashMap<String, SecretString>>>,
     pub(crate) payload: Option<HashMap<String, Payload>>,
-    pub(crate) timeout_seconds: Option<HashMap<String, u64>>,
 }
