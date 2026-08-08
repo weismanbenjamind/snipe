@@ -2,10 +2,9 @@ use reqwest::Client as Client_;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use reqwest::{RequestBuilder, Response};
 
-use crate::containers::{Auth, Method, Payload, SecretString, Target};
+use crate::containers::{Auth, Headers, Method, Payload, Target};
 use crate::errors::ClientError;
 use log::{debug, info, warn};
-use std::collections::HashMap;
 use std::str::FromStr;
 use std::time::Duration;
 
@@ -76,7 +75,7 @@ impl Client {
     }
 }
 
-fn build_headers(headers: &HashMap<String, SecretString>) -> Result<HeaderMap, ClientError> {
+fn build_headers(headers: &Headers) -> Result<HeaderMap, ClientError> {
     let mut header_map = HeaderMap::new();
     let mut header_name: HeaderName;
     let mut header_value: HeaderValue;

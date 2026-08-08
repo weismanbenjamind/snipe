@@ -4,7 +4,7 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
-use crate::containers::{Auth, Payload, SecretString};
+use crate::containers::{Auth, Headers, Payload};
 
 #[derive(Clone, Debug, Error)]
 pub enum GlobalReplaceableError {
@@ -75,7 +75,7 @@ impl<T: Clone> GlobalReplaceable<T> {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct Globals {
     pub(crate) auth: Option<HashMap<String, Auth>>,
-    pub(crate) headers: Option<HashMap<String, HashMap<String, SecretString>>>,
+    pub(crate) headers: Option<HashMap<String, Headers>>,
     pub(crate) payload: Option<HashMap<String, Payload>>,
 }
 
