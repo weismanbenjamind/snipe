@@ -1,5 +1,5 @@
 use crate::containers::SecretString;
-use crate::containers::global_replaceable::GlobalReplaceableLocal;
+use crate::containers::globals::GlobalReplaceableLocal;
 use crate::errors::TargetsError;
 use serde::{Deserialize, Serialize};
 

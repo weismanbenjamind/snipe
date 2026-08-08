@@ -1,8 +1,6 @@
-use crate::containers::global_replaceable::Globals;
-use crate::containers::global_replaceable::GlobalsCfg;
-use crate::containers::target::GlobalReplaceableTarget;
-use crate::containers::target::TargetError;
-use crate::containers::{Target, Vars};
+use crate::containers::Vars;
+use crate::containers::globals::{Globals, GlobalsCfg};
+use crate::containers::target::{GlobalReplaceableTarget, Target, TargetError};
 use crate::errors::TargetsError;
 use crate::var_replacement::resolve_vars;
 use log::{debug, info};

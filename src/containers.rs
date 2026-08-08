@@ -1,5 +1,5 @@
 mod auth;
-mod global_replaceable;
+mod globals;
 mod headers;
 mod method;
 mod payload;
@@ -9,7 +9,6 @@ mod targets;
 mod vars;
 
 pub use auth::Auth;
-use global_replaceable::GlobalReplaceableCfg;
 pub use headers::Headers;
 pub use method::Method;
 pub use payload::Payload;

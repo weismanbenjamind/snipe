@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-use crate::containers::{SecretString, global_replaceable::GlobalReplaceableLocal};
+use crate::containers::SecretString;
+use crate::containers::globals::GlobalReplaceableLocal;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

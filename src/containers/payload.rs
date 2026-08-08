@@ -1,4 +1,4 @@
-use crate::containers::global_replaceable::GlobalReplaceableLocal;
+use crate::containers::globals::GlobalReplaceableLocal;
 use crate::containers::secrets::SecretTomlValue;
 use crate::errors::TargetsError;
 use serde::{Deserialize, Serialize};
