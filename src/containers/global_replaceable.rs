@@ -22,8 +22,6 @@ pub(crate) trait GlobalReplaceableLocal {
     fn has_local(&self) -> bool;
 }
 
-// * Since I flatten local if the leftovers can't be parsed to local they just get parsed as None
-// TODO - Try untagged here to try to force the serialize into T and error otherwise. Note the error message will probably be bad
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(bound(serialize = "T: Serialize", deserialize = "T: DeserializeOwned"))]
 pub(crate) struct GlobalReplaceableCfg<T> {
@@ -71,7 +69,6 @@ impl<T: Clone> GlobalReplaceable<T> {
     }
 }
 
-// TODO - Add timeout
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct Globals {
     pub(crate) auth: Option<HashMap<String, Auth>>,

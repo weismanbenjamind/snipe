@@ -82,7 +82,7 @@ pub(crate) struct GlobalReplaceableTarget {
     pub(crate) name: Option<String>,
     pub(crate) url: String,
     pub(crate) method: Method,
-    pub(crate) timeout_seconds: Option<u64>, // TODO - Figure out timeout
+    pub(crate) timeout_seconds: Option<u64>,
     pub(crate) auth: Option<GlobalReplaceableCfg<Auth>>,
     pub(crate) headers: Option<GlobalReplaceableCfg<Headers>>,
     pub(crate) payload: Option<GlobalReplaceableCfg<Payload>>,
@@ -90,15 +90,35 @@ pub(crate) struct GlobalReplaceableTarget {
 
 impl GlobalReplaceableTarget {
     pub(crate) fn into_target(self, globals: Option<&Globals>) -> Result<Target, TargetError> {
+        let globals = OptionalGlobals { globals };
+
         Ok(Target {
             name: self.name,
             url: self.url,
             method: self.method,
             timeout_seconds: self.timeout_seconds,
-            headers: replace_global(self.headers, globals.and_then(|g| g.headers.as_ref()))?,
-            auth: replace_global(self.auth, globals.and_then(|g| g.auth.as_ref()))?,
-            payload: replace_global(self.payload, globals.and_then(|g| g.payload.as_ref()))?,
+            headers: replace_global(self.headers, globals.headers())?,
+            auth: replace_global(self.auth, globals.auth())?,
+            payload: replace_global(self.payload, globals.payload())?,
         })
+    }
+}
+
+struct OptionalGlobals<'a> {
+    globals: Option<&'a Globals>,
+}
+
+impl<'a> OptionalGlobals<'a> {
+    fn headers(&self) -> Option<&HashMap<String, Headers>> {
+        self.globals.and_then(|g| g.headers.as_ref())
+    }
+
+    fn auth(&self) -> Option<&HashMap<String, Auth>> {
+        self.globals.and_then(|g| g.auth.as_ref())
+    }
+
+    fn payload(&self) -> Option<&HashMap<String, Payload>> {
+        self.globals.and_then(|g| g.payload.as_ref())
     }
 }
 
