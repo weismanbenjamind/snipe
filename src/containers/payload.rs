@@ -50,6 +50,8 @@ impl TryFrom<RawPayload> for Payload {
     }
 }
 
+// This function exists because the global parse on payload will cause the .file field to be parsed into the .params field with the key "File"
+// Good to have as a fallback
 impl From<HashMap<String, SecretTomlValue>> for Payload {
     fn from(value: HashMap<String, SecretTomlValue>) -> Self {
         // Must check for single value here
