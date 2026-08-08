@@ -1,10 +1,12 @@
 use crate::containers::global_replaceable::GlobalReplaceableLocal;
 use crate::containers::secrets::SecretTomlValue;
 use crate::errors::TargetsError;
-use log::debug;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use toml::Value as TomlValue;
+
+const FILE_KEY: &str = "file";
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct RawPayload {
@@ -21,17 +23,18 @@ pub enum Payload {
     Params(HashMap<String, SecretTomlValue>),
 }
 
-// TODO - test this
 impl GlobalReplaceableLocal for Payload {
     fn has_local(&self) -> bool {
-        true
+        match self {
+            Self::Params(p) => !p.is_empty(),
+            Self::File(f) => f != Path::new(""),
+        }
     }
 }
 
 impl TryFrom<RawPayload> for Payload {
     type Error = TargetsError;
     fn try_from(value: RawPayload) -> Result<Self, Self::Error> {
-        debug!("Attempting to parse RawPayload into Payload. Parsing raw payload:\n{value:#?}");
         match (value.file, value.params) {
             (None, None) => Err(TargetsError::MissingPayloadFields),
             (Some(file), Some(params)) => match params.is_empty() {
@@ -41,8 +44,33 @@ impl TryFrom<RawPayload> for Payload {
             (Some(file), None) => Ok(Self::File(file)),
             (None, Some(params)) => match params.is_empty() {
                 true => Err(TargetsError::MissingPayloadFields),
-                false => Ok(Self::Params(params)),
+                false => Ok(Payload::from(params)),
             },
+        }
+    }
+}
+
+impl From<HashMap<String, SecretTomlValue>> for Payload {
+    fn from(value: HashMap<String, SecretTomlValue>) -> Self {
+        // Must check for single value here
+        // Risk a panic below if don't
+        if value.len() != 1 {
+            return Payload::Params(value);
+        }
+
+        // .expect is safe here since we checked there is one value above
+        // Must check for single value above or risk panic here
+        let (k, v) = value
+            .iter()
+            .next()
+            .expect("Invalid state. Expected payload to only have one field.");
+
+        if k.to_lowercase() == FILE_KEY
+            && let TomlValue::String(str_path) = v.as_toml_val()
+        {
+            Payload::File(PathBuf::from(str_path))
+        } else {
+            Payload::Params(value)
         }
     }
 }

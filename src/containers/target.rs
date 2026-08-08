@@ -1,7 +1,7 @@
 use crate::containers::global_replaceable::{
     GlobalReplaceable, GlobalReplaceableError, GlobalReplaceableLocal, Globals,
 };
-use crate::containers::{Auth, GlobalReplaceableCfg, Method, Payload, SecretString};
+use crate::containers::{Auth, GlobalReplaceableCfg, Headers, Method, Payload};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use thiserror::Error;
@@ -21,7 +21,7 @@ pub struct Target {
     url: String,
     method: Method,
     timeout_seconds: Option<u64>,
-    headers: Option<HashMap<String, SecretString>>,
+    headers: Option<Headers>,
     auth: Option<Auth>,
     payload: Option<Payload>,
 }
@@ -33,7 +33,7 @@ impl Target {
         url: &str,
         method: Method,
         timeout_seconds: Option<u64>,
-        headers: Option<HashMap<String, SecretString>>,
+        headers: Option<Headers>,
         auth: Option<Auth>,
         payload: Option<Payload>,
     ) -> Self {
@@ -64,7 +64,7 @@ impl Target {
         self.timeout_seconds
     }
 
-    pub fn headers(&self) -> &Option<HashMap<String, SecretString>> {
+    pub fn headers(&self) -> &Option<Headers> {
         &self.headers
     }
 
@@ -84,14 +84,8 @@ pub(crate) struct GlobalReplaceableTarget {
     pub(crate) method: Method,
     pub(crate) timeout_seconds: Option<u64>, // TODO - Figure out timeout
     pub(crate) auth: Option<GlobalReplaceableCfg<Auth>>,
-    pub(crate) headers: Option<GlobalReplaceableCfg<HashMap<String, SecretString>>>,
+    pub(crate) headers: Option<GlobalReplaceableCfg<Headers>>,
     pub(crate) payload: Option<GlobalReplaceableCfg<Payload>>,
-}
-
-impl GlobalReplaceableLocal for HashMap<String, SecretString> {
-    fn has_local(&self) -> bool {
-        !self.is_empty()
-    }
 }
 
 impl GlobalReplaceableTarget {

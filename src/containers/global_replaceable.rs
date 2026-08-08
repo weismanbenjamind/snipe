@@ -23,7 +23,7 @@ pub(crate) trait GlobalReplaceableLocal {
 }
 
 // * Since I flatten local if the leftovers can't be parsed to local they just get parsed as None
-// TODO - Try untagged here to try to force the serialize into T and error otherwise. Note the error will probably be bad
+// TODO - Try untagged here to try to force the serialize into T and error otherwise. Note the error message will probably be bad
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(bound(serialize = "T: Serialize", deserialize = "T: DeserializeOwned"))]
 pub(crate) struct GlobalReplaceableCfg<T> {
@@ -81,11 +81,5 @@ pub(crate) struct Globals {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct GlobalsCfg {
-    pub(crate) globals: Globals,
-}
-
-impl From<GlobalsCfg> for Globals {
-    fn from(value: GlobalsCfg) -> Self {
-        value.globals
-    }
+    pub(crate) globals: Option<Globals>,
 }

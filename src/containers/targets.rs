@@ -32,8 +32,7 @@ impl Targets {
 
         let raw = read_toml(&path)?;
         let to_replace = GlobalReplaceableTargets::from_toml(&raw)?;
-        let globals: Option<Globals> =
-            toml::from_str::<Option<GlobalsCfg>>(&raw)?.map(|cfg| cfg.into());
+        let globals: Option<Globals> = toml::from_str::<GlobalsCfg>(&raw)?.globals;
 
         info!("Replacing globals in targets file.");
         let replaced = to_replace.into_targets(globals.as_ref())?;
@@ -78,7 +77,7 @@ impl GlobalReplaceableTargets {
         debug!("Generating GlobalReplaceableTargets from toml string.");
         let resolved_toml = replace_vars(raw)?;
         let from_toml: Self = toml::from_str(&resolved_toml)?;
-        debug!("Succesfully GlobalReplaceableTargets from toml string.");
+        debug!("Succesfully generated GlobalReplaceableTargets from toml string.");
         Ok(from_toml)
     }
 }
