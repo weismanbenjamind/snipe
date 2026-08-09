@@ -3,4 +3,4 @@ mod formatter;
 mod writer;
 
 use formatter::ResponseFormatter;
-pub use writer::ResponseWriter;
+pub(crate) use writer::ResponseWriter;

@@ -10,16 +10,19 @@ use std::io::Write;
 use std::path::Path;
 
 #[derive(Debug)]
-pub struct ResponseWriter {
+pub(crate) struct ResponseWriter {
     response: Response,
 }
 
 impl ResponseWriter {
-    pub fn new(response: Response) -> Self {
+    pub(crate) fn new(response: Response) -> Self {
         Self { response }
     }
 
-    pub async fn try_into_binary_file(self, output_file: &Path) -> Result<(), ResponseWriterError> {
+    pub(crate) async fn try_into_binary_file(
+        self,
+        output_file: &Path,
+    ) -> Result<(), ResponseWriterError> {
         info!(
             "Trying to write response body as binary to {}.",
             output_file.display()
@@ -51,7 +54,7 @@ impl ResponseWriter {
         Ok(())
     }
 
-    pub async fn try_into_text_file(
+    pub(crate) async fn try_into_text_file(
         self,
         validated_grab: ValidatedGrab,
         validated_format: ValidatedFormat,
@@ -78,7 +81,7 @@ impl ResponseWriter {
         Ok(())
     }
 
-    pub async fn try_into_console(
+    pub(crate) async fn try_into_console(
         self,
         validated_grab: ValidatedGrab,
         validated_format: ValidatedFormat,

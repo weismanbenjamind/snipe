@@ -6,7 +6,7 @@ use reqwest::{Response, StatusCode};
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
-pub struct ResponseFormatter {
+pub(crate) struct ResponseFormatter {
     status_code: StatusCode,
     headers: HashMap<String, String>,
     body: String,
@@ -14,7 +14,11 @@ pub struct ResponseFormatter {
 
 impl ResponseFormatter {
     #[allow(dead_code)]
-    pub fn new(status_code: StatusCode, headers: HashMap<String, String>, body: String) -> Self {
+    pub(crate) fn new(
+        status_code: StatusCode,
+        headers: HashMap<String, String>,
+        body: String,
+    ) -> Self {
         Self {
             status_code,
             headers,
@@ -24,35 +28,37 @@ impl ResponseFormatter {
 
     #[inline]
     #[allow(dead_code)]
-    pub fn status_code(&self) -> StatusCode {
+    pub(crate) fn status_code(&self) -> StatusCode {
         self.status_code
     }
 
     #[inline]
     #[allow(dead_code)]
-    pub fn status_code_u16(&self) -> u16 {
+    pub(crate) fn status_code_u16(&self) -> u16 {
         self.status_code.as_u16()
     }
 
     #[inline]
     #[allow(dead_code)]
-    pub fn status_code_string(&self) -> String {
+    pub(crate) fn status_code_string(&self) -> String {
         self.status_code_u16().to_string()
     }
 
     #[inline]
     #[allow(dead_code)]
-    pub fn headers(&self) -> &HashMap<String, String> {
+    pub(crate) fn headers(&self) -> &HashMap<String, String> {
         &self.headers
     }
 
     #[inline]
     #[allow(dead_code)]
-    pub fn body(&self) -> &str {
+    pub(crate) fn body(&self) -> &str {
         &self.body
     }
 
-    pub async fn try_from_response(response: Response) -> Result<Self, ResponseFormatterError> {
+    pub(crate) async fn try_from_response(
+        response: Response,
+    ) -> Result<Self, ResponseFormatterError> {
         Ok(Self {
             status_code: response.status(),
             headers: build_response_headers(response.headers())?,
@@ -60,7 +66,7 @@ impl ResponseFormatter {
         })
     }
 
-    pub fn get_http_string(
+    pub(crate) fn get_http_string(
         &self,
         status_code: bool,
         headers: bool,
@@ -75,7 +81,7 @@ impl ResponseFormatter {
         .map_err(ResponseFormatterError::to_string_err_from_err)
     }
 
-    pub fn get_json_string(
+    pub(crate) fn get_json_string(
         &self,
         status_code: bool,
         headers: bool,

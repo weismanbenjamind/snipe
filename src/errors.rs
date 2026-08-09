@@ -39,13 +39,13 @@ impl From<ResponseWriterError> for RunError {
 }
 
 #[derive(Debug, Error)]
-pub enum VarReplaceError {
+pub(crate) enum VarReplaceError {
     #[error("{0}")]
     Base(String),
 }
 
 #[derive(Debug, Error)]
-pub enum TargetsError {
+pub(crate) enum TargetsError {
     #[error("Failed to deserialize targets file. Error: {0}")]
     Dersialization(String),
 
@@ -63,7 +63,7 @@ pub enum TargetsError {
 }
 
 impl TargetsError {
-    pub fn deserialization_from_err<T: StdErr>(err: T) -> Self {
+    pub(crate) fn deserialization_from_err<T: StdErr>(err: T) -> Self {
         Self::Dersialization(err.to_string())
     }
 }
@@ -75,7 +75,7 @@ impl From<toml::de::Error> for TargetsError {
 }
 
 #[derive(Debug, Error)]
-pub enum ClientError {
+pub(crate) enum ClientError {
     #[error("Failed to build client. Error: {0}.")]
     ClientBuild(String),
 
@@ -98,7 +98,7 @@ pub enum ClientError {
 }
 
 #[derive(Debug, Error)]
-pub enum ResponseFormatterError {
+pub(crate) enum ResponseFormatterError {
     #[error("Failed to build response metadata. Error: {0}.")]
     Build(String),
 
@@ -113,11 +113,11 @@ pub enum ResponseFormatterError {
 }
 
 impl ResponseFormatterError {
-    pub fn to_string_err_from_err<T: StdErr>(e: T) -> Self {
+    pub(crate) fn to_string_err_from_err<T: StdErr>(e: T) -> Self {
         Self::ToString(e.to_string())
     }
 
-    pub fn new_response_field_to_string<T: StdErr>(field: &str, err: T) -> Self {
+    pub(crate) fn new_response_field_to_string<T: StdErr>(field: &str, err: T) -> Self {
         Self::ResponseFieldToString(field.into(), err.to_string())
     }
 }
@@ -141,17 +141,17 @@ pub enum ArgsValidationError {
 }
 
 impl ArgsValidationError {
-    pub fn new_base<T>(msg: &str) -> Result<T, Self> {
+    pub(crate) fn new_base<T>(msg: &str) -> Result<T, Self> {
         Err(Self::base_from_str(msg))
     }
 
-    pub fn base_from_str(value: &str) -> Self {
+    pub(crate) fn base_from_str(value: &str) -> Self {
         Self::Base(value.into())
     }
 }
 
 #[derive(Debug, Error)]
-pub enum CfgResolverError {
+pub(crate) enum CfgResolverError {
     #[error(
         "Failed to resolve path to configuration file. Path at {0} does not exist and value at env var {1} is not not set."
     )]
@@ -165,7 +165,7 @@ pub enum CfgResolverError {
 }
 
 #[derive(Debug, Error)]
-pub enum FilesystemError {
+pub(crate) enum FilesystemError {
     #[error("Failed to create path to output path {0}. Error: {1}")]
     PathCreation(String, String),
 
@@ -174,7 +174,7 @@ pub enum FilesystemError {
 }
 
 #[derive(Debug, Error)]
-pub enum ResponseWriterError {
+pub(crate) enum ResponseWriterError {
     #[error("{0}")]
     Base(String),
 
@@ -201,7 +201,7 @@ impl From<ResponseFormatterError> for ResponseWriterError {
 }
 
 impl ResponseWriterError {
-    pub fn binary_write_from_err<T: StdErr>(err: T) -> Self {
+    pub(crate) fn binary_write_from_err<T: StdErr>(err: T) -> Self {
         Self::BinaryWrite(err.to_string())
     }
 }

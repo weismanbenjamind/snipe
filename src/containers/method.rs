@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Clone, Copy, Serialize)]
 #[serde(try_from = "String")]
-pub enum Method {
+pub(crate) enum Method {
     Get,
     Delete,
     Post,

@@ -5,7 +5,7 @@ use crate::containers::globals::GlobalReplaceableLocal;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Headers(HashMap<String, SecretString>);
+pub(crate) struct Headers(HashMap<String, SecretString>);
 
 // Allow for 'for ... in headers' without consuming headers (since implemented on &'a Headers)
 // Also gives the .into_iter() on &Headers

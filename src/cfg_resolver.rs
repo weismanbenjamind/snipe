@@ -6,20 +6,20 @@ use std::path::{Path, PathBuf};
 
 const HOME_DELMITER: &str = "~";
 
-pub struct CfgResolver<'a> {
+pub(crate) struct CfgResolver<'a> {
     cfg_path: &'a Path,
     cfg_env_var: Option<&'a str>,
 }
 
 impl<'a> CfgResolver<'a> {
-    pub fn new(cfg_path: &'a Path, cfg_env_var: Option<&'a str>) -> Self {
+    pub(crate) fn new(cfg_path: &'a Path, cfg_env_var: Option<&'a str>) -> Self {
         Self {
             cfg_path,
             cfg_env_var,
         }
     }
 
-    pub fn resolve_cfg_path_from_env(self) -> Result<PathBuf, CfgResolverError> {
+    pub(crate) fn resolve_cfg_path_from_env(self) -> Result<PathBuf, CfgResolverError> {
         let found = match self.cfg_path.exists() {
             true => {
                 info!("Passed config file path exists. Skipping using env to find config.");

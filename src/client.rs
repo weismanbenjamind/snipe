@@ -8,12 +8,12 @@ use log::{debug, info, warn};
 use std::str::FromStr;
 use std::time::Duration;
 
-pub struct Client {
+pub(crate) struct Client {
     _client: Client_,
 }
 
 impl Client {
-    pub fn new() -> Result<Self, ClientError> {
+    pub(crate) fn new() -> Result<Self, ClientError> {
         info!("Building client");
         let _client = Client_::builder()
             .build()
@@ -22,7 +22,7 @@ impl Client {
         Ok(Self { _client })
     }
 
-    pub async fn send_request(&self, target: &Target) -> Result<Response, ClientError> {
+    pub(crate) async fn send_request(&self, target: &Target) -> Result<Response, ClientError> {
         self.build_request(target)?
             .send()
             .await

@@ -11,7 +11,7 @@ use crate::response::ResponseWriter;
 use std::path::PathBuf;
 
 #[derive(Clone, Debug)]
-pub struct ShootCmd {
+pub(crate) struct ShootCmd {
     target: String,
     validated_grab: ValidatedGrab,
     validated_format: ValidatedFormat,
@@ -20,7 +20,7 @@ pub struct ShootCmd {
 }
 
 impl ShootCmd {
-    pub fn new(
+    pub(crate) fn new(
         target: String,
         validated_grab: ValidatedGrab,
         validated_format: ValidatedFormat,
@@ -36,23 +36,23 @@ impl ShootCmd {
         })
     }
 
-    pub fn target(&self) -> &str {
+    pub(crate) fn target(&self) -> &str {
         &self.target
     }
 
-    pub fn validated_grab(&self) -> ValidatedGrab {
+    pub(crate) fn validated_grab(&self) -> ValidatedGrab {
         self.validated_grab
     }
 
-    pub fn validated_format(&self) -> ValidatedFormat {
+    pub(crate) fn validated_format(&self) -> ValidatedFormat {
         self.validated_format
     }
 
-    pub fn pretty(&self) -> bool {
+    pub(crate) fn pretty(&self) -> bool {
         self.pretty
     }
 
-    pub fn output_file(&self) -> Option<&Path> {
+    pub(crate) fn output_file(&self) -> Option<&Path> {
         self.output_file.as_deref()
     }
 }
@@ -75,7 +75,7 @@ impl TryFrom<RawShootArgs> for ShootCmd {
 }
 
 impl ShootCmd {
-    pub async fn run(&self, targets: &Targets) -> Result<(), RunError> {
+    pub(crate) async fn run(&self, targets: &Targets) -> Result<(), RunError> {
         info!("Starting request process.");
 
         let target = targets

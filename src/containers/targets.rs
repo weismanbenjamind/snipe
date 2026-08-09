@@ -10,19 +10,19 @@ use std::path::Path;
 use std::{collections::HashMap, ffi::OsStr};
 
 #[derive(Debug, Deserialize, Clone, Serialize)]
-pub struct Targets {
+pub(crate) struct Targets {
     targets: HashMap<String, Target>,
 }
 
 impl Targets {
     #[allow(dead_code)]
-    pub fn new(targets: HashMap<String, Target>) -> Self {
+    pub(crate) fn new(targets: HashMap<String, Target>) -> Self {
         Self { targets }
     }
 
     // Note Targets is never meant to be written back to a toml file
     // It's a runtime artifact full of replaced variables, environment variables, potential secrets, etc.
-    pub fn from_toml_file<P: AsRef<Path>>(path: &P) -> Result<Self, TargetsError> {
+    pub(crate) fn from_toml_file<P: AsRef<Path>>(path: &P) -> Result<Self, TargetsError> {
         info!(
             "Generating Targets from .toml file at {}",
             path.as_ref().display()
@@ -46,11 +46,11 @@ impl Targets {
         Ok(replaced)
     }
 
-    pub fn get_target(&self, target: &str) -> Option<&Target> {
+    pub(crate) fn get_target(&self, target: &str) -> Option<&Target> {
         self.targets.get(target)
     }
 
-    pub fn as_map(&self) -> &HashMap<String, Target> {
+    pub(crate) fn as_map(&self) -> &HashMap<String, Target> {
         &self.targets
     }
 }

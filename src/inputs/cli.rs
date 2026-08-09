@@ -98,14 +98,14 @@ impl TryFrom<RawSnipeCLIArgs> for SnipeCLIArgs {
 
 // Note - comments below are actually used of for CLI documentation
 #[derive(Clone, Debug, Subcommand)]
-pub enum RawCommand {
+pub(crate) enum RawCommand {
     /// List all potential API requests to make
     List,
     Shoot(RawShootArgs),
 }
 
 #[derive(Clone, Debug)]
-pub enum Command {
+pub(crate) enum Command {
     List,
     Shoot(ShootCmd),
 }

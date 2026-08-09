@@ -7,7 +7,7 @@ use thiserror::Error;
 use crate::containers::{Auth, Headers, Payload};
 
 #[derive(Clone, Debug, Error)]
-pub enum GlobalReplaceableError {
+pub(crate) enum GlobalReplaceableError {
     #[error("Could not find requested global variable {0}")]
     MissingGlobal(String),
 

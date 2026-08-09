@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use thiserror::Error;
 
 #[derive(Clone, Debug, Error)]
-pub enum TargetError {
+pub(crate) enum TargetError {
     #[error("{0}")]
     GlobalReplaceable(#[from] GlobalReplaceableError),
 
@@ -17,7 +17,7 @@ pub enum TargetError {
 }
 
 #[derive(Debug, Deserialize, Clone, Serialize)]
-pub struct Target {
+pub(crate) struct Target {
     name: Option<String>,
     url: String,
     method: Method,
@@ -29,7 +29,7 @@ pub struct Target {
 
 impl Target {
     #[allow(dead_code)]
-    pub fn new(
+    pub(crate) fn new(
         name: Option<String>,
         url: &str,
         method: Method,
@@ -49,31 +49,31 @@ impl Target {
         }
     }
 
-    pub fn name(&self) -> Option<&str> {
+    pub(crate) fn name(&self) -> Option<&str> {
         self.name.as_deref()
     }
 
-    pub fn method(&self) -> Method {
+    pub(crate) fn method(&self) -> Method {
         self.method
     }
 
-    pub fn url(&self) -> &str {
+    pub(crate) fn url(&self) -> &str {
         &self.url
     }
 
-    pub fn timeout_seconds(&self) -> Option<u64> {
+    pub(crate) fn timeout_seconds(&self) -> Option<u64> {
         self.timeout_seconds
     }
 
-    pub fn headers(&self) -> &Option<Headers> {
+    pub(crate) fn headers(&self) -> &Option<Headers> {
         &self.headers
     }
 
-    pub fn auth(&self) -> &Option<Auth> {
+    pub(crate) fn auth(&self) -> &Option<Auth> {
         &self.auth
     }
 
-    pub fn payload(&self) -> Option<&Payload> {
+    pub(crate) fn payload(&self) -> Option<&Payload> {
         self.payload.as_ref()
     }
 }

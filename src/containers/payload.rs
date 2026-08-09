@@ -12,7 +12,7 @@ const FILE_KEY: &str = "file";
 const PARAMS_KEY: &str = "params";
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct RawPayload {
+pub(crate) struct RawPayload {
     file: Option<PathBuf>,
 
     #[serde(flatten)]
@@ -21,7 +21,7 @@ pub struct RawPayload {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(try_from = "RawPayload")]
-pub enum Payload {
+pub(crate) enum Payload {
     File(PathBuf),
     Params(HashMap<String, SecretTomlValue>),
 }
