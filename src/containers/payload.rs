@@ -35,7 +35,6 @@ impl GlobalReplaceableLocal for Payload {
     }
 }
 
-// TODO - Need to update this - serde parses into a HashMap with a Params key when it's present
 impl TryFrom<RawPayload> for Payload {
     type Error = TargetsError;
     fn try_from(value: RawPayload) -> Result<Self, Self::Error> {

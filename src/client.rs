@@ -107,7 +107,6 @@ fn build_auth(request_builder: RequestBuilder, auth: &Auth) -> RequestBuilder {
     }
 }
 
-// TODO - Need to fix params parsing and get rid of expect call below
 fn build_payload(
     request_builder: RequestBuilder,
     payload: &Payload,
