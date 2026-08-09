@@ -44,10 +44,10 @@ impl RawGrab {
 
 #[derive(Clone, Copy, Debug)]
 pub struct ValidatedGrab {
-    status_code: bool,
-    headers: bool,
-    body: bool,
-    int_status_code: bool,
+    pub(crate) status_code: bool,
+    pub(crate) headers: bool,
+    pub(crate) body: bool,
+    pub(crate) int_status_code: bool,
 }
 
 impl ValidatedGrab {
@@ -57,7 +57,7 @@ impl ValidatedGrab {
         validated_format: ValidatedFormat,
     ) -> Result<Self, ArgsValidationError> {
         let grab = Self::init_from_raw_grab(grab);
-        match validated_format.raw_format() {
+        match validated_format.raw_format {
             RawFormat::Http => Ok(grab),
             RawFormat::Json => Ok(grab),
             RawFormat::PrettyJson => Ok(grab),
@@ -71,22 +71,6 @@ impl ValidatedGrab {
     #[inline]
     fn only_body(&self) -> bool {
         self.body && !self.headers && !self.status_code && !self.int_status_code
-    }
-
-    pub fn status_code(&self) -> bool {
-        self.status_code
-    }
-
-    pub fn headers(&self) -> bool {
-        self.headers
-    }
-
-    pub fn body(&self) -> bool {
-        self.body
-    }
-
-    pub fn int_status_code(&self) -> bool {
-        self.int_status_code
     }
 
     // Validation occurs at the RawGrab level

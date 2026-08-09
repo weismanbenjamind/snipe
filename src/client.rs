@@ -33,25 +33,25 @@ impl Client {
         info!("Starting request build.");
         let mut request_builder = self.init_request_builder(target);
 
-        if let Some(timeout) = target.timeout_seconds() {
+        if let Some(timeout) = target.timeout_seconds {
             debug!("Adding timeout of {timeout} seconds.");
             request_builder = request_builder.timeout(Duration::from_secs(timeout));
             debug!("Timeout added.")
         }
 
-        if let Some(headers) = target.headers() {
+        if let Some(headers) = &target.headers {
             debug!("Adding headers:\n{headers:#?}");
             request_builder = request_builder.headers(build_headers(headers)?);
             debug!("Headers added.")
         }
 
-        if let Some(auth) = target.auth() {
+        if let Some(auth) = &target.auth {
             debug!("Adding auth:\n{auth:#?}");
             request_builder = build_auth(request_builder, auth);
             debug!("Auth added.")
         }
 
-        if let Some(payload) = target.payload() {
+        if let Some(payload) = &target.payload {
             debug!("Adding payload:\n{payload:#?}");
             request_builder = build_payload(request_builder, payload)?;
             debug!("Payload added.");
@@ -62,8 +62,8 @@ impl Client {
     }
 
     fn init_request_builder(&self, target: &Target) -> RequestBuilder {
-        let method = target.method();
-        let url = target.url();
+        let method = target.method;
+        let url = &target.url;
         debug!("Attempting to build '{:?}' request for url {url}", method);
         match method {
             Method::Delete => self._client.delete(url),
@@ -100,9 +100,9 @@ fn get_header_value(header_value: &str) -> Result<HeaderValue, ClientError> {
 
 fn build_auth(request_builder: RequestBuilder, auth: &Auth) -> RequestBuilder {
     match auth {
-        Auth::Bearer(bearer_auth) => request_builder.bearer_auth(bearer_auth.token().value()),
+        Auth::Bearer(bearer_auth) => request_builder.bearer_auth(bearer_auth.token.value()),
         Auth::Basic(basic_auth) => {
-            request_builder.basic_auth(basic_auth.username(), Some(basic_auth.password().value()))
+            request_builder.basic_auth(&basic_auth.username, Some(basic_auth.password.value()))
         }
     }
 }

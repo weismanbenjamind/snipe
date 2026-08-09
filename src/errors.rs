@@ -137,16 +137,6 @@ pub enum ArgsValidationError {
     NoOutputFileWithBinary,
 }
 
-impl ArgsValidationError {
-    pub(crate) fn new_base<T>(msg: &str) -> Result<T, Self> {
-        Err(Self::base_from_str(msg))
-    }
-
-    pub(crate) fn base_from_str(value: &str) -> Self {
-        Self::Base(value.into())
-    }
-}
-
 #[derive(Debug, Error)]
 pub(crate) enum CfgResolverError {
     #[error(

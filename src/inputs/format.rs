@@ -13,15 +13,11 @@ pub enum RawFormat {
 
 #[derive(Clone, Copy, Debug)]
 pub struct ValidatedFormat {
-    raw_format: RawFormat,
+    pub(crate) raw_format: RawFormat,
 }
 
 impl ValidatedFormat {
-    pub fn raw_format(&self) -> RawFormat {
-        self.raw_format
-    }
-
-    pub fn new_validated(
+    pub(crate) fn new_validated(
         raw_format: RawFormat,
         pretty: bool,
         output_file: Option<&Path>,

@@ -13,47 +13,10 @@ pub(crate) struct ResponseFormatter {
 }
 
 impl ResponseFormatter {
-    #[allow(dead_code)]
-    pub(crate) fn new(
-        status_code: StatusCode,
-        headers: HashMap<String, String>,
-        body: String,
-    ) -> Self {
-        Self {
-            status_code,
-            headers,
-            body,
-        }
-    }
-
-    #[inline]
-    #[allow(dead_code)]
-    pub(crate) fn status_code(&self) -> StatusCode {
-        self.status_code
-    }
-
-    #[inline]
-    #[allow(dead_code)]
-    pub(crate) fn status_code_u16(&self) -> u16 {
-        self.status_code.as_u16()
-    }
-
     #[inline]
     #[allow(dead_code)]
     pub(crate) fn status_code_string(&self) -> String {
-        self.status_code_u16().to_string()
-    }
-
-    #[inline]
-    #[allow(dead_code)]
-    pub(crate) fn headers(&self) -> &HashMap<String, String> {
-        &self.headers
-    }
-
-    #[inline]
-    #[allow(dead_code)]
-    pub(crate) fn body(&self) -> &str {
-        &self.body
+        self.status_code.as_u16().to_string()
     }
 
     pub(crate) async fn try_from_response(

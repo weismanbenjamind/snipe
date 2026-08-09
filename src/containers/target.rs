@@ -18,64 +18,13 @@ pub(crate) enum TargetError {
 
 #[derive(Debug, Deserialize, Clone, Serialize)]
 pub(crate) struct Target {
-    name: Option<String>,
-    url: String,
-    method: Method,
-    timeout_seconds: Option<u64>,
-    headers: Option<Headers>,
-    auth: Option<Auth>,
-    payload: Option<Payload>,
-}
-
-impl Target {
-    #[allow(dead_code)]
-    pub(crate) fn new(
-        name: Option<String>,
-        url: &str,
-        method: Method,
-        timeout_seconds: Option<u64>,
-        headers: Option<Headers>,
-        auth: Option<Auth>,
-        payload: Option<Payload>,
-    ) -> Self {
-        Self {
-            name,
-            url: url.to_string(),
-            method,
-            timeout_seconds,
-            headers,
-            auth,
-            payload,
-        }
-    }
-
-    pub(crate) fn name(&self) -> Option<&str> {
-        self.name.as_deref()
-    }
-
-    pub(crate) fn method(&self) -> Method {
-        self.method
-    }
-
-    pub(crate) fn url(&self) -> &str {
-        &self.url
-    }
-
-    pub(crate) fn timeout_seconds(&self) -> Option<u64> {
-        self.timeout_seconds
-    }
-
-    pub(crate) fn headers(&self) -> &Option<Headers> {
-        &self.headers
-    }
-
-    pub(crate) fn auth(&self) -> &Option<Auth> {
-        &self.auth
-    }
-
-    pub(crate) fn payload(&self) -> Option<&Payload> {
-        self.payload.as_ref()
-    }
+    pub(crate) name: Option<String>,
+    pub(crate) url: String,
+    pub(crate) method: Method,
+    pub(crate) timeout_seconds: Option<u64>,
+    pub(crate) headers: Option<Headers>,
+    pub(crate) auth: Option<Auth>,
+    pub(crate) payload: Option<Payload>,
 }
 
 #[derive(Debug, Deserialize, Clone, Serialize)]

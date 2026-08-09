@@ -19,20 +19,6 @@ pub(crate) struct ShootCmd {
     output_file: Option<PathBuf>,
 }
 
-impl ShootCmd {
-    pub(crate) fn target(&self) -> &str {
-        &self.target
-    }
-
-    pub(crate) fn validated_format(&self) -> ValidatedFormat {
-        self.validated_format
-    }
-
-    pub(crate) fn output_file(&self) -> Option<&Path> {
-        self.output_file.as_deref()
-    }
-}
-
 impl TryFrom<RawShootArgs> for ShootCmd {
     type Error = ArgsValidationError;
     fn try_from(value: RawShootArgs) -> Result<Self, Self::Error> {
@@ -55,12 +41,12 @@ impl ShootCmd {
         info!("Starting request process.");
 
         let target = targets
-            .get_target(self.target())
+            .get_target(&self.target)
             .ok_or_else(|| RunError::Failure(format!("Failed to find target {}", self.target)))?;
 
         info!(
             "Sending request for target '{}'.",
-            target.name().unwrap_or(&self.target)
+            target.name.as_ref().unwrap_or(&self.target)
         );
         let response = Client::new()?.send_request(target).await?;
         info!("Response recieved");
@@ -68,15 +54,17 @@ impl ShootCmd {
         let response_writer = ResponseWriter::new(response);
 
         info!("Outputting response");
-        match self.validated_format().raw_format() {
-            RawFormat::Binary => handle_binary_output(response_writer, self.output_file()).await,
+        match self.validated_format.raw_format {
+            RawFormat::Binary => {
+                handle_binary_output(response_writer, self.output_file.as_deref()).await
+            }
             RawFormat::Http | RawFormat::Json | RawFormat::PrettyJson => {
                 handle_string_output(
                     response_writer,
                     self.validated_grab,
                     self.validated_format,
                     self.pretty,
-                    self.output_file(),
+                    self.output_file.as_deref(),
                 )
                 .await
             }
