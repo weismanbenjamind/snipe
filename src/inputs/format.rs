@@ -4,7 +4,7 @@ use serde::Serialize;
 use std::path::Path;
 
 #[derive(Clone, Copy, Debug, Serialize, ValueEnum)]
-pub enum RawFormat {
+pub(crate) enum RawFormat {
     Http,
     Json,
     PrettyJson,
@@ -12,7 +12,7 @@ pub enum RawFormat {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct ValidatedFormat {
+pub(crate) struct ValidatedFormat {
     pub(crate) raw_format: RawFormat,
 }
 

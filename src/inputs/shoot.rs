@@ -5,7 +5,7 @@ use std::path::PathBuf;
 
 #[derive(Args, Debug, Clone)]
 #[command(about = "Make a specific API request")]
-pub struct RawShootArgs {
+pub(crate) struct RawShootArgs {
     #[arg(help = "Target HTTP request to send")]
     target: String,
 
@@ -37,7 +37,7 @@ pub struct RawShootArgs {
 }
 
 impl RawShootArgs {
-    pub fn into_parts(self) -> (String, RawGrab, RawFormat, bool, Option<PathBuf>) {
+    pub(crate) fn into_parts(self) -> (String, RawGrab, RawFormat, bool, Option<PathBuf>) {
         (
             self.target,
             self.grab,

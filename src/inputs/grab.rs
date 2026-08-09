@@ -4,7 +4,7 @@ use clap::Args;
 
 #[derive(Args, Clone, Copy, Debug)]
 #[group(multiple = true, required = false)]
-pub struct RawGrab {
+pub(crate) struct RawGrab {
     #[arg(
         long,
         short = 'S',
@@ -43,7 +43,7 @@ impl RawGrab {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct ValidatedGrab {
+pub(crate) struct ValidatedGrab {
     pub(crate) status_code: bool,
     pub(crate) headers: bool,
     pub(crate) body: bool,

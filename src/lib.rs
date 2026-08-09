@@ -3,7 +3,7 @@ pub mod cli_formatting;
 mod client;
 mod commands;
 mod containers;
-pub mod errors;
+mod errors;
 pub mod inputs;
 mod response;
 mod run;
