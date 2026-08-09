@@ -13,7 +13,7 @@ struct RawAuth {
 
 #[derive(Debug, Deserialize, Clone, Serialize)]
 #[serde(tag = "scheme", try_from = "RawAuth")]
-pub enum Auth {
+pub(crate) enum Auth {
     Bearer(BearerAuth),
     Basic(BasicAuth),
 }
@@ -65,41 +65,12 @@ fn get_missing_auth_field_err(field_name: &str, auth_type: &str) -> TargetsError
 }
 
 #[derive(Debug, Deserialize, Clone, Serialize)]
-pub struct BearerAuth {
-    token: SecretString,
-}
-
-impl BearerAuth {
-    #[allow(dead_code)]
-    pub(crate) fn new(token: SecretString) -> Self {
-        Self { token }
-    }
-
-    pub(crate) fn token(&self) -> &SecretString {
-        &self.token
-    }
+pub(crate) struct BearerAuth {
+    pub(crate) token: SecretString,
 }
 
 #[derive(Debug, Deserialize, Clone, Serialize)]
-pub struct BasicAuth {
-    username: String,
-    password: SecretString,
-}
-
-impl BasicAuth {
-    #[allow(dead_code)]
-    pub(crate) fn new(username: &str, password: SecretString) -> Self {
-        Self {
-            username: username.to_string(),
-            password,
-        }
-    }
-
-    pub(crate) fn username(&self) -> &str {
-        &self.username
-    }
-
-    pub(crate) fn password(&self) -> &SecretString {
-        &self.password
-    }
+pub(crate) struct BasicAuth {
+    pub(crate) username: String,
+    pub(crate) password: SecretString,
 }

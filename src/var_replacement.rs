@@ -1,10 +1,9 @@
 use crate::containers::Vars;
+use crate::errors::VarReplaceError;
 use log::debug;
 use regex::{Captures, Regex};
 use std::collections::HashSet;
 use std::env;
-
-use crate::errors::VarReplaceError;
 
 // Raw string to not treat \ as escape characters
 // \$ to match literal '$'
@@ -32,7 +31,7 @@ const VAR_PATTERN_DEFAULT: &str = r"\$\{VARS\.([^}]+)\}";
 
 const MISSING: &str = "MISSING";
 
-pub fn resolve_vars(
+pub(crate) fn resolve_vars(
     toml_str: &str,
     maybe_vars: Option<&Vars>,
     var_pattern: Option<&str>,

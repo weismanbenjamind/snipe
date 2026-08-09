@@ -3,7 +3,8 @@ mod format;
 mod grab;
 mod shoot;
 
-pub use cli::{Command, RawCommand, RawSnipeCLIArgs, SnipeCLIArgs};
-pub use format::{RawFormat, ValidatedFormat};
-pub use grab::{RawGrab, ValidatedGrab};
-pub use shoot::RawShootArgs;
+pub(crate) use cli::Command;
+pub use cli::{RawSnipeCLIArgs, SnipeCLIArgs};
+pub(crate) use format::{RawFormat, ValidatedFormat};
+pub(crate) use grab::ValidatedGrab;
+pub(crate) use shoot::RawShootArgs;

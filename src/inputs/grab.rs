@@ -4,7 +4,7 @@ use clap::Args;
 
 #[derive(Args, Clone, Copy, Debug)]
 #[group(multiple = true, required = false)]
-pub struct RawGrab {
+pub(crate) struct RawGrab {
     #[arg(
         long,
         short = 'S',
@@ -37,81 +37,27 @@ pub struct RawGrab {
 }
 
 impl RawGrab {
-    pub fn new(
-        status_code: bool,
-        headers: bool,
-        body: bool,
-        int_status_code: bool,
-        full: bool,
-    ) -> Result<Self, ArgsValidationError> {
-        let have_individuals = status_code || headers || body;
-
-        if have_individuals && int_status_code {
-            return ArgsValidationError::new_base(
-                "Cannot pass status_code, headers, or body, with int_status_code.",
-            );
-        }
-
-        if have_individuals && full {
-            return ArgsValidationError::new_base(
-                "Cannot pass status_code, headers, or body, with full",
-            );
-        }
-
-        if int_status_code && full {
-            return ArgsValidationError::new_base("Cannot pass full with int_status_code.");
-        }
-
-        Ok(Self {
-            status_code,
-            headers,
-            body,
-            int_status_code,
-            full,
-        })
-    }
-
-    pub fn status_code(&self) -> bool {
-        self.status_code
-    }
-
-    pub fn headers(&self) -> bool {
-        self.headers
-    }
-
-    pub fn body(&self) -> bool {
-        self.body
-    }
-
-    pub fn int_status_code(&self) -> bool {
-        self.int_status_code
-    }
-
-    pub fn full(&self) -> bool {
-        self.full
-    }
-
-    pub fn in_default_state(&self) -> bool {
+    fn in_default_state(&self) -> bool {
         !self.status_code && !self.headers && !self.body && !self.int_status_code && !self.full
     }
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct ValidatedGrab {
-    status_code: bool,
-    headers: bool,
-    body: bool,
-    int_status_code: bool,
+pub(crate) struct ValidatedGrab {
+    pub(crate) status_code: bool,
+    pub(crate) headers: bool,
+    pub(crate) body: bool,
+    pub(crate) int_status_code: bool,
 }
 
 impl ValidatedGrab {
     // Validation occurs at RawGrab level (for response component combos) and below for interaction with formatting
-    pub fn new_validated(
+    pub(crate) fn new_validated(
         grab: RawGrab,
         validated_format: ValidatedFormat,
     ) -> Result<Self, ArgsValidationError> {
         let grab = Self::init_from_raw_grab(grab);
-        match validated_format.raw_format() {
+        match validated_format.raw_format {
             RawFormat::Http => Ok(grab),
             RawFormat::Json => Ok(grab),
             RawFormat::PrettyJson => Ok(grab),
@@ -125,22 +71,6 @@ impl ValidatedGrab {
     #[inline]
     fn only_body(&self) -> bool {
         self.body && !self.headers && !self.status_code && !self.int_status_code
-    }
-
-    pub fn status_code(&self) -> bool {
-        self.status_code
-    }
-
-    pub fn headers(&self) -> bool {
-        self.headers
-    }
-
-    pub fn body(&self) -> bool {
-        self.body
-    }
-
-    pub fn int_status_code(&self) -> bool {
-        self.int_status_code
     }
 
     // Validation occurs at the RawGrab level

@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use thiserror::Error;
 
 #[derive(Clone, Debug, Error)]
-pub enum TargetError {
+pub(crate) enum TargetError {
     #[error("{0}")]
     GlobalReplaceable(#[from] GlobalReplaceableError),
 
@@ -17,76 +17,25 @@ pub enum TargetError {
 }
 
 #[derive(Debug, Deserialize, Clone, Serialize)]
-pub struct Target {
-    name: Option<String>,
-    url: String,
-    method: Method,
-    timeout_seconds: Option<u64>,
-    headers: Option<Headers>,
-    auth: Option<Auth>,
-    payload: Option<Payload>,
-}
-
-impl Target {
-    #[allow(dead_code)]
-    pub fn new(
-        name: Option<String>,
-        url: &str,
-        method: Method,
-        timeout_seconds: Option<u64>,
-        headers: Option<Headers>,
-        auth: Option<Auth>,
-        payload: Option<Payload>,
-    ) -> Self {
-        Self {
-            name,
-            url: url.to_string(),
-            method,
-            timeout_seconds,
-            headers,
-            auth,
-            payload,
-        }
-    }
-
-    pub fn name(&self) -> Option<&str> {
-        self.name.as_deref()
-    }
-
-    pub fn method(&self) -> Method {
-        self.method
-    }
-
-    pub fn url(&self) -> &str {
-        &self.url
-    }
-
-    pub fn timeout_seconds(&self) -> Option<u64> {
-        self.timeout_seconds
-    }
-
-    pub fn headers(&self) -> &Option<Headers> {
-        &self.headers
-    }
-
-    pub fn auth(&self) -> &Option<Auth> {
-        &self.auth
-    }
-
-    pub fn payload(&self) -> Option<&Payload> {
-        self.payload.as_ref()
-    }
-}
-
-#[derive(Debug, Deserialize, Clone, Serialize)]
-pub(crate) struct GlobalReplaceableTarget {
+pub(crate) struct Target {
     pub(crate) name: Option<String>,
     pub(crate) url: String,
     pub(crate) method: Method,
     pub(crate) timeout_seconds: Option<u64>,
-    pub(crate) auth: Option<GlobalReplaceableCfg<Auth>>,
-    pub(crate) headers: Option<GlobalReplaceableCfg<Headers>>,
-    pub(crate) payload: Option<GlobalReplaceableCfg<Payload>>,
+    pub(crate) headers: Option<Headers>,
+    pub(crate) auth: Option<Auth>,
+    pub(crate) payload: Option<Payload>,
+}
+
+#[derive(Debug, Deserialize, Clone, Serialize)]
+pub(super) struct GlobalReplaceableTarget {
+    name: Option<String>,
+    url: String,
+    method: Method,
+    timeout_seconds: Option<u64>,
+    auth: Option<GlobalReplaceableCfg<Auth>>,
+    headers: Option<GlobalReplaceableCfg<Headers>>,
+    payload: Option<GlobalReplaceableCfg<Payload>>,
 }
 
 impl GlobalReplaceableTarget {

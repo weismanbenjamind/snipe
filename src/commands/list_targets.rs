@@ -5,7 +5,7 @@ use crate::errors::RunError;
 use std::error::Error;
 use std::fmt::Write;
 
-pub fn run_list_targets_cmd(targets: &Targets) -> Result<(), RunError> {
+pub(crate) fn run_list_targets_cmd(targets: &Targets) -> Result<(), RunError> {
     info!("Getting target list.");
 
     info!("Writing target names to buffer.");

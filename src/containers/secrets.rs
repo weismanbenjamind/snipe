@@ -5,10 +5,10 @@ use toml::map::Map as TomlMap;
 const REDACTED_DELIMITER: &str = "*****";
 
 #[derive(Clone, Deserialize, Serialize)]
-pub struct SecretString(String);
+pub(crate) struct SecretString(String);
 
 impl SecretString {
-    pub fn value(&self) -> &str {
+    pub(crate) fn value(&self) -> &str {
         &self.0
     }
 }
@@ -32,13 +32,9 @@ impl std::fmt::Debug for SecretString {
 }
 
 #[derive(Clone, Deserialize, Serialize)]
-pub struct SecretTomlValue(TomlValue);
+pub(crate) struct SecretTomlValue(TomlValue);
 
 impl SecretTomlValue {
-    pub fn as_toml_val(&self) -> &TomlValue {
-        &self.0
-    }
-
     fn fmt_toml_val(val: &TomlValue, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match val {
             TomlValue::Boolean(_)

@@ -2,7 +2,7 @@ use crate::commands::ShootCmd;
 use crate::errors::ArgsValidationError;
 use crate::inputs::shoot::RawShootArgs;
 use clap::{ArgAction, Parser, Subcommand};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 #[derive(Parser, Debug, Clone)]
 #[command(
@@ -34,48 +34,14 @@ pub struct RawSnipeCLIArgs {
     verbose: u8,
 }
 
-impl RawSnipeCLIArgs {
-    pub fn cfg(&self) -> &Path {
-        &self.cfg
-    }
-
-    pub fn command(&self) -> &RawCommand {
-        &self.command
-    }
-
-    pub fn cfg_env(&self) -> &str {
-        &self.cfg_env
-    }
-
-    pub fn verbose(&self) -> u8 {
-        self.verbose
-    }
-}
-
 pub struct SnipeCLIArgs {
-    cfg: PathBuf,
-    command: Command,
-    cfg_env: Option<String>,
-    verbose: u8,
+    pub(crate) cfg: PathBuf,
+    pub(crate) command: Command,
+    pub(crate) cfg_env: Option<String>,
+    pub(crate) verbose: u8,
 }
 
 impl SnipeCLIArgs {
-    pub fn cfg(&self) -> &Path {
-        &self.cfg
-    }
-
-    pub fn command(&self) -> &Command {
-        &self.command
-    }
-
-    pub fn cfg_env(&self) -> Option<&str> {
-        self.cfg_env.as_deref()
-    }
-
-    pub fn verbose(&self) -> u8 {
-        self.verbose
-    }
-
     fn resolve_cfg_env(cfg_env: String) -> Option<String> {
         match cfg_env.to_lowercase().as_str() {
             "skip" => None,
@@ -98,14 +64,14 @@ impl TryFrom<RawSnipeCLIArgs> for SnipeCLIArgs {
 
 // Note - comments below are actually used of for CLI documentation
 #[derive(Clone, Debug, Subcommand)]
-pub enum RawCommand {
+pub(super) enum RawCommand {
     /// List all potential API requests to make
     List,
     Shoot(RawShootArgs),
 }
 
 #[derive(Clone, Debug)]
-pub enum Command {
+pub(crate) enum Command {
     List,
     Shoot(ShootCmd),
 }

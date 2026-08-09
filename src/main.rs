@@ -1,6 +1,6 @@
 use clap::Parser;
-use snipe::cli_formatting::{get_args_validation_err_msg, print_err};
-use snipe::inputs::{RawSnipeCLIArgs, SnipeCLIArgs};
+use snipe::args::{RawSnipeCLIArgs, SnipeCLIArgs};
+use snipe::formatting::{get_args_validation_err_msg, print_err};
 use snipe::run_cli;
 use std::process::ExitCode;
 

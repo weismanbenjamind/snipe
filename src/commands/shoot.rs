@@ -11,50 +11,12 @@ use crate::response::ResponseWriter;
 use std::path::PathBuf;
 
 #[derive(Clone, Debug)]
-pub struct ShootCmd {
+pub(crate) struct ShootCmd {
     target: String,
     validated_grab: ValidatedGrab,
     validated_format: ValidatedFormat,
     pretty: bool,
     output_file: Option<PathBuf>,
-}
-
-impl ShootCmd {
-    pub fn new(
-        target: String,
-        validated_grab: ValidatedGrab,
-        validated_format: ValidatedFormat,
-        pretty: bool,
-        output_file: Option<PathBuf>,
-    ) -> Result<Self, ArgsValidationError> {
-        Ok(Self {
-            target,
-            validated_grab,
-            validated_format,
-            pretty,
-            output_file,
-        })
-    }
-
-    pub fn target(&self) -> &str {
-        &self.target
-    }
-
-    pub fn validated_grab(&self) -> ValidatedGrab {
-        self.validated_grab
-    }
-
-    pub fn validated_format(&self) -> ValidatedFormat {
-        self.validated_format
-    }
-
-    pub fn pretty(&self) -> bool {
-        self.pretty
-    }
-
-    pub fn output_file(&self) -> Option<&Path> {
-        self.output_file.as_deref()
-    }
 }
 
 impl TryFrom<RawShootArgs> for ShootCmd {
@@ -75,16 +37,16 @@ impl TryFrom<RawShootArgs> for ShootCmd {
 }
 
 impl ShootCmd {
-    pub async fn run(&self, targets: &Targets) -> Result<(), RunError> {
+    pub(crate) async fn run(&self, targets: &Targets) -> Result<(), RunError> {
         info!("Starting request process.");
 
         let target = targets
-            .get_target(self.target())
+            .get_target(&self.target)
             .ok_or_else(|| RunError::Failure(format!("Failed to find target {}", self.target)))?;
 
         info!(
             "Sending request for target '{}'.",
-            target.name().unwrap_or(&self.target)
+            target.name.as_ref().unwrap_or(&self.target)
         );
         let response = Client::new()?.send_request(target).await?;
         info!("Response recieved");
@@ -92,15 +54,17 @@ impl ShootCmd {
         let response_writer = ResponseWriter::new(response);
 
         info!("Outputting response");
-        match self.validated_format().raw_format() {
-            RawFormat::Binary => handle_binary_output(response_writer, self.output_file()).await,
+        match self.validated_format.raw_format {
+            RawFormat::Binary => {
+                handle_binary_output(response_writer, self.output_file.as_deref()).await
+            }
             RawFormat::Http | RawFormat::Json | RawFormat::PrettyJson => {
                 handle_string_output(
                     response_writer,
                     self.validated_grab,
                     self.validated_format,
                     self.pretty,
-                    self.output_file(),
+                    self.output_file.as_deref(),
                 )
                 .await
             }
