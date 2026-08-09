@@ -107,12 +107,16 @@ fn build_auth(request_builder: RequestBuilder, auth: &Auth) -> RequestBuilder {
     }
 }
 
+// TODO - Need to fix params parsing and get rid of expect call below
 fn build_payload(
     request_builder: RequestBuilder,
     payload: &Payload,
 ) -> Result<RequestBuilder, ClientError> {
     match payload {
-        Payload::Params(json) => Ok(request_builder.json(json)),
+        Payload::Params(json) => Ok(request_builder.json(
+            json.get("Params")
+                .expect("Expected Params key to be present"),
+        )),
         Payload::File(path) => {
             debug!("Reading payload at path {} into bytes", path.display());
             let bytes = std::fs::read(path).map_err(|e| ClientError::BodyToBytes {

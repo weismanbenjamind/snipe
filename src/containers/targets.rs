@@ -29,8 +29,9 @@ impl Targets {
         );
 
         let raw = read_toml(&path)?;
-        let to_replace = GlobalReplaceableTargets::from_toml(&raw)?;
-        let globals: Option<Globals> = toml::from_str::<GlobalsCfg>(&raw)?.globals;
+        let resolved_toml = replace_vars(&raw)?;
+        let to_replace: GlobalReplaceableTargets = toml::from_str(&resolved_toml)?;
+        let globals: Option<Globals> = toml::from_str::<GlobalsCfg>(&resolved_toml)?.globals;
 
         info!("Replacing globals in targets file.");
         let replaced = to_replace.into_targets(globals.as_ref())?;
@@ -69,14 +70,6 @@ impl GlobalReplaceableTargets {
             .collect::<Result<HashMap<String, Target>, TargetError>>()
             .map_err(TargetsError::from)
             .map(Targets::new)
-    }
-
-    pub fn from_toml(raw: &str) -> Result<Self, TargetsError> {
-        debug!("Generating GlobalReplaceableTargets from toml string.");
-        let resolved_toml = replace_vars(raw)?;
-        let from_toml: Self = toml::from_str(&resolved_toml)?;
-        debug!("Succesfully generated GlobalReplaceableTargets from toml string.");
-        Ok(from_toml)
     }
 }
 
