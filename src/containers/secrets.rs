@@ -35,6 +35,10 @@ impl std::fmt::Debug for SecretString {
 pub struct SecretTomlValue(TomlValue);
 
 impl SecretTomlValue {
+    pub fn as_toml_val(&self) -> &TomlValue {
+        &self.0
+    }
+
     fn fmt_toml_val(val: &TomlValue, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match val {
             TomlValue::Boolean(_)
@@ -133,5 +137,17 @@ impl std::fmt::Display for SecretTomlValue {
 impl std::fmt::Debug for SecretTomlValue {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         Self::debug_toml_val(&self.0, f)
+    }
+}
+
+impl From<SecretTomlValue> for TomlValue {
+    fn from(value: SecretTomlValue) -> Self {
+        value.0
+    }
+}
+
+impl From<TomlValue> for SecretTomlValue {
+    fn from(value: TomlValue) -> Self {
+        Self(value)
     }
 }

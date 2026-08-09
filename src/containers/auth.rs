@@ -1,4 +1,5 @@
 use crate::containers::SecretString;
+use crate::containers::globals::GlobalReplaceableLocal;
 use crate::errors::TargetsError;
 use serde::{Deserialize, Serialize};
 
@@ -42,6 +43,12 @@ impl TryFrom<RawAuth> for Auth {
                 value.scheme
             ))),
         }
+    }
+}
+
+impl GlobalReplaceableLocal for Auth {
+    fn has_local(&self) -> bool {
+        true
     }
 }
 
