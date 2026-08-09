@@ -37,60 +37,6 @@ pub struct RawGrab {
 }
 
 impl RawGrab {
-    pub fn new(
-        status_code: bool,
-        headers: bool,
-        body: bool,
-        int_status_code: bool,
-        full: bool,
-    ) -> Result<Self, ArgsValidationError> {
-        let have_individuals = status_code || headers || body;
-
-        if have_individuals && int_status_code {
-            return ArgsValidationError::new_base(
-                "Cannot pass status_code, headers, or body, with int_status_code.",
-            );
-        }
-
-        if have_individuals && full {
-            return ArgsValidationError::new_base(
-                "Cannot pass status_code, headers, or body, with full",
-            );
-        }
-
-        if int_status_code && full {
-            return ArgsValidationError::new_base("Cannot pass full with int_status_code.");
-        }
-
-        Ok(Self {
-            status_code,
-            headers,
-            body,
-            int_status_code,
-            full,
-        })
-    }
-
-    pub fn status_code(&self) -> bool {
-        self.status_code
-    }
-
-    pub fn headers(&self) -> bool {
-        self.headers
-    }
-
-    pub fn body(&self) -> bool {
-        self.body
-    }
-
-    pub fn int_status_code(&self) -> bool {
-        self.int_status_code
-    }
-
-    pub fn full(&self) -> bool {
-        self.full
-    }
-
     pub fn in_default_state(&self) -> bool {
         !self.status_code && !self.headers && !self.body && !self.int_status_code && !self.full
     }

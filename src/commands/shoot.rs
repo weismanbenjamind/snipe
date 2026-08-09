@@ -20,36 +20,12 @@ pub(crate) struct ShootCmd {
 }
 
 impl ShootCmd {
-    pub(crate) fn new(
-        target: String,
-        validated_grab: ValidatedGrab,
-        validated_format: ValidatedFormat,
-        pretty: bool,
-        output_file: Option<PathBuf>,
-    ) -> Result<Self, ArgsValidationError> {
-        Ok(Self {
-            target,
-            validated_grab,
-            validated_format,
-            pretty,
-            output_file,
-        })
-    }
-
     pub(crate) fn target(&self) -> &str {
         &self.target
     }
 
-    pub(crate) fn validated_grab(&self) -> ValidatedGrab {
-        self.validated_grab
-    }
-
     pub(crate) fn validated_format(&self) -> ValidatedFormat {
         self.validated_format
-    }
-
-    pub(crate) fn pretty(&self) -> bool {
-        self.pretty
     }
 
     pub(crate) fn output_file(&self) -> Option<&Path> {

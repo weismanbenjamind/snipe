@@ -39,10 +39,6 @@ impl RawSnipeCLIArgs {
         &self.cfg
     }
 
-    pub fn command(&self) -> &RawCommand {
-        &self.command
-    }
-
     pub fn cfg_env(&self) -> &str {
         &self.cfg_env
     }

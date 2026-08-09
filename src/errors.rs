@@ -85,9 +85,6 @@ pub(crate) enum ClientError {
     #[error("Failed to send request. Error: {0}.")]
     SendRequestFailure(String),
 
-    #[error("{0}")]
-    ResponseBuild(String),
-
     #[error("Failed to request body as {path} into bytes. Error {source}")]
     BodyToBytes {
         path: PathBuf,
