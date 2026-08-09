@@ -37,7 +37,7 @@ pub(crate) struct RawGrab {
 }
 
 impl RawGrab {
-    pub fn in_default_state(&self) -> bool {
+    fn in_default_state(&self) -> bool {
         !self.status_code && !self.headers && !self.body && !self.int_status_code && !self.full
     }
 }
@@ -52,7 +52,7 @@ pub(crate) struct ValidatedGrab {
 
 impl ValidatedGrab {
     // Validation occurs at RawGrab level (for response component combos) and below for interaction with formatting
-    pub fn new_validated(
+    pub(crate) fn new_validated(
         grab: RawGrab,
         validated_format: ValidatedFormat,
     ) -> Result<Self, ArgsValidationError> {

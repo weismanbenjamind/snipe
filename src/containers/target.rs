@@ -28,14 +28,14 @@ pub(crate) struct Target {
 }
 
 #[derive(Debug, Deserialize, Clone, Serialize)]
-pub(crate) struct GlobalReplaceableTarget {
-    pub(crate) name: Option<String>,
-    pub(crate) url: String,
-    pub(crate) method: Method,
-    pub(crate) timeout_seconds: Option<u64>,
-    pub(crate) auth: Option<GlobalReplaceableCfg<Auth>>,
-    pub(crate) headers: Option<GlobalReplaceableCfg<Headers>>,
-    pub(crate) payload: Option<GlobalReplaceableCfg<Payload>>,
+pub(super) struct GlobalReplaceableTarget {
+    name: Option<String>,
+    url: String,
+    method: Method,
+    timeout_seconds: Option<u64>,
+    auth: Option<GlobalReplaceableCfg<Auth>>,
+    headers: Option<GlobalReplaceableCfg<Headers>>,
+    payload: Option<GlobalReplaceableCfg<Payload>>,
 }
 
 impl GlobalReplaceableTarget {

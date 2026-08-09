@@ -6,7 +6,7 @@ use reqwest::{Response, StatusCode};
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
-pub(crate) struct ResponseFormatter {
+pub(super) struct ResponseFormatter {
     status_code: StatusCode,
     headers: HashMap<String, String>,
     body: String,
@@ -14,12 +14,11 @@ pub(crate) struct ResponseFormatter {
 
 impl ResponseFormatter {
     #[inline]
-    #[allow(dead_code)]
-    pub(crate) fn status_code_string(&self) -> String {
+    pub(super) fn status_code_string(&self) -> String {
         self.status_code.as_u16().to_string()
     }
 
-    pub(crate) async fn try_from_response(
+    pub(super) async fn try_from_response(
         response: Response,
     ) -> Result<Self, ResponseFormatterError> {
         Ok(Self {
@@ -29,7 +28,7 @@ impl ResponseFormatter {
         })
     }
 
-    pub(crate) fn get_http_string(
+    pub(super) fn get_http_string(
         &self,
         status_code: bool,
         headers: bool,
@@ -44,7 +43,7 @@ impl ResponseFormatter {
         .map_err(ResponseFormatterError::to_string_err_from_err)
     }
 
-    pub(crate) fn get_json_string(
+    pub(super) fn get_json_string(
         &self,
         status_code: bool,
         headers: bool,

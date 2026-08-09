@@ -7,7 +7,7 @@ use std::fmt::Error as FmtError;
 use std::fmt::Write;
 
 #[derive(Clone, Debug, Serialize)]
-pub(crate) struct JsonFormat<'a> {
+pub(super) struct JsonFormat<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     status_code: Option<u16>,
 
@@ -19,7 +19,7 @@ pub(crate) struct JsonFormat<'a> {
 }
 
 impl<'a> JsonFormat<'a> {
-    pub(crate) fn new(
+    pub(super) fn new(
         status_code: Option<u16>,
         headers: Option<&'a HashMap<String, String>>,
         body: Option<Body<'a>>,
@@ -31,7 +31,7 @@ impl<'a> JsonFormat<'a> {
         }
     }
 
-    pub(crate) fn new_from_str_body(
+    pub(super) fn new_from_str_body(
         status_code: Option<u16>,
         headers: Option<&'a HashMap<String, String>>,
         body: Option<&'a str>,
@@ -42,7 +42,7 @@ impl<'a> JsonFormat<'a> {
         }
     }
 
-    pub(crate) fn into_json_string(self, pretty: bool) -> Result<String, SerdeJsonError> {
+    pub(super) fn into_json_string(self, pretty: bool) -> Result<String, SerdeJsonError> {
         let serializer = JsonSerializer::from(self);
         match pretty {
             true => serializer.into_string_pretty(),
@@ -53,7 +53,7 @@ impl<'a> JsonFormat<'a> {
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(untagged)]
-pub(crate) enum Body<'a> {
+pub(super) enum Body<'a> {
     Json(Value),
     RawStr(&'a str),
 }
@@ -127,14 +127,14 @@ impl<'a> From<JsonFormat<'a>> for JsonSerializer<'a> {
 }
 
 #[derive(Clone, Debug)]
-pub(crate) struct HTTPFormat<'a> {
+pub(super) struct HTTPFormat<'a> {
     status_code: Option<StatusCode>,
     headers: Option<&'a HashMap<String, String>>,
     body: Option<&'a str>,
 }
 
 impl<'a> HTTPFormat<'a> {
-    pub(crate) fn new(
+    pub(super) fn new(
         status_code: Option<StatusCode>,
         headers: Option<&'a HashMap<String, String>>,
         body: Option<&'a str>,
@@ -146,7 +146,7 @@ impl<'a> HTTPFormat<'a> {
         }
     }
 
-    pub(crate) fn into_http_string(self) -> Result<String, FmtError> {
+    pub(super) fn into_http_string(self) -> Result<String, FmtError> {
         let mut buf = String::new();
 
         if let Some(status_code) = self.status_code {

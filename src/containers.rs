@@ -12,7 +12,7 @@ pub(crate) use auth::Auth;
 pub(crate) use headers::Headers;
 pub(crate) use method::Method;
 pub(crate) use payload::Payload;
-pub(crate) use secrets::SecretString;
+use secrets::SecretString;
 pub(crate) use target::{Target, TargetError};
 pub(crate) use targets::Targets;
 pub(crate) use vars::Vars;

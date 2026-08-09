@@ -15,8 +15,7 @@ pub(crate) struct Targets {
 }
 
 impl Targets {
-    #[allow(dead_code)]
-    pub(crate) fn new(targets: HashMap<String, Target>) -> Self {
+    fn new(targets: HashMap<String, Target>) -> Self {
         Self { targets }
     }
 
@@ -58,7 +57,7 @@ impl Targets {
 type GlobalReplaceableTargetsType = HashMap<String, GlobalReplaceableTarget>;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub(crate) struct GlobalReplaceableTargets {
+struct GlobalReplaceableTargets {
     targets: GlobalReplaceableTargetsType,
 }
 

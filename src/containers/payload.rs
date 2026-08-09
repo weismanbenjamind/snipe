@@ -12,7 +12,7 @@ const FILE_KEY: &str = "file";
 const PARAMS_KEY: &str = "params";
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub(crate) struct RawPayload {
+struct RawPayload {
     file: Option<PathBuf>,
 
     #[serde(flatten)]
