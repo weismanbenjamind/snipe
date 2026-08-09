@@ -113,10 +113,7 @@ fn build_payload(
     payload: &Payload,
 ) -> Result<RequestBuilder, ClientError> {
     match payload {
-        Payload::Params(json) => Ok(request_builder.json(
-            json.get("Params")
-                .expect("Expected Params key to be present"),
-        )),
+        Payload::Params(json) => Ok(request_builder.json(json)),
         Payload::File(path) => {
             debug!("Reading payload at path {} into bytes", path.display());
             let bytes = std::fs::read(path).map_err(|e| ClientError::BodyToBytes {

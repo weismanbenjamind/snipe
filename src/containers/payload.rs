@@ -1,12 +1,15 @@
 use crate::containers::globals::GlobalReplaceableLocal;
 use crate::containers::secrets::SecretTomlValue;
 use crate::errors::TargetsError;
+use log::debug;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use toml::Value as TomlValue;
+use toml::map::Map as TomlMap;
 
 const FILE_KEY: &str = "file";
+const PARAMS_KEY: &str = "params";
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct RawPayload {
@@ -52,10 +55,11 @@ impl TryFrom<RawPayload> for Payload {
 }
 
 // This function exists because the global parse on payload will cause the .file field to be parsed into the .params field with the key "File"
-// Good to have as a fallback
+// Additionall the global parse on payload will cause the .params field to always be parsed as {"params": {"actual": params}}
+// Need special logic to unwrap this nested mapping. Could cause a failure if a payload has a single top level "params" key
 impl From<HashMap<String, SecretTomlValue>> for Payload {
     fn from(value: HashMap<String, SecretTomlValue>) -> Self {
-        // Must check for single value here
+        // Must check for single value and short-circuit here
         // Risk a panic below if don't
         if value.len() != 1 {
             return Payload::Params(value);
@@ -64,16 +68,56 @@ impl From<HashMap<String, SecretTomlValue>> for Payload {
         // .expect is safe here since we checked there is one value above
         // Must check for single value above or risk panic here
         let (k, v) = value
-            .iter()
+            .into_iter()
             .next()
             .expect("Invalid state. Expected payload to only have one field.");
 
-        if k.to_lowercase() == FILE_KEY
-            && let TomlValue::String(str_path) = v.as_toml_val()
+        let key_lowered = k.to_lowercase();
+        let raw_toml: TomlValue = v.into();
+
+        // If the lowered key is 'file' and we have a String value -> parse as Payload::File
+        if key_lowered == FILE_KEY
+            && let TomlValue::String(str_path) = raw_toml
         {
+            debug!(
+                "Found single length parms map with lowercased key 'file' key a string value. Parsing payload as file variant."
+            );
             Payload::File(PathBuf::from(str_path))
-        } else {
-            Payload::Params(value)
+        }
+        // If the lowred key is 'params' and we have a Table toml value -> remove the 'params' key and return the inner HashMap
+        else if key_lowered == PARAMS_KEY
+            && let TomlValue::Table(t) = raw_toml
+        {
+            debug!(
+                "Found single length parms map with lowercased key 'params' key a table value. Parsing as flattened map. \
+                POTENTIAL ERROR CASE if payload has a single top level key when lowercased resolves to 'params'."
+            );
+            Payload::Params(TomlMapWrapper(t).into())
+        }
+        // All other case fall back to params
+        else {
+            Payload::Params(rebuild_map(k, raw_toml))
         }
     }
+}
+
+struct TomlMapWrapper(TomlMap<String, TomlValue>);
+
+impl From<TomlMapWrapper> for HashMap<String, SecretTomlValue> {
+    fn from(value: TomlMapWrapper) -> HashMap<String, SecretTomlValue> {
+        let map = value.0;
+        let mut converted = HashMap::<String, SecretTomlValue>::with_capacity(map.len());
+
+        map.into_iter().for_each(|(k, v)| {
+            let _ = converted.insert(k, SecretTomlValue::from(v));
+        });
+
+        converted
+    }
+}
+
+fn rebuild_map(k: String, raw_toml: TomlValue) -> HashMap<String, SecretTomlValue> {
+    let mut map = HashMap::<String, SecretTomlValue>::with_capacity(1);
+    map.insert(k, raw_toml.into());
+    map
 }

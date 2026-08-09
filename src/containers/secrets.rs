@@ -139,3 +139,15 @@ impl std::fmt::Debug for SecretTomlValue {
         Self::debug_toml_val(&self.0, f)
     }
 }
+
+impl From<SecretTomlValue> for TomlValue {
+    fn from(value: SecretTomlValue) -> Self {
+        value.0
+    }
+}
+
+impl From<TomlValue> for SecretTomlValue {
+    fn from(value: TomlValue) -> Self {
+        Self(value)
+    }
+}
