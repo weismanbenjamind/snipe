@@ -87,13 +87,12 @@ impl ResponseWriter {
         validated_format: ValidatedFormat,
         pretty: bool,
     ) -> Result<(), ResponseWriterError> {
-        info!("Writing formatted response to console");
+        info!("Attempting to write formatted response to console.");
         println!(
             "{}",
             self.try_into_string(validated_grab, validated_format, pretty)
                 .await?
         );
-        info!("Successfully wrote formatted response to console.");
         Ok(())
     }
 
@@ -165,7 +164,7 @@ fn handle_string_formatted_output(
 ) -> Result<String, ResponseFormatterError> {
     match validated_format.raw_format {
         RawFormat::Http => {
-            info!("Writing response to HTTP string");
+            info!("Writing response to HTTP string.");
             response_formatter.get_http_string(
                 validated_grab.status_code,
                 validated_grab.headers,
@@ -173,7 +172,7 @@ fn handle_string_formatted_output(
             )
         }
         RawFormat::Json => {
-            info!("Writing response to JSON string.");
+            info!("Writing response to JSON string with pretty = {pretty}.");
             response_formatter.get_json_string(
                 validated_grab.status_code,
                 validated_grab.headers,

@@ -38,22 +38,20 @@ impl TryFrom<RawShootArgs> for ShootCmd {
 
 impl ShootCmd {
     pub(crate) async fn run(&self, targets: &Targets) -> Result<(), RunError> {
-        info!("Starting request process.");
+        info!("Running shoot command.");
 
         let target = targets
             .get_target(&self.target)
             .ok_or_else(|| RunError::Failure(format!("Failed to find target {}", self.target)))?;
 
         info!(
-            "Sending request for target '{}'.",
+            "Initiating request build/send process for target '{}'.",
             target.name.as_ref().unwrap_or(&self.target)
         );
         let response = Client::new()?.send_request(target).await?;
-        info!("Response recieved");
 
         let response_writer = ResponseWriter::new(response);
 
-        info!("Outputting response");
         match self.validated_format.raw_format {
             RawFormat::Binary => {
                 handle_binary_output(response_writer, self.output_file.as_deref()).await
@@ -69,9 +67,6 @@ impl ShootCmd {
                 .await
             }
         }?;
-        info!("Successfully output response.");
-
-        info!("Finished request process.");
 
         Ok(())
     }

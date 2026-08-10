@@ -6,9 +6,7 @@ use std::error::Error;
 use std::fmt::Write;
 
 pub(crate) fn run_list_targets_cmd(targets: &Targets) -> Result<(), RunError> {
-    info!("Getting target list.");
-
-    info!("Writing target names to buffer.");
+    info!("Generating targets list.");
     let mut target_names: Vec<&String> = targets.as_map().keys().collect();
     target_names.sort();
 
@@ -16,11 +14,10 @@ pub(crate) fn run_list_targets_cmd(targets: &Targets) -> Result<(), RunError> {
     target_names
         .iter()
         .try_for_each(|key| writeln!(buf, "{}", key).map_err(get_failed_get_targets_list_err))?;
-    info!("Targets writtin to buffer. Displaying.");
 
+    info!("Successfully generated targets list. Displaying.");
     print!("{buf}");
 
-    info!("Done getting targets list.");
     Ok(())
 }
 
