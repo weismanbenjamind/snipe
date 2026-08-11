@@ -1,4 +1,5 @@
 mod auth;
+mod format;
 mod globals;
 mod headers;
 mod method;
