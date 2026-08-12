@@ -48,7 +48,7 @@ fn build_validated_grab(
     match (raw_grab, validated_format) {
         (None, None) | (None, Some(_)) => Ok(None),
         (Some(g), Some(f)) => Ok(Some(ValidatedGrab::new_validated(g, f)?)),
-        (Some(_), None) => return Err(GrabWithoutFormat), // TODO - this should not be an error case. Should be able to use config for format
+        (Some(_), None) => Err(GrabWithoutFormat), // TODO - this should not be an error case. Should be able to use config for format
     }
 }
 
@@ -57,17 +57,6 @@ pub(crate) struct MergedArgs {
     validated_format: ValidatedFormat,
     pretty: bool,
     output_file: Option<PathBuf>,
-}
-
-impl From<ShootCmd> for MergedArgs {
-    fn from(value: ShootCmd) -> Self {
-        Self {
-            validated_grab: value.validated_grab.unwrap(), // TODO - Remove this unwrap
-            validated_format: value.validated_format.unwrap(), // TODO - Remove this unwrap
-            pretty: value.pretty,
-            output_file: value.output_file,
-        }
-    }
 }
 
 impl ShootCmd {
@@ -83,7 +72,7 @@ impl ShootCmd {
             target.name.as_ref().unwrap_or(&self.target)
         );
 
-        let merged_args = self._merge_output_cfg(target.output_cfg.as_ref());
+        let merged_args = self.into_merged_args(target.output_cfg.as_ref())?;
 
         let response = Client::new()?.send_request(target).await?;
         info!("Response recieved");
@@ -113,35 +102,62 @@ impl ShootCmd {
         Ok(())
     }
 
-    fn _merge_output_cfg(self, _output_cfg: Option<&OutputCfg>) -> MergedArgs {
-        match _output_cfg {
-            None => MergedArgs::from(self),
-            Some(cfg) => {
-                let pretty = merge_pretty(self.pretty, cfg.pretty);
-                let output_file = merge_output_file(self.output_file, cfg.output_file.as_ref());
-
-                // TODO - remove unwrap
-                let validated_format = merge_format(
-                    self.validated_format,
-                    cfg.format,
-                    pretty,
-                    output_file.as_deref(),
-                )
-                .unwrap();
-
-                // TODO - Remove unwrap
-                let validated_grab =
-                    merge_grab(self.validated_grab, cfg.grab.as_ref(), validated_format).unwrap();
-
-                MergedArgs {
-                    validated_grab,
-                    validated_format,
-                    pretty,
-                    output_file,
-                }
-            }
+    fn into_merged_args(
+        self,
+        output_cfg: Option<&OutputCfg>,
+    ) -> Result<MergedArgs, ArgsValidationError> {
+        match output_cfg {
+            None => build_merged_args_output_cfg_none(self),
+            Some(cfg) => build_merged_args_output_cfg_some(self, cfg),
         }
     }
+}
+
+fn build_merged_args_output_cfg_none(
+    shoot_cmd: ShootCmd,
+) -> Result<MergedArgs, ArgsValidationError> {
+    let validated_grab = shoot_cmd.validated_grab.ok_or(ArgsValidationError::UnderspecifiedMerge("Must specify components to grab from request via CLI if omitting them from target config."))?;
+    let validated_format =
+        shoot_cmd
+            .validated_format
+            .ok_or(ArgsValidationError::UnderspecifiedMerge(
+                "Must specify output format via CLI if omitting it from target config.",
+            ))?;
+
+    Ok(MergedArgs {
+        validated_grab,
+        validated_format,
+        pretty: shoot_cmd.pretty,
+        output_file: shoot_cmd.output_file,
+    })
+}
+
+fn build_merged_args_output_cfg_some(
+    shoot_cmd: ShootCmd,
+    cfg: &OutputCfg,
+) -> Result<MergedArgs, ArgsValidationError> {
+    let pretty = merge_pretty(shoot_cmd.pretty, cfg.pretty);
+    let output_file = merge_output_file(shoot_cmd.output_file, cfg.output_file.as_ref());
+
+    let validated_format = merge_format(
+        shoot_cmd.validated_format,
+        cfg.format,
+        pretty,
+        output_file.as_deref(),
+    )?;
+
+    let validated_grab = merge_grab(
+        shoot_cmd.validated_grab,
+        cfg.grab.as_ref(),
+        validated_format,
+    )?;
+
+    Ok(MergedArgs {
+        validated_grab,
+        validated_format,
+        pretty,
+        output_file,
+    })
 }
 
 #[inline]
@@ -181,34 +197,38 @@ async fn handle_string_output(
     Ok(result?)
 }
 
-// TODO - Fix error handling below
-
+// TODO - may want to assume that a input of "body" for grab is user using the default and use the config value
+// Right now the grab parameter must be passed if not in cfg
+// Better logic might be if both None then use body
 fn merge_grab(
     from_args: Option<ValidatedGrab>,
     from_cfg: Option<&Vec<GrabCfg>>,
     validated_format: ValidatedFormat,
-) -> Result<ValidatedGrab, &'static str> {
+) -> Result<ValidatedGrab, ArgsValidationError> {
     match (from_args, from_cfg) {
         (Some(grab), None) | (Some(grab), Some(_)) => Ok(grab),
-        (None, Some(grab)) => ValidatedGrab::new_validated(RawGrab::from(grab), validated_format)
-            .map_err(|_| "Failed to create validated args given format"),
-        (None, None) => {
-            Err("Must specify what component(s) to grab out of request from either CLI or config.")
-        }
+        (None, Some(grab)) => ValidatedGrab::new_validated(RawGrab::from(grab), validated_format),
+        (None, None) => Err(ArgsValidationError::UnderspecifiedMerge(
+            "Must specify what component(s) to grab out of request from either CLI or config.",
+        )),
     }
 }
 
+// TODO - may want to assume that a format of "http" is user using the default and use the config value
+// Right format grab parameter must be passed if not in cfg
+// Better logic might be if both None then use "htttp"
 fn merge_format(
     from_args: Option<ValidatedFormat>,
     from_cfg: Option<RawFormat>,
     pretty: bool,
     output_file: Option<&Path>,
-) -> Result<ValidatedFormat, &'static str> {
+) -> Result<ValidatedFormat, ArgsValidationError> {
     match (from_args, from_cfg) {
         (Some(format), None) | (Some(format), Some(_)) => Ok(format),
-        (None, Some(args)) => ValidatedFormat::new_validated(args, pretty, output_file)
-            .map_err(|_| "Failed to create validated args given format"),
-        (None, None) => Err("Must specify response formatting from either CLI or config."),
+        (None, Some(args)) => ValidatedFormat::new_validated(args, pretty, output_file),
+        (None, None) => Err(ArgsValidationError::UnderspecifiedMerge(
+            "Must specify response formatting from either CLI or config.",
+        )),
     }
 }
 

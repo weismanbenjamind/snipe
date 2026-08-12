@@ -6,6 +6,9 @@ use thiserror::Error;
 pub enum RunError {
     #[error("{0}")]
     Failure(String),
+
+    #[error("{0}")]
+    ArgsValidation(#[from] ArgsValidationError),
 }
 
 impl From<&str> for RunError {
@@ -139,8 +142,11 @@ pub enum ArgsValidationError {
     #[error("Value {0} is not a valid format.")]
     InvalidFormat(String),
 
+    #[error("{0}")]
+    UnderspecifiedMerge(&'static str),
+
     #[error("Must specify format if also specify grab.")]
-    GrabWithoutFormat,
+    GrabWithoutFormat, // TODO - should remove this error when allow format to be omitted if parsed through the config
 }
 
 #[derive(Debug, Error)]

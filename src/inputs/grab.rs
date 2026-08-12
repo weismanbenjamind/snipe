@@ -113,7 +113,7 @@ impl ValidatedGrab {
 
 impl From<&Vec<GrabCfg>> for RawGrab {
     fn from(value: &Vec<GrabCfg>) -> Self {
-        let unique: HashSet<&GrabCfg> = value.into_iter().collect();
+        let unique: HashSet<&GrabCfg> = value.iter().collect();
         RawGrab {
             status_code: unique.contains(&GrabCfg::IntStatusCode),
             headers: unique.contains(&GrabCfg::Headers),
