@@ -30,6 +30,10 @@ impl TryFrom<String> for RawFormat {
 pub(crate) struct ValidatedFormat(RawFormat);
 
 impl ValidatedFormat {
+    pub(crate) fn new(raw_format: RawFormat) -> Self {
+        Self(raw_format)
+    }
+
     pub(crate) fn raw(&self) -> RawFormat {
         self.0
     }

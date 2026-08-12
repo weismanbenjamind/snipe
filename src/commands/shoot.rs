@@ -197,9 +197,6 @@ async fn handle_string_output(
     Ok(result?)
 }
 
-// TODO - may want to assume that a input of "body" for grab is user using the default and use the config value
-// Right now the grab parameter must be passed if not in cfg
-// Better logic might be if both None then use body
 fn merge_grab(
     from_args: Option<ValidatedGrab>,
     from_cfg: Option<&Vec<GrabCfg>>,
@@ -208,15 +205,15 @@ fn merge_grab(
     match (from_args, from_cfg) {
         (Some(grab), None) | (Some(grab), Some(_)) => Ok(grab),
         (None, Some(grab)) => ValidatedGrab::new_validated(RawGrab::from(grab), validated_format),
-        (None, None) => Err(ArgsValidationError::UnderspecifiedMerge(
-            "Must specify what component(s) to grab out of request from either CLI or config.",
-        )),
+        (None, None) => Ok(ValidatedGrab {
+            status_code: false,
+            headers: false,
+            body: true, // If nothing passed via CLI and via cfg default to body
+            int_status_code: false,
+        }),
     }
 }
 
-// TODO - may want to assume that a format of "http" is user using the default and use the config value
-// Right format grab parameter must be passed if not in cfg
-// Better logic might be if both None then use "htttp"
 fn merge_format(
     from_args: Option<ValidatedFormat>,
     from_cfg: Option<RawFormat>,
@@ -226,9 +223,7 @@ fn merge_format(
     match (from_args, from_cfg) {
         (Some(format), None) | (Some(format), Some(_)) => Ok(format),
         (None, Some(args)) => ValidatedFormat::new_validated(args, pretty, output_file),
-        (None, None) => Err(ArgsValidationError::UnderspecifiedMerge(
-            "Must specify response formatting from either CLI or config.",
-        )),
+        (None, None) => Ok(ValidatedFormat::new(RawFormat::Http)), // If nothing passed via CLI and via cfg default to HTTP
     }
 }
 
