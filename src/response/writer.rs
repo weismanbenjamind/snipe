@@ -163,7 +163,7 @@ fn handle_string_formatted_output(
     validated_grab: ValidatedGrab,
     pretty: bool,
 ) -> Result<String, ResponseFormatterError> {
-    match validated_format.raw_format {
+    match validated_format.raw() {
         RawFormat::Http => {
             info!("Writing response to HTTP string");
             response_formatter.get_http_string(

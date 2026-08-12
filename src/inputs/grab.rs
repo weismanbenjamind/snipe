@@ -1,3 +1,6 @@
+use std::collections::HashSet;
+
+use crate::containers::output::GrabCfg;
 use crate::errors::ArgsValidationError;
 use crate::inputs::{RawFormat, ValidatedFormat};
 use clap::Args;
@@ -57,7 +60,7 @@ impl ValidatedGrab {
         validated_format: ValidatedFormat,
     ) -> Result<Self, ArgsValidationError> {
         let grab = Self::init_from_raw_grab(grab);
-        match validated_format.raw_format {
+        match validated_format.raw() {
             RawFormat::Http => Ok(grab),
             RawFormat::Json => Ok(grab),
             RawFormat::PrettyJson => Ok(grab),
@@ -104,6 +107,19 @@ impl ValidatedGrab {
             headers: value.headers,
             body: value.body,
             int_status_code: value.int_status_code,
+        }
+    }
+}
+
+impl From<&Vec<GrabCfg>> for RawGrab {
+    fn from(value: &Vec<GrabCfg>) -> Self {
+        let unique: HashSet<&GrabCfg> = value.into_iter().collect();
+        RawGrab {
+            status_code: unique.contains(&GrabCfg::IntStatusCode),
+            headers: unique.contains(&GrabCfg::Headers),
+            body: unique.contains(&GrabCfg::Body),
+            int_status_code: unique.contains(&GrabCfg::IntStatusCode),
+            full: unique.contains(&GrabCfg::Full),
         }
     }
 }

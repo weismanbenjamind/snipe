@@ -1,8 +1,8 @@
 mod auth;
-mod format;
 mod globals;
 mod headers;
 mod method;
+pub(crate) mod output;
 mod payload;
 mod secrets;
 mod target;
@@ -12,6 +12,7 @@ mod vars;
 pub(crate) use auth::Auth;
 pub(crate) use headers::Headers;
 pub(crate) use method::Method;
+pub(crate) use output::OutputCfg;
 pub(crate) use payload::Payload;
 use secrets::SecretString;
 pub(crate) use target::{Target, TargetError};

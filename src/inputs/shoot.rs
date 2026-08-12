@@ -10,7 +10,7 @@ pub(crate) struct RawShootArgs {
     target: String,
 
     #[command(flatten)]
-    grab: RawGrab,
+    grab: Option<RawGrab>,
 
     #[arg(
         short,
@@ -18,7 +18,7 @@ pub(crate) struct RawShootArgs {
         default_value = "http",
         help = "Format style for response data"
     )]
-    format: RawFormat,
+    format: Option<RawFormat>,
 
     #[arg(
         short,
@@ -37,7 +37,15 @@ pub(crate) struct RawShootArgs {
 }
 
 impl RawShootArgs {
-    pub(crate) fn into_parts(self) -> (String, RawGrab, RawFormat, bool, Option<PathBuf>) {
+    pub(crate) fn into_parts(
+        self,
+    ) -> (
+        String,
+        Option<RawGrab>,
+        Option<RawFormat>,
+        bool,
+        Option<PathBuf>,
+    ) {
         (
             self.target,
             self.grab,

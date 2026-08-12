@@ -135,6 +135,12 @@ pub enum ArgsValidationError {
 
     #[error("Must provide an output file for binary format")]
     NoOutputFileWithBinary,
+
+    #[error("Value {0} is not a valid format.")]
+    InvalidFormat(String),
+
+    #[error("Must specify format if also specify grab.")]
+    GrabWithoutFormat,
 }
 
 #[derive(Debug, Error)]
