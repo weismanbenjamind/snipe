@@ -181,35 +181,6 @@ async fn handle_string_output(
     Ok(result?)
 }
 
-// * Below might be abstraction for merge logic. Save for later
-// #[derive(Debug, Clone, Error)]
-// enum MergeError {
-//     #[error("For field '{0}' to merge cfg value with CLI value. {1}")]
-//     BothValuesNone(String, String),
-// }
-
-// enum Merge<T, U> {
-//     Args(T),
-//     Cfg(U),
-//     ArgsAndCfg { args: T, cfg: U },
-// }
-
-// fn _merge_grab(
-//     _from_args: Option<ValidatedGrab>,
-//     _from_cfg: Option<Vec<GrabCfg>>,
-// ) -> Result<ValidatedGrab, MergeError> {
-//     let to_merge = match (_from_args, _from_cfg) {
-//         (None, None) => FailedMerge("Grab", "One of cfg or CLI values must be present"),
-//         (Some(_), None) => Merge::Args(_from_args),
-//         (None, Some(_)) => Merge::Cfg(_from_cfg),
-//         (Some(_), Some(_)) => Merge::ArgsAndCfg {
-//             args: _from_args,
-//             cfg: _from_cfg,
-//         },
-//     }
-//     Ok(_from_args.unwrap())
-// }
-
 // TODO - Fix error handling below
 
 fn merge_grab(
