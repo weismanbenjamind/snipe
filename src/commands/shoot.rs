@@ -77,15 +77,13 @@ fn build_merged_args_output_cfg_none(
             "Must specify output format via CLI if omitting it from target config.",
         ))?;
 
-    // TODO - Tweak encap so can only build validated format via `new`
-    let validated_format = ValidatedFormat::new_validated(
+    let validated_format = ValidatedFormat::new(
         raw_format,
         shoot_args.pretty,
         shoot_args.output_file.as_deref(),
     )?;
 
-    // TODO - Tweak encap so can only build validated grab via `new`
-    let validated_grab = ValidatedGrab::new_validated(raw_grab, validated_format)?;
+    let validated_grab = ValidatedGrab::new(raw_grab, validated_format)?;
 
     Ok(MergedArgs {
         validated_grab,
@@ -182,10 +180,10 @@ fn merge_format(
 ) -> Result<ValidatedFormat, ArgsValidationError> {
     match (from_args, from_cfg) {
         (Some(format), None) | (Some(format), Some(_)) => {
-            ValidatedFormat::new_validated(format, pretty, output_file)
+            ValidatedFormat::new(format, pretty, output_file)
         }
-        (None, Some(format)) => ValidatedFormat::new_validated(format, pretty, output_file),
-        (None, None) => Ok(ValidatedFormat::new(RawFormat::Http)), // If nothing passed via CLI and via cfg default to HTTP
+        (None, Some(format)) => ValidatedFormat::new(format, pretty, output_file),
+        (None, None) => Ok(ValidatedFormat::default()), // If nothing passed via CLI and via cfg use default which is HTTP
     }
 }
 
@@ -195,15 +193,8 @@ fn merge_grab(
     validated_format: ValidatedFormat,
 ) -> Result<ValidatedGrab, ArgsValidationError> {
     match (from_args, from_cfg) {
-        (Some(grab), None) | (Some(grab), Some(_)) => {
-            ValidatedGrab::new_validated(grab, validated_format)
-        }
-        (None, Some(grab)) => ValidatedGrab::new_validated(RawGrab::from(grab), validated_format),
-        (None, None) => Ok(ValidatedGrab {
-            status_code: false,
-            headers: false,
-            body: true, // If nothing passed via CLI and via cfg default to body
-            int_status_code: false,
-        }),
+        (Some(grab), None) | (Some(grab), Some(_)) => ValidatedGrab::new(grab, validated_format),
+        (None, Some(grab)) => ValidatedGrab::new(RawGrab::from(grab), validated_format),
+        (None, None) => Ok(ValidatedGrab::default()), // If nothing passed via CLI and via cfg use default which is Body
     }
 }

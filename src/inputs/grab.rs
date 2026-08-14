@@ -5,6 +5,11 @@ use crate::errors::ArgsValidationError;
 use crate::inputs::{RawFormat, ValidatedFormat};
 use clap::Args;
 
+// * Note - do not want to fields public for RawGrab
+// Depend on clap validation to ensure proper combos
+// Need to encapsulate to ensure always getting proper combos
+// If need to create RawGrab outside of ClI should add a ::new() method
+// ::new() should return a Result<RawGrab, SomeErrorForInvalidGrabCombo>
 #[derive(Args, Clone, Copy, Debug)]
 #[group(multiple = true, required = false)]
 pub(crate) struct RawGrab {
@@ -39,25 +44,23 @@ pub(crate) struct RawGrab {
     full: bool,
 }
 
-// TODO - May not need this anymore due to parsing with option - buy probably good to check how updated parsing with Option plays with not passing any args
 impl RawGrab {
     fn in_default_state(&self) -> bool {
         !self.status_code && !self.headers && !self.body && !self.int_status_code && !self.full
     }
 }
 
-// TODO - may want to tweak encap here so only way to build ValidtedGrab is via a `new` method
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct ValidatedGrab {
-    pub(crate) status_code: bool,
-    pub(crate) headers: bool,
-    pub(crate) body: bool,
-    pub(crate) int_status_code: bool,
+    status_code: bool,
+    headers: bool,
+    body: bool,
+    int_status_code: bool,
 }
 
 impl ValidatedGrab {
     // Validation occurs at RawGrab level (for response component combos) and below for interaction with formatting
-    pub(crate) fn new_validated(
+    pub(crate) fn new(
         grab: RawGrab,
         validated_format: ValidatedFormat,
     ) -> Result<Self, ArgsValidationError> {
@@ -73,6 +76,22 @@ impl ValidatedGrab {
         }
     }
 
+    pub(crate) fn status_code(&self) -> bool {
+        self.status_code
+    }
+
+    pub(crate) fn headers(&self) -> bool {
+        self.headers
+    }
+
+    pub(crate) fn body(&self) -> bool {
+        self.body
+    }
+
+    pub(crate) fn int_status_code(&self) -> bool {
+        self.int_status_code
+    }
+
     #[inline]
     fn only_body(&self) -> bool {
         self.body && !self.headers && !self.status_code && !self.int_status_code
@@ -82,14 +101,9 @@ impl ValidatedGrab {
     // Raw grab validates good combos
     // Validation either happens at CLI level or via ::new() method
     fn init_from_raw_grab(value: RawGrab) -> Self {
-        // If everything is false default to headers
+        // If everything is false default to body
         if value.in_default_state() {
-            return Self {
-                status_code: false,
-                headers: false,
-                body: true,
-                int_status_code: false,
-            };
+            return Self::default();
         }
 
         // If full is true then set status_code, headers, and body to true
@@ -109,6 +123,17 @@ impl ValidatedGrab {
             headers: value.headers,
             body: value.body,
             int_status_code: value.int_status_code,
+        }
+    }
+}
+
+impl Default for ValidatedGrab {
+    fn default() -> Self {
+        Self {
+            status_code: false,
+            headers: false,
+            body: true, // Default to grab body
+            int_status_code: false,
         }
     }
 }

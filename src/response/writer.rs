@@ -106,7 +106,7 @@ impl ResponseWriter {
         info!("Transforming response into String.");
         let response_formatter = ResponseFormatter::try_from_response(self.response).await?;
 
-        let result = match validated_grab.int_status_code {
+        let result = match validated_grab.int_status_code() {
             true => response_formatter.status_code_string(),
             false => handle_string_formatted_output(
                 response_formatter,
@@ -167,26 +167,26 @@ fn handle_string_formatted_output(
         RawFormat::Http => {
             info!("Writing response to HTTP string");
             response_formatter.get_http_string(
-                validated_grab.status_code,
-                validated_grab.headers,
-                validated_grab.body,
+                validated_grab.status_code(),
+                validated_grab.headers(),
+                validated_grab.body(),
             )
         }
         RawFormat::Json => {
             info!("Writing response to JSON string.");
             response_formatter.get_json_string(
-                validated_grab.status_code,
-                validated_grab.headers,
-                validated_grab.body,
+                validated_grab.status_code(),
+                validated_grab.headers(),
+                validated_grab.body(),
                 pretty,
             )
         }
         RawFormat::PrettyJson => {
             info!("Writing response to pretty JSON string.");
             response_formatter.get_json_string(
-                validated_grab.status_code,
-                validated_grab.headers,
-                validated_grab.body,
+                validated_grab.status_code(),
+                validated_grab.headers(),
+                validated_grab.body(),
                 true,
             )
         }
