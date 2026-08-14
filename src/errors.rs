@@ -142,8 +142,8 @@ pub enum ArgsValidationError {
     #[error("Value {0} is not a valid format.")]
     InvalidFormat(String),
 
-    #[error("{0}")]
-    UnderspecifiedMerge(&'static str),
+    #[error("Cannot grab {0} with other response components")]
+    InvalidGrab(&'static str),
 }
 
 #[derive(Debug, Error)]
