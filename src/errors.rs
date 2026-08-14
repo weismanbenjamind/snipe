@@ -144,6 +144,12 @@ pub enum ArgsValidationError {
 
     #[error("Cannot grab {0} with other response components")]
     InvalidGrab(&'static str),
+
+    #[error("Must specify response components to grab either via CLI or via cfg file")]
+    MissingGrab,
+
+    #[error("No value passed for grab arg {0}")]
+    GrabNotSet(&'static str),
 }
 
 #[derive(Debug, Error)]

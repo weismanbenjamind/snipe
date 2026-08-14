@@ -43,9 +43,8 @@ pub(crate) struct RawGrab {
     full: bool,
 }
 
-// TODO - Do I need this anymore since RawGrab is optional? Will raw grab just be None unless something is passed?
 impl RawGrab {
-    fn in_default_state(&self) -> bool {
+    fn empty(&self) -> bool {
         !self.status_code && !self.headers && !self.body && !self.int_status_code && !self.full
     }
 }
@@ -78,11 +77,11 @@ impl Default for RawGrab {
 
 #[derive(Clone, Copy, Debug, Default)]
 struct RawGrabBuilder {
-    status_code: bool,
-    headers: bool,
-    body: bool,
-    int_status_code: bool,
-    full: bool,
+    status_code: Option<bool>,
+    headers: Option<bool>,
+    body: Option<bool>,
+    int_status_code: Option<bool>,
+    full: Option<bool>,
 }
 
 impl RawGrabBuilder {
@@ -91,41 +90,60 @@ impl RawGrabBuilder {
     }
 
     fn with_status_code(mut self, status_code: bool) -> Self {
-        self.status_code = status_code;
+        self.status_code = Some(status_code);
         self
     }
     fn with_headers(mut self, headers: bool) -> Self {
-        self.headers = headers;
+        self.headers = Some(headers);
         self
     }
+
     fn with_body(mut self, body: bool) -> Self {
-        self.body = body;
+        self.body = Some(body);
         self
     }
+
     fn with_int_status_code(mut self, int_status_code: bool) -> Self {
-        self.int_status_code = int_status_code;
+        self.int_status_code = Some(int_status_code);
         self
     }
+
     fn with_full(mut self, full: bool) -> Self {
-        self.full = full;
+        self.full = Some(full);
         self
     }
 
     fn build(self) -> Result<RawGrab, ArgsValidationError> {
-        if self.full && (self.status_code || self.headers || self.body || self.int_status_code) {
+        let status_code = self
+            .status_code
+            .ok_or(ArgsValidationError::GrabNotSet("status code"))?;
+
+        let headers = self
+            .headers
+            .ok_or(ArgsValidationError::GrabNotSet("headers"))?;
+
+        let body = self.body.ok_or(ArgsValidationError::GrabNotSet("body"))?;
+
+        let int_status_code = self
+            .int_status_code
+            .ok_or(ArgsValidationError::GrabNotSet("int_status_code"))?;
+
+        let full = self.full.ok_or(ArgsValidationError::GrabNotSet("full"))?;
+
+        if full && (status_code || headers || body || int_status_code) {
             return Err(ArgsValidationError::InvalidGrab("full response"));
         }
 
-        if self.int_status_code && (self.status_code || self.headers || self.body || self.full) {
+        if int_status_code && (status_code || headers || body || full) {
             return Err(ArgsValidationError::InvalidGrab("int status code"));
         }
 
         Ok(RawGrab {
-            status_code: self.status_code,
-            headers: self.headers,
-            body: self.body,
-            int_status_code: self.int_status_code,
-            full: self.full,
+            status_code,
+            headers,
+            body,
+            int_status_code,
+            full,
         })
     }
 }
@@ -144,7 +162,7 @@ impl ValidatedGrab {
         grab: RawGrab,
         validated_format: ValidatedFormat,
     ) -> Result<Self, ArgsValidationError> {
-        let grab = Self::init_from_raw_grab(grab);
+        let grab = Self::init_from_raw_grab(grab)?;
         match validated_format.raw() {
             RawFormat::Http => Ok(grab),
             RawFormat::Json => Ok(grab),
@@ -179,31 +197,30 @@ impl ValidatedGrab {
 
     // Validation occurs at the RawGrab level
     // Raw grab validates good combos
-    // Validation either happens at CLI level or via ::new() method
-    fn init_from_raw_grab(value: RawGrab) -> Self {
-        // If everything is false default to body
-        if value.in_default_state() {
-            return Self::default();
+    // Validation either happens at CLI level or via ::new() method on RawGrab
+    fn init_from_raw_grab(value: RawGrab) -> Result<Self, ArgsValidationError> {
+        if value.empty() {
+            return Err(ArgsValidationError::MissingGrab);
         }
 
         // If full is true then set status_code, headers, and body to true
         // and int_status_code to false
         if value.full {
-            return Self {
+            return Ok(Self {
                 status_code: true,
                 headers: true,
                 body: true,
                 int_status_code: false,
-            };
+            });
         }
 
         // Otherwise return all values as set in RawGrab
-        Self {
+        Ok(Self {
             status_code: value.status_code,
             headers: value.headers,
             body: value.body,
             int_status_code: value.int_status_code,
-        }
+        })
     }
 }
 
