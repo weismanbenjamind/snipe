@@ -54,7 +54,7 @@ impl TryFrom<&Vec<GrabCfg>> for RawGrab {
     fn try_from(value: &Vec<GrabCfg>) -> Result<Self, ArgsValidationError> {
         let unique: HashSet<&GrabCfg> = value.iter().collect();
         RawGrabBuilder::new()
-            .with_status_code(unique.contains(&GrabCfg::IntStatusCode))
+            .with_status_code(unique.contains(&GrabCfg::StatusCode))
             .with_headers(unique.contains(&GrabCfg::Headers))
             .with_body(unique.contains(&GrabCfg::Body))
             .with_int_status_code(unique.contains(&GrabCfg::IntStatusCode))
