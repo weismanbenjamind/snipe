@@ -1,4 +1,3 @@
-use crate::errors::ArgsValidationError;
 use crate::inputs::shoot::ShootArgs;
 use clap::{ArgAction, Parser, Subcommand};
 use std::path::PathBuf;
@@ -49,28 +48,21 @@ impl SnipeCLIArgs {
     }
 }
 
-impl TryFrom<RawSnipeCLIArgs> for SnipeCLIArgs {
-    type Error = ArgsValidationError;
-    fn try_from(value: RawSnipeCLIArgs) -> Result<Self, Self::Error> {
-        Ok(Self {
+impl From<RawSnipeCLIArgs> for SnipeCLIArgs {
+    fn from(value: RawSnipeCLIArgs) -> Self {
+        Self {
             cfg: value.cfg,
             command: value.command,
             cfg_env: Self::resolve_cfg_env(value.cfg_env),
             verbose: value.verbose,
-        })
+        }
     }
 }
 
 // Note - comments below are actually used of for CLI documentation
 #[derive(Clone, Debug, Subcommand)]
-pub(super) enum RawCommand {
-    /// List all potential API requests to make
-    List,
-    Shoot(ShootArgs),
-}
-
-#[derive(Clone, Debug, Subcommand)]
 pub(crate) enum Command {
+    /// List all potential API requests to make
     List,
     Shoot(ShootArgs),
 }
