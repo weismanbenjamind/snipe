@@ -14,6 +14,7 @@ All relevant updates will be listed in this document
 
 ### Added
 
+- Layered config/CLI arguments
 - Variable interpolation system for auth, headers, and payload
 - Shortcut to pretty print JSON output
 - Redaction of of potential sensitive varaiables
