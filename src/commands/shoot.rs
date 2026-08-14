@@ -117,43 +117,6 @@ fn build_merged_args_output_cfg_some(
     })
 }
 
-#[inline]
-async fn handle_binary_output(
-    response_writer: ResponseWriter,
-    output_file: Option<&Path>,
-) -> Result<(), RunError> {
-    match output_file {
-        Some(output_file) => Ok(response_writer.try_into_binary_file(output_file).await?),
-        None => Err(RunError::from(
-            "Must set output file for writing to a binary file",
-        )),
-    }
-}
-
-#[inline]
-async fn handle_string_output(
-    response_writer: ResponseWriter,
-    validated_grab: ValidatedGrab,
-    validated_format: ValidatedFormat,
-    pretty: bool,
-    output_file: Option<&Path>,
-) -> Result<(), RunError> {
-    let result = match output_file {
-        Some(output_file) => {
-            response_writer
-                .try_into_text_file(validated_grab, validated_format, pretty, output_file)
-                .await
-        }
-        None => {
-            response_writer
-                .try_into_console(validated_grab, validated_format, pretty)
-                .await
-        }
-    };
-
-    Ok(result?)
-}
-
 // If args will default pretty to false unless passed; then it's true.
 // This behavior is because --pretty is a flag
 fn merge_pretty(from_args: bool, from_cfg: Option<bool>) -> bool {
@@ -197,4 +160,41 @@ fn merge_grab(
         (None, Some(grab)) => ValidatedGrab::new(RawGrab::from(grab), validated_format),
         (None, None) => Ok(ValidatedGrab::default()), // If nothing passed via CLI and via cfg use default which is Body
     }
+}
+
+#[inline]
+async fn handle_binary_output(
+    response_writer: ResponseWriter,
+    output_file: Option<&Path>,
+) -> Result<(), RunError> {
+    match output_file {
+        Some(output_file) => Ok(response_writer.try_into_binary_file(output_file).await?),
+        None => Err(RunError::from(
+            "Must set output file for writing to a binary file",
+        )),
+    }
+}
+
+#[inline]
+async fn handle_string_output(
+    response_writer: ResponseWriter,
+    validated_grab: ValidatedGrab,
+    validated_format: ValidatedFormat,
+    pretty: bool,
+    output_file: Option<&Path>,
+) -> Result<(), RunError> {
+    let result = match output_file {
+        Some(output_file) => {
+            response_writer
+                .try_into_text_file(validated_grab, validated_format, pretty, output_file)
+                .await
+        }
+        None => {
+            response_writer
+                .try_into_console(validated_grab, validated_format, pretty)
+                .await
+        }
+    };
+
+    Ok(result?)
 }
