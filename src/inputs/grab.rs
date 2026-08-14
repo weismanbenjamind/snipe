@@ -8,8 +8,7 @@ use clap::Args;
 // * Note - do not want to fields public for RawGrab
 // Depend on clap validation to ensure proper combos
 // Need to encapsulate to ensure always getting proper combos
-// If need to create RawGrab outside of ClI should add a ::new() method
-// ::new() should return a Result<RawGrab, SomeErrorForInvalidGrabCombo>
+// If need to create RawGrab outside of ClI should use the RawGrabBuilder struct
 #[derive(Args, Clone, Copy, Debug)]
 #[group(multiple = true, required = false)]
 pub(crate) struct RawGrab {
@@ -44,9 +43,90 @@ pub(crate) struct RawGrab {
     full: bool,
 }
 
+// TODO - Do I need this anymore since RawGrab is optional? Will raw grab just be None unless something is passed?
 impl RawGrab {
     fn in_default_state(&self) -> bool {
         !self.status_code && !self.headers && !self.body && !self.int_status_code && !self.full
+    }
+}
+
+impl TryFrom<&Vec<GrabCfg>> for RawGrab {
+    type Error = ArgsValidationError;
+    fn try_from(value: &Vec<GrabCfg>) -> Result<Self, ArgsValidationError> {
+        let unique: HashSet<&GrabCfg> = value.iter().collect();
+        RawGrabBuilder::new()
+            .with_status_code(unique.contains(&GrabCfg::IntStatusCode))
+            .with_headers(unique.contains(&GrabCfg::Headers))
+            .with_body(unique.contains(&GrabCfg::Body))
+            .with_int_status_code(unique.contains(&GrabCfg::IntStatusCode))
+            .with_full(unique.contains(&GrabCfg::Full))
+            .build()
+    }
+}
+
+impl Default for RawGrab {
+    fn default() -> Self {
+        Self {
+            status_code: false,
+            headers: false,
+            body: true, // Default to grab body
+            int_status_code: false,
+            full: false,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+struct RawGrabBuilder {
+    status_code: bool,
+    headers: bool,
+    body: bool,
+    int_status_code: bool,
+    full: bool,
+}
+
+impl RawGrabBuilder {
+    fn new() -> Self {
+        Self::default()
+    }
+
+    fn with_status_code(mut self, status_code: bool) -> Self {
+        self.status_code = status_code;
+        self
+    }
+    fn with_headers(mut self, headers: bool) -> Self {
+        self.headers = headers;
+        self
+    }
+    fn with_body(mut self, body: bool) -> Self {
+        self.body = body;
+        self
+    }
+    fn with_int_status_code(mut self, int_status_code: bool) -> Self {
+        self.int_status_code = int_status_code;
+        self
+    }
+    fn with_full(mut self, full: bool) -> Self {
+        self.full = full;
+        self
+    }
+
+    fn build(self) -> Result<RawGrab, ArgsValidationError> {
+        if self.full && (self.status_code || self.headers || self.body || self.int_status_code) {
+            return Err(ArgsValidationError::InvalidGrab("full response"));
+        }
+
+        if self.int_status_code && (self.status_code || self.headers || self.body || self.full) {
+            return Err(ArgsValidationError::InvalidGrab("int status code"));
+        }
+
+        Ok(RawGrab {
+            status_code: self.status_code,
+            headers: self.headers,
+            body: self.body,
+            int_status_code: self.int_status_code,
+            full: self.full,
+        })
     }
 }
 
@@ -134,19 +214,6 @@ impl Default for ValidatedGrab {
             headers: false,
             body: true, // Default to grab body
             int_status_code: false,
-        }
-    }
-}
-
-impl From<&Vec<GrabCfg>> for RawGrab {
-    fn from(value: &Vec<GrabCfg>) -> Self {
-        let unique: HashSet<&GrabCfg> = value.iter().collect();
-        RawGrab {
-            status_code: unique.contains(&GrabCfg::IntStatusCode),
-            headers: unique.contains(&GrabCfg::Headers),
-            body: unique.contains(&GrabCfg::Body),
-            int_status_code: unique.contains(&GrabCfg::IntStatusCode),
-            full: unique.contains(&GrabCfg::Full),
         }
     }
 }

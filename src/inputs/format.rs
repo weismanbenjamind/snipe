@@ -3,10 +3,10 @@ use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-// TODO - Might need special de-serialization logic here on the enum to turn it back into a string
-#[derive(Clone, Copy, Debug, Serialize, Deserialize, ValueEnum)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, ValueEnum, Default)]
 #[serde(try_from = "String")]
 pub(crate) enum RawFormat {
+    #[default]
     Http,
     Json,
     PrettyJson,

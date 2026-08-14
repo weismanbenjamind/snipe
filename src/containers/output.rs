@@ -18,7 +18,7 @@ pub(crate) struct OutputCfg {
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq, Hash)]
-#[serde(try_from = "String")]
+#[serde(try_from = "String", rename_all = "snake_case")]
 pub(crate) enum GrabCfg {
     StatusCode,
     Headers,

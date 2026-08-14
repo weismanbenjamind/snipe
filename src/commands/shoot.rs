@@ -4,10 +4,11 @@ use crate::containers::output::{GrabCfg, OutputCfg};
 use crate::errors::{ArgsValidationError, RunError};
 use crate::inputs::{RawFormat, RawGrab, ShootArgs, ValidatedFormat, ValidatedGrab};
 use crate::response::ResponseWriter;
-use log::info;
+use log::{debug, info};
 use std::path::Path;
 use std::path::PathBuf;
 
+#[derive(Clone, Debug)]
 pub(crate) struct MergedArgs {
     validated_grab: ValidatedGrab,
     validated_format: ValidatedFormat,
@@ -61,21 +62,21 @@ fn build_merged_args(
     shoot_args: ShootArgs,
     output_cfg: Option<&OutputCfg>,
 ) -> Result<MergedArgs, ArgsValidationError> {
-    match output_cfg {
+    let args = match output_cfg {
         None => build_merged_args_output_cfg_none(shoot_args),
         Some(cfg) => build_merged_args_output_cfg_some(shoot_args, cfg),
-    }
+    }?;
+
+    debug!("Using merged args:\n{args:#?}");
+
+    Ok(args)
 }
 
 fn build_merged_args_output_cfg_none(
     shoot_args: ShootArgs,
 ) -> Result<MergedArgs, ArgsValidationError> {
-    let raw_grab = shoot_args.grab.ok_or(ArgsValidationError::UnderspecifiedMerge("Must specify components to grab from request via CLI if omitting them from target config."))?;
-    let raw_format = shoot_args
-        .format
-        .ok_or(ArgsValidationError::UnderspecifiedMerge(
-            "Must specify output format via CLI if omitting it from target config.",
-        ))?;
+    let raw_grab = shoot_args.grab.unwrap_or_default(); // RawGrab defauts to grabbing body. Which is what we want if grab isn't present
+    let raw_format = shoot_args.format.unwrap_or_default(); // RawFormat defauts to HTTP. Which is what we want if format isn't present
 
     let validated_format = ValidatedFormat::new(
         raw_format,
@@ -157,7 +158,7 @@ fn merge_grab(
 ) -> Result<ValidatedGrab, ArgsValidationError> {
     match (from_args, from_cfg) {
         (Some(grab), None) | (Some(grab), Some(_)) => ValidatedGrab::new(grab, validated_format),
-        (None, Some(grab)) => ValidatedGrab::new(RawGrab::from(grab), validated_format),
+        (None, Some(grab)) => ValidatedGrab::new(RawGrab::try_from(grab)?, validated_format),
         (None, None) => Ok(ValidatedGrab::default()), // If nothing passed via CLI and via cfg use default which is Body
     }
 }
