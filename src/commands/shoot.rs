@@ -98,7 +98,7 @@ fn build_merged_args_output_cfg_some(
     cfg: &OutputCfg,
 ) -> Result<MergedArgs, ArgsValidationError> {
     let pretty = merge_pretty(shoot_args.pretty, cfg.pretty);
-    let output_file = merge_output_file(shoot_args.output_file, cfg.output_file.as_ref());
+    let output_file = merge_output_file(shoot_args.output_file, cfg.output_file.as_deref());
 
     let validated_format = merge_format(
         shoot_args.format,
@@ -164,10 +164,10 @@ fn merge_pretty(from_args: bool, from_cfg: Option<bool>) -> bool {
     }
 }
 
-fn merge_output_file(from_args: Option<PathBuf>, from_cfg: Option<&PathBuf>) -> Option<PathBuf> {
+fn merge_output_file(from_args: Option<PathBuf>, from_cfg: Option<&Path>) -> Option<PathBuf> {
     match (from_args, from_cfg) {
         (Some(path), None) | (Some(path), Some(_)) => Some(path),
-        (None, Some(path)) => Some(path.clone()),
+        (None, Some(path)) => Some(PathBuf::from(path)),
         (None, None) => None,
     }
 }
