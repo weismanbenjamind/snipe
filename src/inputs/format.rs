@@ -47,8 +47,9 @@ impl ValidatedFormat {
         match pretty {
             false => Ok(Self(raw_format)),
             true => match raw_format {
-                RawFormat::Json | RawFormat::Http | RawFormat::PrettyJson => Ok(Self(raw_format)),
-                RawFormat::Binary => Err(ArgsValidationError::PrettyWithBinary),
+                RawFormat::Json | RawFormat::PrettyJson => Ok(Self(raw_format)),
+                RawFormat::Http => Err(ArgsValidationError::InvalidWithPretty("http string")),
+                RawFormat::Binary => Err(ArgsValidationError::InvalidWithPretty("binary")),
             },
         }
     }
