@@ -12,12 +12,7 @@ pub(crate) struct ShootArgs {
     #[command(flatten)]
     pub(crate) grab: Option<RawGrab>,
 
-    #[arg(
-        short,
-        long,
-        default_value = "http",
-        help = "Format style for response data"
-    )]
+    #[arg(short, long, help = "Format style for response data")]
     pub(crate) format: Option<RawFormat>,
 
     #[arg(
