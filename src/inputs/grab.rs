@@ -39,12 +39,14 @@ pub(crate) struct RawGrab {
     full: bool,
 }
 
+// TODO - May not need this anymore due to parsing with option - buy probably good to check how updated parsing with Option plays with not passing any args
 impl RawGrab {
     fn in_default_state(&self) -> bool {
         !self.status_code && !self.headers && !self.body && !self.int_status_code && !self.full
     }
 }
 
+// TODO - may want to tweak encap here so only way to build ValidtedGrab is via a `new` method
 #[derive(Clone, Copy, Debug)]
 pub(crate) struct ValidatedGrab {
     pub(crate) status_code: bool,

@@ -30,6 +30,7 @@ impl TryFrom<String> for RawFormat {
 pub(crate) struct ValidatedFormat(RawFormat);
 
 impl ValidatedFormat {
+    // TODO - may want to tweak encap here so only way to build ValidtedGrab is via a `new` method that constains validation
     pub(crate) fn new(raw_format: RawFormat) -> Self {
         Self(raw_format)
     }

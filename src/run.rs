@@ -1,7 +1,7 @@
 use log::info;
 
 use crate::cfg_resolver::CfgResolver;
-use crate::commands::run_list_targets_cmd;
+use crate::commands::{run_list_targets_cmd, run_shoot_cmd};
 use crate::containers::Targets;
 use crate::errors::RunError;
 use crate::inputs::{Command, SnipeCLIArgs};
@@ -28,7 +28,7 @@ pub async fn run_cli(snipe_cli_args: SnipeCLIArgs) -> Result<(), RunError> {
 
     match snipe_cli_args.command {
         Command::List => run_list_targets_cmd(targets),
-        Command::Shoot(cmd) => cmd.run(targets).await,
+        Command::Shoot(shoot_args) => run_shoot_cmd(shoot_args, targets).await,
     }
 }
 

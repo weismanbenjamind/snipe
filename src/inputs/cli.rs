@@ -1,6 +1,5 @@
-use crate::commands::ShootCmd;
 use crate::errors::ArgsValidationError;
-use crate::inputs::shoot::RawShootArgs;
+use crate::inputs::shoot::ShootArgs;
 use clap::{ArgAction, Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -20,7 +19,7 @@ pub struct RawSnipeCLIArgs {
     cfg: PathBuf,
 
     #[command(subcommand)]
-    command: RawCommand,
+    command: Command,
 
     #[arg(
         short = 'e',
@@ -55,7 +54,7 @@ impl TryFrom<RawSnipeCLIArgs> for SnipeCLIArgs {
     fn try_from(value: RawSnipeCLIArgs) -> Result<Self, Self::Error> {
         Ok(Self {
             cfg: value.cfg,
-            command: Command::try_from(value.command)?,
+            command: value.command,
             cfg_env: Self::resolve_cfg_env(value.cfg_env),
             verbose: value.verbose,
         })
@@ -67,23 +66,11 @@ impl TryFrom<RawSnipeCLIArgs> for SnipeCLIArgs {
 pub(super) enum RawCommand {
     /// List all potential API requests to make
     List,
-    Shoot(RawShootArgs),
+    Shoot(ShootArgs),
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Subcommand)]
 pub(crate) enum Command {
     List,
-    Shoot(ShootCmd),
-}
-
-impl TryFrom<RawCommand> for Command {
-    type Error = ArgsValidationError;
-    fn try_from(value: RawCommand) -> Result<Self, Self::Error> {
-        match value {
-            RawCommand::List => Ok(Self::List),
-            RawCommand::Shoot(raw_shoot_args) => {
-                Ok(Self::Shoot(ShootCmd::try_from(raw_shoot_args)?))
-            }
-        }
-    }
+    Shoot(ShootArgs),
 }

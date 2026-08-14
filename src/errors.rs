@@ -144,9 +144,6 @@ pub enum ArgsValidationError {
 
     #[error("{0}")]
     UnderspecifiedMerge(&'static str),
-
-    #[error("Must specify format if also specify grab.")]
-    GrabWithoutFormat, // TODO - should remove this error when allow format to be omitted if parsed through the config
 }
 
 #[derive(Debug, Error)]
