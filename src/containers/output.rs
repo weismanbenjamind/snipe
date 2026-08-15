@@ -15,6 +15,7 @@ pub(crate) struct OutputCfg {
     pub(crate) format: Option<RawFormat>,
     pub(crate) pretty: Option<bool>,
     pub(crate) output_file: Option<PathBuf>,
+    pub(crate) dry_run: Option<bool>,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq, Hash)]

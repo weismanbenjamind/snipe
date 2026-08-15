@@ -14,6 +14,7 @@ pub(crate) struct MergedArgs {
     validated_format: ValidatedFormat,
     pretty: bool,
     output_file: Option<PathBuf>,
+    dry_run: bool,
 }
 
 pub(crate) async fn run_shoot_cmd(shoot_args: ShootArgs, targets: Targets) -> Result<(), RunError> {
@@ -30,7 +31,15 @@ pub(crate) async fn run_shoot_cmd(shoot_args: ShootArgs, targets: Targets) -> Re
 
     let merged_args = build_merged_args(shoot_args, target.output_cfg.as_ref())?;
 
-    let response = Client::new()?.send_request(target).await?;
+    let client = Client::new()?;
+    let request = client.build_request(target)?;
+
+    if merged_args.dry_run {
+        println!("Dry run detected. Request succesfully built. Not sending.");
+        return Ok(());
+    }
+
+    let response = client.send_request(request).await?;
     info!("Response recieved");
 
     let response_writer = ResponseWriter::new(response);
@@ -91,6 +100,7 @@ fn build_merged_args_output_cfg_none(
         validated_format,
         pretty: shoot_args.pretty,
         output_file: shoot_args.output_file,
+        dry_run: shoot_args.dry_run,
     })
 }
 
@@ -98,32 +108,32 @@ fn build_merged_args_output_cfg_some(
     shoot_args: ShootArgs,
     cfg: &OutputCfg,
 ) -> Result<MergedArgs, ArgsValidationError> {
-    let pretty = merge_pretty(shoot_args.pretty, cfg.pretty);
+    let pretty = merge_cli_flag(shoot_args.pretty, cfg.pretty);
     let output_file = merge_output_file(shoot_args.output_file, cfg.output_file.as_deref());
-
     let validated_format = merge_format(
         shoot_args.format,
         cfg.format,
         pretty,
         output_file.as_deref(),
     )?;
-
     let validated_grab = merge_grab(shoot_args.grab, cfg.grab.as_ref(), validated_format)?;
+    let dry_run = merge_cli_flag(shoot_args.dry_run, cfg.dry_run);
 
     Ok(MergedArgs {
         validated_grab,
         validated_format,
         pretty,
         output_file,
+        dry_run,
     })
 }
 
-// If args will default pretty to false unless passed; then it's true.
-// This behavior is because --pretty is a flag
-fn merge_pretty(from_args: bool, from_cfg: Option<bool>) -> bool {
+// Args will default to false unless passed; then it's true.
+// This behavior is because --arg is a flag
+fn merge_cli_flag(from_args: bool, from_cfg: Option<bool>) -> bool {
     match (from_args, from_cfg) {
         (true, None) | (true, Some(_)) => true,
-        (false, Some(pretty)) => pretty,
+        (false, Some(cfg_val)) => cfg_val,
         (false, None) => false,
     }
 }

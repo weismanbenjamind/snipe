@@ -29,4 +29,12 @@ pub(crate) struct ShootArgs {
         help = "Optional file that output should be written to. If passed contents will be written to this file and not stdout"
     )]
     pub(crate) output_file: Option<PathBuf>,
+
+    #[arg(
+        short,
+        long,
+        default_value = "false",
+        help = "If request should be built but not sent"
+    )]
+    pub(crate) dry_run: bool,
 }
