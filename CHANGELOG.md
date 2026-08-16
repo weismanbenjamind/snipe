@@ -14,6 +14,7 @@ All relevant updates will be listed in this document
 
 ### Added
 
+- Dry run
 - Layered config/CLI arguments
 - Variable interpolation system for auth, headers, and payload
 - Shortcut to pretty print JSON output
