@@ -223,14 +223,3 @@ impl ValidatedGrab {
         })
     }
 }
-
-impl Default for ValidatedGrab {
-    fn default() -> Self {
-        Self {
-            status_code: false,
-            headers: false,
-            body: true, // Default to grab body
-            int_status_code: false,
-        }
-    }
-}

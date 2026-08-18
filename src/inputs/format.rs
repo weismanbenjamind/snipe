@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::path::Path;
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, ValueEnum, Default)]
-#[serde(try_from = "String")]
+#[serde(try_from = "String", rename_all = "snake_case")]
 pub(crate) enum RawFormat {
     #[default]
     Http,
@@ -66,11 +66,5 @@ impl ValidatedFormat {
                 RawFormat::Binary => Err(ArgsValidationError::NoOutputFileWithBinary),
             },
         }
-    }
-}
-
-impl Default for ValidatedFormat {
-    fn default() -> Self {
-        Self(RawFormat::Http)
     }
 }

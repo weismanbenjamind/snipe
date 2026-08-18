@@ -156,7 +156,7 @@ fn merge_format(
             ValidatedFormat::new(format, pretty, output_file)
         }
         (None, Some(format)) => ValidatedFormat::new(format, pretty, output_file),
-        (None, None) => Ok(ValidatedFormat::default()), // If nothing passed via CLI and via cfg use default which is HTTP
+        (None, None) => ValidatedFormat::new(RawFormat::default(), pretty, output_file), // If nothing passed via CLI and via cfg use default which is HTTP
     }
 }
 
@@ -168,7 +168,7 @@ fn merge_grab(
     match (from_args, from_cfg) {
         (Some(grab), None) | (Some(grab), Some(_)) => ValidatedGrab::new(grab, validated_format),
         (None, Some(grab)) => ValidatedGrab::new(RawGrab::try_from(grab)?, validated_format),
-        (None, None) => Ok(ValidatedGrab::default()), // If nothing passed via CLI and via cfg use default which is Body
+        (None, None) => ValidatedGrab::new(RawGrab::default(), validated_format), // If nothing passed via CLI and via cfg use default which is Body
     }
 }
 
