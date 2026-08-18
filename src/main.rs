@@ -6,9 +6,12 @@ use std::process::ExitCode;
 #[tokio::main]
 async fn main() -> ExitCode {
     match run_cli(SnipeCLIArgs::from(RawSnipeCLIArgs::parse())).await {
-        Ok(()) => ExitCode::SUCCESS,
+        Ok(success_msg) => {
+            println!("{success_msg}");
+            ExitCode::SUCCESS
+        }
         Err(err) => {
-            eprintln!("{}", err);
+            eprintln!("{err}");
             ExitCode::FAILURE
         }
     }

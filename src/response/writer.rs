@@ -1,3 +1,4 @@
+use crate::commands::SuccessMsg;
 use crate::errors::{FilesystemError, ResponseFormatterError, ResponseWriterError};
 use crate::inputs::{RawFormat, ValidatedFormat, ValidatedGrab};
 use crate::response::ResponseFormatter;
@@ -22,17 +23,17 @@ impl ResponseWriter {
     pub(crate) async fn try_into_binary_file(
         self,
         output_file: &Path,
-    ) -> Result<(), ResponseWriterError> {
+    ) -> Result<SuccessMsg, ResponseWriterError> {
         info!(
             "Trying to write response body as binary to {}.",
             output_file.display()
         );
 
         if !self.response.status().is_success() {
-            return get_bad_response_for_binary_write_err(
+            return Err(get_bad_response_for_binary_write_err(
                 self.response.status().as_u16(),
                 output_file,
-            );
+            ));
         }
 
         let mut file = open_output_file(output_file)?;
@@ -47,11 +48,12 @@ impl ResponseWriter {
                 .map_err(ResponseWriterError::binary_write_from_err)?;
         }
 
-        info!(
+        let msg = format!(
             "Succesfully to wrote response body as binary to {}.",
             output_file.display()
         );
-        Ok(())
+        debug!("{msg}");
+        Ok(SuccessMsg(msg))
     }
 
     pub(crate) async fn try_into_text_file(
@@ -60,7 +62,7 @@ impl ResponseWriter {
         validated_format: ValidatedFormat,
         pretty: bool,
         output_file: &Path,
-    ) -> Result<(), ResponseWriterError> {
+    ) -> Result<SuccessMsg, ResponseWriterError> {
         info!(
             "Writing formatted response as string to file {}.",
             output_file.display()
@@ -70,39 +72,24 @@ impl ResponseWriter {
             .try_into_string(validated_grab, validated_format, pretty)
             .await?;
         try_create_parent_dirs(output_file)?;
-        fs::write(output_file, response_string).map_err(|e| {
+        fs::write(output_file, response_string.as_str()).map_err(|e| {
             ResponseWriterError::TextWrite(output_file.display().to_string(), e.to_string())
         })?;
 
-        info!(
+        let msg = format!(
             "Successfully wrote formatted response as string to file {}.",
             output_file.display()
         );
-        Ok(())
+        info!("{msg}");
+        Ok(SuccessMsg(msg))
     }
 
-    pub(crate) async fn try_into_console(
+    pub(crate) async fn try_into_string(
         self,
         validated_grab: ValidatedGrab,
         validated_format: ValidatedFormat,
         pretty: bool,
-    ) -> Result<(), ResponseWriterError> {
-        info!("Writing formatted response to console");
-        println!(
-            "{}",
-            self.try_into_string(validated_grab, validated_format, pretty)
-                .await?
-        );
-        info!("Successfully wrote formatted response to console.");
-        Ok(())
-    }
-
-    async fn try_into_string(
-        self,
-        validated_grab: ValidatedGrab,
-        validated_format: ValidatedFormat,
-        pretty: bool,
-    ) -> Result<String, ResponseWriterError> {
+    ) -> Result<SuccessMsg, ResponseWriterError> {
         info!("Transforming response into String.");
         let response_formatter = ResponseFormatter::try_from_response(self.response).await?;
 
@@ -116,7 +103,7 @@ impl ResponseWriter {
             )?,
         };
 
-        Ok(result)
+        Ok(SuccessMsg(result))
     }
 }
 
@@ -124,11 +111,11 @@ impl ResponseWriter {
 fn get_bad_response_for_binary_write_err(
     status_code: u16,
     output_file: &Path,
-) -> Result<(), ResponseWriterError> {
-    Err(ResponseWriterError::BadResponse(
+) -> ResponseWriterError {
+    ResponseWriterError::BadResponse(
         status_code,
         format!("Blocked writing to file {}", output_file.display()),
-    ))
+    )
 }
 
 fn open_output_file<P: AsRef<Path>>(output_path: P) -> Result<fs::File, FilesystemError> {

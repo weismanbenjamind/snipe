@@ -1,7 +1,7 @@
 use log::info;
 
 use crate::cfg_resolver::CfgResolver;
-use crate::commands::{run_list_targets_cmd, run_shoot_cmd};
+use crate::commands::{SnipeResult, run_list_targets_cmd, run_shoot_cmd};
 use crate::containers::Targets;
 use crate::errors::RunError;
 use crate::inputs::{Command, SnipeCLIArgs};
@@ -14,7 +14,7 @@ const WARN: &str = "warn";
 const INFO: &str = "info";
 const DEBUG: &str = "debug";
 
-pub async fn run_cli(snipe_cli_args: SnipeCLIArgs) -> Result<(), RunError> {
+pub async fn run_cli(snipe_cli_args: SnipeCLIArgs) -> SnipeResult {
     set_vebosity(snipe_cli_args.verbose)?;
 
     info!("Resolving config file path.");

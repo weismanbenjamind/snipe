@@ -1,4 +1,5 @@
 use crate::client::Client;
+use crate::commands::{SnipeResult, SuccessMsg};
 use crate::containers::Targets;
 use crate::containers::output::{GrabCfg, OutputCfg};
 use crate::errors::{ArgsValidationError, RunError};
@@ -17,7 +18,7 @@ pub(crate) struct MergedArgs {
     dry_run: bool,
 }
 
-pub(crate) async fn run_shoot_cmd(shoot_args: ShootArgs, targets: Targets) -> Result<(), RunError> {
+pub(crate) async fn run_shoot_cmd(shoot_args: ShootArgs, targets: Targets) -> SnipeResult {
     info!("Starting request process.");
 
     let target = targets
@@ -35,8 +36,9 @@ pub(crate) async fn run_shoot_cmd(shoot_args: ShootArgs, targets: Targets) -> Re
     let request = client.build_request(target)?;
 
     if merged_args.dry_run {
-        println!("Dry run detected. Request succesfully built. Not sending.");
-        return Ok(());
+        return Ok(SuccessMsg(
+            "Dry run detected. Request succesfully built. Not sending.".to_string(),
+        ));
     }
 
     let response = client.send_request(request).await?;
@@ -44,8 +46,7 @@ pub(crate) async fn run_shoot_cmd(shoot_args: ShootArgs, targets: Targets) -> Re
 
     let response_writer = ResponseWriter::new(response);
 
-    info!("Outputting response");
-    match merged_args.validated_format.raw() {
+    let result = match merged_args.validated_format.raw() {
         RawFormat::Binary => {
             handle_binary_output(response_writer, merged_args.output_file.as_deref()).await
         }
@@ -59,12 +60,10 @@ pub(crate) async fn run_shoot_cmd(shoot_args: ShootArgs, targets: Targets) -> Re
             )
             .await
         }
-    }?;
-    info!("Successfully output response.");
-
+    };
     info!("Finished request process.");
 
-    Ok(())
+    result
 }
 
 fn build_merged_args(
@@ -177,7 +176,7 @@ fn merge_grab(
 async fn handle_binary_output(
     response_writer: ResponseWriter,
     output_file: Option<&Path>,
-) -> Result<(), RunError> {
+) -> SnipeResult {
     match output_file {
         Some(output_file) => Ok(response_writer.try_into_binary_file(output_file).await?),
         None => Err(RunError::from(
@@ -193,7 +192,7 @@ async fn handle_string_output(
     validated_format: ValidatedFormat,
     pretty: bool,
     output_file: Option<&Path>,
-) -> Result<(), RunError> {
+) -> SnipeResult {
     let result = match output_file {
         Some(output_file) => {
             response_writer
@@ -202,10 +201,10 @@ async fn handle_string_output(
         }
         None => {
             response_writer
-                .try_into_console(validated_grab, validated_format, pretty)
+                .try_into_string(validated_grab, validated_format, pretty)
                 .await
         }
     };
 
-    Ok(result?)
+    result.map_err(RunError::from)
 }
