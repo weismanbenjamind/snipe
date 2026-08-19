@@ -5,7 +5,7 @@ use thiserror::Error;
 
 #[derive(Clone, Debug, Error)]
 pub(crate) enum OutputError {
-    #[error("Invalid grab option {0})")]
+    #[error("Invalid grab option {0}).")]
     InvalidGrab(String),
 }
 

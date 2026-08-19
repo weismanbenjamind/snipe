@@ -8,13 +8,13 @@ use crate::containers::{Auth, Headers, Payload};
 
 #[derive(Clone, Debug, Error)]
 pub(crate) enum GlobalReplaceableError {
-    #[error("Could not find requested global variable {0}")]
+    #[error("Could not find requested global variable {0}.")]
     MissingGlobal(String),
 
-    #[error("Must only specify a local or global for all replaceable variables")]
+    #[error("Must only specify a local or global for all replaceable variables.")]
     Overspecified,
 
-    #[error("Must specify a local or global for all global replaceable variables")]
+    #[error("Must specify a local or global for all global replaceable variables.")]
     Underspecified,
 }
 
