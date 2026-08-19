@@ -19,10 +19,8 @@ pub(crate) fn run_list_targets_cmd(targets: Targets) -> SnipeResult {
         .try_for_each(|key| writeln!(buf, "{}", key).map_err(get_failed_get_targets_list_err))?;
     info!("Targets writtin to buffer. Displaying.");
 
-    print!("{buf}");
-
     info!("Done getting targets list.");
-    Ok(SuccessMsg(buf))
+    Ok(SuccessMsg(buf.trim().to_string()))
 }
 
 #[inline]
