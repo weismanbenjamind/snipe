@@ -14,11 +14,9 @@ pub(crate) struct Client {
 
 impl Client {
     pub(crate) fn new() -> Result<Self, ClientError> {
-        info!("Building client");
         let _client = Client_::builder()
             .build()
             .map_err(|e| ClientError::ClientBuild(e.to_string()))?;
-        info!("Client built.");
         Ok(Self { _client })
     }
 
@@ -26,10 +24,14 @@ impl Client {
         &self,
         request: RequestBuilder,
     ) -> Result<Response, ClientError> {
-        request
+        info!("Sending request.");
+        let response = request
             .send()
             .await
-            .map_err(|e| ClientError::SendRequestFailure(e.to_string()))
+            .map_err(|e| ClientError::SendRequestFailure(e.to_string()))?;
+        info!("Response recieved.");
+
+        Ok(response)
     }
 
     pub(crate) fn build_request(&self, target: &Target) -> Result<RequestBuilder, ClientError> {
