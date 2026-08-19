@@ -1,11 +1,12 @@
 use log::info;
 
+use super::{SnipeResult, SuccessMsg};
 use crate::containers::Targets;
 use crate::errors::RunError;
 use std::error::Error;
 use std::fmt::Write;
 
-pub(crate) fn run_list_targets_cmd(targets: &Targets) -> Result<(), RunError> {
+pub(crate) fn run_list_targets_cmd(targets: Targets) -> SnipeResult {
     info!("Getting target list.");
 
     info!("Writing target names to buffer.");
@@ -18,10 +19,8 @@ pub(crate) fn run_list_targets_cmd(targets: &Targets) -> Result<(), RunError> {
         .try_for_each(|key| writeln!(buf, "{}", key).map_err(get_failed_get_targets_list_err))?;
     info!("Targets writtin to buffer. Displaying.");
 
-    print!("{buf}");
-
     info!("Done getting targets list.");
-    Ok(())
+    Ok(SuccessMsg(buf.trim().to_string()))
 }
 
 #[inline]

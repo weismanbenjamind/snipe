@@ -2,7 +2,7 @@ use crate::containers::globals::{
     GlobalReplaceable, GlobalReplaceableCfg, GlobalReplaceableError, GlobalReplaceableLocal,
     Globals,
 };
-use crate::containers::{Auth, Headers, Method, Payload};
+use crate::containers::{Auth, Headers, Method, OutputCfg, Payload};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use thiserror::Error;
@@ -25,6 +25,7 @@ pub(crate) struct Target {
     pub(crate) headers: Option<Headers>,
     pub(crate) auth: Option<Auth>,
     pub(crate) payload: Option<Payload>,
+    pub(crate) output_cfg: Option<OutputCfg>,
 }
 
 #[derive(Debug, Deserialize, Clone, Serialize)]
@@ -33,6 +34,7 @@ pub(super) struct GlobalReplaceableTarget {
     url: String,
     method: Method,
     timeout_seconds: Option<u64>,
+    output_cfg: Option<OutputCfg>,
     auth: Option<GlobalReplaceableCfg<Auth>>,
     headers: Option<GlobalReplaceableCfg<Headers>>,
     payload: Option<GlobalReplaceableCfg<Payload>>,
@@ -47,6 +49,7 @@ impl GlobalReplaceableTarget {
             url: self.url,
             method: self.method,
             timeout_seconds: self.timeout_seconds,
+            output_cfg: self.output_cfg,
             headers: replace_global(self.headers, globals.headers())?,
             auth: replace_global(self.auth, globals.auth())?,
             payload: replace_global(self.payload, globals.payload())?,

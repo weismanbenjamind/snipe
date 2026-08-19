@@ -1,23 +1,40 @@
 use crate::errors::ArgsValidationError;
 use clap::ValueEnum;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-#[derive(Clone, Copy, Debug, Serialize, ValueEnum)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, ValueEnum, Default)]
+#[serde(try_from = "String", rename_all = "snake_case")]
 pub(crate) enum RawFormat {
+    #[default]
     Http,
     Json,
     PrettyJson,
     Binary,
 }
 
-#[derive(Clone, Copy, Debug)]
-pub(crate) struct ValidatedFormat {
-    pub(crate) raw_format: RawFormat,
+impl TryFrom<String> for RawFormat {
+    type Error = ArgsValidationError;
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        match value.to_lowercase().as_str() {
+            "http" => Ok(Self::Http),
+            "json" => Ok(Self::Json),
+            "pretty_json" => Ok(Self::PrettyJson),
+            "binary" => Ok(Self::Binary),
+            _ => Err(ArgsValidationError::InvalidFormat(value)),
+        }
+    }
 }
 
+#[derive(Clone, Copy, Debug)]
+pub(crate) struct ValidatedFormat(RawFormat);
+
 impl ValidatedFormat {
-    pub(crate) fn new_validated(
+    pub(crate) fn raw(&self) -> RawFormat {
+        self.0
+    }
+
+    pub(crate) fn new(
         raw_format: RawFormat,
         pretty: bool,
         output_file: Option<&Path>,
@@ -28,12 +45,11 @@ impl ValidatedFormat {
     #[inline]
     fn init_from_pretty(raw_format: RawFormat, pretty: bool) -> Result<Self, ArgsValidationError> {
         match pretty {
-            false => Ok(Self { raw_format }),
+            false => Ok(Self(raw_format)),
             true => match raw_format {
-                RawFormat::Json | RawFormat::Http | RawFormat::PrettyJson => {
-                    Ok(Self { raw_format })
-                }
-                RawFormat::Binary => Err(ArgsValidationError::PrettyWithBinary),
+                RawFormat::Json | RawFormat::PrettyJson => Ok(Self(raw_format)),
+                RawFormat::Http => Err(ArgsValidationError::InvalidWithPretty("http string")),
+                RawFormat::Binary => Err(ArgsValidationError::InvalidWithPretty("binary")),
             },
         }
     }
@@ -45,7 +61,7 @@ impl ValidatedFormat {
     ) -> Result<Self, ArgsValidationError> {
         match output_file {
             Some(_) => Ok(self),
-            None => match self.raw_format {
+            None => match self.0 {
                 RawFormat::Http | RawFormat::Json | RawFormat::PrettyJson => Ok(self),
                 RawFormat::Binary => Err(ArgsValidationError::NoOutputFileWithBinary),
             },

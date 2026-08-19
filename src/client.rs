@@ -22,14 +22,17 @@ impl Client {
         Ok(Self { _client })
     }
 
-    pub(crate) async fn send_request(&self, target: &Target) -> Result<Response, ClientError> {
-        self.build_request(target)?
+    pub(crate) async fn send_request(
+        &self,
+        request: RequestBuilder,
+    ) -> Result<Response, ClientError> {
+        request
             .send()
             .await
             .map_err(|e| ClientError::SendRequestFailure(e.to_string()))
     }
 
-    fn build_request(&self, target: &Target) -> Result<RequestBuilder, ClientError> {
+    pub(crate) fn build_request(&self, target: &Target) -> Result<RequestBuilder, ClientError> {
         info!("Starting request build.");
         let mut request_builder = self.init_request_builder(target);
 
