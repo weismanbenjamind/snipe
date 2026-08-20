@@ -119,11 +119,15 @@ fn build_payload(
     match payload {
         Payload::Params(json) => Ok(request_builder.json(json)),
         Payload::File(path) => {
-            debug!("Reading payload at path {} into bytes", path.display());
+            debug!("Reading payload at path {} into bytes.", path.display());
             let bytes = std::fs::read(path).map_err(|e| ClientError::BodyToBytes {
                 path: path.into(),
                 source: e,
             })?;
+            debug!(
+                "Successfully read payload at path {} into bytes.",
+                path.display()
+            );
             Ok(request_builder.body(bytes))
         }
     }
