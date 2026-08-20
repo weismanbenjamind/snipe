@@ -40,15 +40,17 @@ fn set_vebosity(verbosity: u8) -> Result<(), RunError> {
 fn get_log_level(verbosity: u8) -> Option<String> {
     match env::var(RUST_LOG) {
         Ok(level) => Some(level),
-        Err(_) => Some(
-            match verbosity {
-                0 => WARN,
-                1 => INFO,
-                _ => DEBUG,
-            }
-            .to_string(),
-        ),
+        Err(_) => Some(match verbosity {
+            0 => WARN.to_string(),
+            1 => build_verbosity_string(INFO),
+            _ => build_verbosity_string(DEBUG),
+        }),
     }
+}
+
+#[inline]
+fn build_verbosity_string(level: &str) -> String {
+    format!("warn,snipe={level}")
 }
 
 #[inline]
