@@ -152,7 +152,7 @@ fn handle_string_formatted_output(
 ) -> Result<String, ResponseFormatterError> {
     match validated_format.raw() {
         RawFormat::Http => {
-            info!("Writing response to HTTP string");
+            info!("Writing response to HTTP string.");
             response_formatter.get_http_string(
                 validated_grab.status_code(),
                 validated_grab.headers(),
@@ -160,7 +160,7 @@ fn handle_string_formatted_output(
             )
         }
         RawFormat::Json => {
-            info!("Writing response to JSON string.");
+            info!("Writing response to JSON string with pretty = {pretty}.");
             response_formatter.get_json_string(
                 validated_grab.status_code(),
                 validated_grab.headers(),

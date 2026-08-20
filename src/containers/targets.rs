@@ -1,3 +1,4 @@
+// TODO - Pick up tuning logging here
 use crate::containers::Vars;
 use crate::containers::globals::{Globals, GlobalsCfg};
 use crate::containers::target::{GlobalReplaceableTarget, Target, TargetError};
@@ -23,7 +24,7 @@ impl Targets {
     // It's a runtime artifact full of replaced variables, environment variables, potential secrets, etc.
     pub(crate) fn from_toml_file<P: AsRef<Path>>(path: &P) -> Result<Self, TargetsError> {
         info!(
-            "Generating Targets from .toml file at {}",
+            "Generating Targets from .toml file {}.",
             path.as_ref().display()
         );
 
@@ -32,12 +33,10 @@ impl Targets {
         let to_replace: GlobalReplaceableTargets = toml::from_str(&resolved_toml)?;
         let globals: Option<Globals> = toml::from_str::<GlobalsCfg>(&resolved_toml)?.globals;
 
-        info!("Replacing globals in targets file.");
         let replaced = to_replace.into_targets(globals.as_ref())?;
-        info!("Succesfully replaced globals in targets file.");
 
         info!(
-            "Succesfully generated targets from .toml file at {}",
+            "Succesfully generated Targets from .toml file {}.",
             path.as_ref().display()
         );
         debug!("Parsed targets file as:\n{replaced:#?}");
@@ -63,12 +62,14 @@ struct GlobalReplaceableTargets {
 
 impl GlobalReplaceableTargets {
     fn into_targets(self, globals: Option<&Globals>) -> Result<Targets, TargetsError> {
+        info!("Replacing globals in targets file.");
         self.targets
             .into_iter()
             .map(|(k, v)| Ok((k, v.into_target(globals)?)))
             .collect::<Result<HashMap<String, Target>, TargetError>>()
             .map_err(TargetsError::from)
             .map(Targets::new)
+            .inspect(|_| info!("Succesfully replaced globals in targets file."))
     }
 }
 
@@ -122,14 +123,12 @@ fn get_toml_extension_err(path: &Path) -> TargetsError {
 }
 
 fn replace_vars(raw: &str) -> Result<String, TargetsError> {
-    info!(
-        "Attempting to replace user defined variables and environment varables in global replaceable toml."
-    );
+    info!("Replacing user defined variables and environment varables.");
     let toml_str = get_replacement_string(raw)?;
     let maybe_vars: Option<Vars> = toml::from_str(raw).ok();
     let resolved_toml = resolve_vars(&toml_str, maybe_vars.as_ref(), None, None)
         .map_err(TargetsError::deserialization_from_err)?;
-    info!("Variables replaced.");
+    info!("Succesfully replaced variables and environment varables.");
     Ok(resolved_toml)
 }
 
