@@ -25,7 +25,7 @@ impl ResponseWriter {
         output_file: &Path,
     ) -> Result<SuccessMsg, ResponseWriterError> {
         info!(
-            "Trying to write response body as binary to {}.",
+            "Writing response body as binary to {}.",
             output_file.display()
         );
 
@@ -37,8 +37,6 @@ impl ResponseWriter {
         }
 
         let mut file = open_output_file(output_file)?;
-
-        info!("Staring response body stream.");
         let mut stream = self.response.bytes_stream();
         let mut chunk: Bytes; // Don't want to allocate memory every loop iteration
 
@@ -52,7 +50,7 @@ impl ResponseWriter {
             "Succesfully to wrote response body as binary to {}.",
             output_file.display()
         );
-        debug!("{msg}");
+        info!("{msg}");
         Ok(SuccessMsg(msg))
     }
 
@@ -63,10 +61,7 @@ impl ResponseWriter {
         pretty: bool,
         output_file: &Path,
     ) -> Result<SuccessMsg, ResponseWriterError> {
-        info!(
-            "Writing formatted response as string to file {}.",
-            output_file.display()
-        );
+        info!("Writing response to {}.", output_file.display());
 
         let response_string = self
             .try_into_string(validated_grab, validated_format, pretty)
@@ -76,10 +71,7 @@ impl ResponseWriter {
             ResponseWriterError::TextWrite(output_file.display().to_string(), e.to_string())
         })?;
 
-        let msg = format!(
-            "Successfully wrote formatted response as string to file {}.",
-            output_file.display()
-        );
+        let msg = format!("Successfully wrote response to {}.", output_file.display());
         info!("{msg}");
         Ok(SuccessMsg(msg))
     }

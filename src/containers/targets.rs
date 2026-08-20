@@ -23,10 +23,7 @@ impl Targets {
     // Note Targets is never meant to be written back to a toml file
     // It's a runtime artifact full of replaced variables, environment variables, potential secrets, etc.
     pub(crate) fn from_toml_file<P: AsRef<Path>>(path: &P) -> Result<Self, TargetsError> {
-        info!(
-            "Generating Targets from .toml file {}.",
-            path.as_ref().display()
-        );
+        info!("Generating Targets from file {}.", path.as_ref().display());
 
         let raw = read_toml(&path)?;
         let resolved_toml = replace_vars(&raw)?;
@@ -36,7 +33,7 @@ impl Targets {
         let replaced = to_replace.into_targets(globals.as_ref())?;
 
         info!(
-            "Succesfully generated Targets from .toml file {}.",
+            "Succesfully generated Targets from file {}.",
             path.as_ref().display()
         );
         debug!("Parsed targets file as:\n{replaced:#?}");
@@ -128,7 +125,7 @@ fn replace_vars(raw: &str) -> Result<String, TargetsError> {
     let maybe_vars: Option<Vars> = toml::from_str(raw).ok();
     let resolved_toml = resolve_vars(&toml_str, maybe_vars.as_ref(), None, None)
         .map_err(TargetsError::deserialization_from_err)?;
-    info!("Succesfully replaced variables and environment varables.");
+    info!("Succesfully replaced user defined variables and environment varables.");
     Ok(resolved_toml)
 }
 
