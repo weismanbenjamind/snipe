@@ -1,5 +1,3 @@
-use log::info;
-
 use crate::cfg_resolver::CfgResolver;
 use crate::commands::{SnipeResult, run_list_targets_cmd, run_shoot_cmd};
 use crate::containers::Targets;
@@ -17,14 +15,10 @@ const DEBUG: &str = "debug";
 pub async fn run_cli(snipe_cli_args: SnipeCLIArgs) -> SnipeResult {
     set_vebosity(snipe_cli_args.verbose)?;
 
-    info!("Resolving config file path.");
     let cfg_path = CfgResolver::new(&snipe_cli_args.cfg, snipe_cli_args.cfg_env.as_deref())
         .resolve_cfg_path_from_env()?;
-    info!("Resolved config file path to {}.", cfg_path.display());
 
-    info!("Creating targets from file at {}.", cfg_path.display());
     let targets = Targets::from_toml_file(&cfg_path)?;
-    info!("Targets successfully created.");
 
     match snipe_cli_args.command {
         Command::List => run_list_targets_cmd(targets),
@@ -46,15 +40,17 @@ fn set_vebosity(verbosity: u8) -> Result<(), RunError> {
 fn get_log_level(verbosity: u8) -> Option<String> {
     match env::var(RUST_LOG) {
         Ok(level) => Some(level),
-        Err(_) => Some(
-            match verbosity {
-                0 => WARN,
-                1 => INFO,
-                _ => DEBUG,
-            }
-            .to_string(),
-        ),
+        Err(_) => Some(match verbosity {
+            0 => WARN.to_string(),
+            1 => build_verbosity_string(INFO),
+            _ => build_verbosity_string(DEBUG),
+        }),
     }
+}
+
+#[inline]
+fn build_verbosity_string(level: &str) -> String {
+    format!("warn,snipe={level}")
 }
 
 #[inline]

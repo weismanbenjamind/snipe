@@ -1,5 +1,5 @@
 use crate::errors::CfgResolverError;
-use log::info;
+use log::{debug, info};
 
 use std::env;
 use std::path::{Path, PathBuf};
@@ -20,13 +20,14 @@ impl<'a> CfgResolver<'a> {
     }
 
     pub(crate) fn resolve_cfg_path_from_env(self) -> Result<PathBuf, CfgResolverError> {
+        info!("Resolving config file path.");
         let found = match self.cfg_path.exists() {
             true => {
-                info!("Passed config file path exists. Skipping using env to find config.");
+                debug!("Passed config file path exists. Skipping using env to find config.");
                 Some(self.cfg_path.to_path_buf())
             }
             false => {
-                info!(
+                debug!(
                     "Passed config file path does not exist. Attempting to resolve config file path from env."
                 );
                 self.cfg_env_var
@@ -34,10 +35,16 @@ impl<'a> CfgResolver<'a> {
             }
         };
         let found = found.ok_or_else(|| self.get_unresolved_cfg_err())?;
-        match found.starts_with(HOME_DELMITER) {
+        let found = match found.starts_with(HOME_DELMITER) {
             true => replace_home_dir(found),
             false => Ok(found),
-        }
+        }?;
+
+        info!(
+            "Successfully resolved config file path to {}.",
+            found.display()
+        );
+        Ok(found)
     }
 
     fn get_unresolved_cfg_err(&'a self) -> CfgResolverError {

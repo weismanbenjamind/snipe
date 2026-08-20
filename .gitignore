@@ -7,3 +7,4 @@ snipe_targets*
 snipe
 .old/*
 .env
+.snipe/

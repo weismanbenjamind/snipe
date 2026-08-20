@@ -19,14 +19,14 @@ pub(crate) struct MergedArgs {
 }
 
 pub(crate) async fn run_shoot_cmd(shoot_args: ShootArgs, targets: Targets) -> SnipeResult {
-    info!("Starting request process.");
+    info!("Running shoot command.");
 
     let target = targets
         .get_target(&shoot_args.target)
         .ok_or_else(|| RunError::Failure(format!("Failed to find target {}", shoot_args.target)))?;
 
     info!(
-        "Sending request for target '{}'.",
+        "Initiating request build/send process for target '{}'.",
         target.name.as_ref().unwrap_or(&shoot_args.target)
     );
 
@@ -42,7 +42,6 @@ pub(crate) async fn run_shoot_cmd(shoot_args: ShootArgs, targets: Targets) -> Sn
     }
 
     let response = client.send_request(request).await?;
-    info!("Response recieved");
 
     let response_writer = ResponseWriter::new(response);
 
@@ -61,7 +60,7 @@ pub(crate) async fn run_shoot_cmd(shoot_args: ShootArgs, targets: Targets) -> Sn
             .await
         }
     };
-    info!("Finished request process.");
+    info!("Successfully ran shoot command.");
 
     result
 }

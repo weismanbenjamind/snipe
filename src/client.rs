@@ -14,11 +14,9 @@ pub(crate) struct Client {
 
 impl Client {
     pub(crate) fn new() -> Result<Self, ClientError> {
-        info!("Building client");
         let _client = Client_::builder()
             .build()
             .map_err(|e| ClientError::ClientBuild(e.to_string()))?;
-        info!("Client built.");
         Ok(Self { _client })
     }
 
@@ -26,10 +24,14 @@ impl Client {
         &self,
         request: RequestBuilder,
     ) -> Result<Response, ClientError> {
-        request
+        info!("Sending request.");
+        let response = request
             .send()
             .await
-            .map_err(|e| ClientError::SendRequestFailure(e.to_string()))
+            .map_err(|e| ClientError::SendRequestFailure(e.to_string()))?;
+        info!("Response recieved.");
+
+        Ok(response)
     }
 
     pub(crate) fn build_request(&self, target: &Target) -> Result<RequestBuilder, ClientError> {
@@ -117,11 +119,15 @@ fn build_payload(
     match payload {
         Payload::Params(json) => Ok(request_builder.json(json)),
         Payload::File(path) => {
-            debug!("Reading payload at path {} into bytes", path.display());
+            debug!("Reading payload at path {} into bytes.", path.display());
             let bytes = std::fs::read(path).map_err(|e| ClientError::BodyToBytes {
                 path: path.into(),
                 source: e,
             })?;
+            debug!(
+                "Successfully read payload at path {} into bytes.",
+                path.display()
+            );
             Ok(request_builder.body(bytes))
         }
     }

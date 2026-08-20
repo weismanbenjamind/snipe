@@ -56,7 +56,7 @@ fn replace_vars(
         let target_var = &captures[1].to_lowercase();
 
         debug!(
-            "Found match {} and searching for pre-defined variable {target_var} in toml.",
+            "Found match {}. Searching for user defined variable {target_var}.",
             &captures[0]
         );
         vars.get(target_var).unwrap_or_else(|| {
@@ -80,7 +80,7 @@ fn replace_env_vars(input: &str, env_pattern: Option<&str>) -> Result<String, Va
     let replaced = env_var_regex.replace_all(input, |captures: &Captures| {
         // Note - duplicate using &captures[index] to prevent memory allocation
         debug!(
-            "Found match {} and searching for env var {}.",
+            "Found match {}. Searching for environment variable {}.",
             &captures[0], &captures[1]
         );
         env::var(&captures[1]).unwrap_or_else(|_| {

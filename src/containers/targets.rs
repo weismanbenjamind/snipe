@@ -22,22 +22,17 @@ impl Targets {
     // Note Targets is never meant to be written back to a toml file
     // It's a runtime artifact full of replaced variables, environment variables, potential secrets, etc.
     pub(crate) fn from_toml_file<P: AsRef<Path>>(path: &P) -> Result<Self, TargetsError> {
-        info!(
-            "Generating Targets from .toml file at {}",
-            path.as_ref().display()
-        );
+        info!("Generating Targets from file {}.", path.as_ref().display());
 
         let raw = read_toml(&path)?;
         let resolved_toml = replace_vars(&raw)?;
         let to_replace: GlobalReplaceableTargets = toml::from_str(&resolved_toml)?;
         let globals: Option<Globals> = toml::from_str::<GlobalsCfg>(&resolved_toml)?.globals;
 
-        info!("Replacing globals in targets file.");
         let replaced = to_replace.into_targets(globals.as_ref())?;
-        info!("Succesfully replaced globals in targets file.");
 
         info!(
-            "Succesfully generated targets from .toml file at {}",
+            "Succesfully generated Targets from file {}.",
             path.as_ref().display()
         );
         debug!("Parsed targets file as:\n{replaced:#?}");
@@ -63,28 +58,22 @@ struct GlobalReplaceableTargets {
 
 impl GlobalReplaceableTargets {
     fn into_targets(self, globals: Option<&Globals>) -> Result<Targets, TargetsError> {
+        info!("Replacing globals in targets file.");
         self.targets
             .into_iter()
             .map(|(k, v)| Ok((k, v.into_target(globals)?)))
             .collect::<Result<HashMap<String, Target>, TargetError>>()
             .map_err(TargetsError::from)
             .map(Targets::new)
+            .inspect(|_| info!("Succesfully replaced globals in targets file."))
     }
 }
 
 fn read_toml<P: AsRef<Path>>(path: &P) -> Result<String, TargetsError> {
-    debug!(
-        "Attempting to read .toml file at {}",
-        path.as_ref().display()
-    );
     validate_toml_path(path)?;
     let result = read_to_string(path).map_err(|e| {
         TargetsError::Dersialization(format!("Failed to read toml to string. Error: {e}",))
     })?;
-    debug!(
-        "Successfully read .toml file at {}",
-        path.as_ref().display()
-    );
     Ok(result)
 }
 
@@ -122,14 +111,12 @@ fn get_toml_extension_err(path: &Path) -> TargetsError {
 }
 
 fn replace_vars(raw: &str) -> Result<String, TargetsError> {
-    info!(
-        "Attempting to replace user defined variables and environment varables in global replaceable toml."
-    );
+    info!("Replacing user defined variables and environment varables.");
     let toml_str = get_replacement_string(raw)?;
     let maybe_vars: Option<Vars> = toml::from_str(raw).ok();
     let resolved_toml = resolve_vars(&toml_str, maybe_vars.as_ref(), None, None)
         .map_err(TargetsError::deserialization_from_err)?;
-    info!("Variables replaced.");
+    info!("Succesfully replaced user defined variables and environment varables.");
     Ok(resolved_toml)
 }
 

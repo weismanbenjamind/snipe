@@ -79,7 +79,7 @@ impl From<HashMap<String, SecretTomlValue>> for Payload {
             && let TomlValue::String(str_path) = raw_toml
         {
             debug!(
-                "Found single length parms map with lowercased key 'file' key a string value. Parsing payload as file variant."
+                "Found single length parms map with lowercased key 'file' and a string value. Parsing payload as file variant."
             );
             Payload::File(PathBuf::from(str_path))
         }
@@ -88,8 +88,8 @@ impl From<HashMap<String, SecretTomlValue>> for Payload {
             && let TomlValue::Table(t) = raw_toml
         {
             debug!(
-                "Found single length parms map with lowercased key 'params' key a table value. Parsing as flattened map. \
-                POTENTIAL ERROR CASE if payload has a single top level key when lowercased resolves to 'params'."
+                "Found single length parms map with lowercased key 'params' and a table value. Parsing as flattened map. \
+                POTENTIAL ERROR CASE if payload has a single top level key when lowercased resolves to 'params' this 'params' key will be flattened (omitted)."
             );
             Payload::Params(TomlMapWrapper(t).into())
         }
