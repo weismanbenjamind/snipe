@@ -1,4 +1,3 @@
-// TODO - Pick up tuning logging here
 use crate::containers::Vars;
 use crate::containers::globals::{Globals, GlobalsCfg};
 use crate::containers::target::{GlobalReplaceableTarget, Target, TargetError};
@@ -71,18 +70,10 @@ impl GlobalReplaceableTargets {
 }
 
 fn read_toml<P: AsRef<Path>>(path: &P) -> Result<String, TargetsError> {
-    debug!(
-        "Attempting to read .toml file at {}",
-        path.as_ref().display()
-    );
     validate_toml_path(path)?;
     let result = read_to_string(path).map_err(|e| {
         TargetsError::Dersialization(format!("Failed to read toml to string. Error: {e}",))
     })?;
-    debug!(
-        "Successfully read .toml file at {}",
-        path.as_ref().display()
-    );
     Ok(result)
 }
 
