@@ -1,23 +1,23 @@
 # Snipe
 
-Snipe is a lightweight, fast, precise CLI HTTP client/collections storage tool. The idea of the tool is to configure HTTP requests and response formatting in a `toml` file and optionally `json` files then use the CLI tool to make requests and tweak output/formatting options for fast development iteration.
+Snipe is a lightweight, fast, precise CLI HTTP client/collections storage tool. The idea of the tool is to configure HTTP requests and response formatting in a `toml` file and optionally `json` files then use the CLI  to make requests and tweak output/formatting options for fast development iteration.
 
 ## Quickstart
 
-By default `snipe` will look for a `.snipe_targets.toml` file in your present working directory. An example configuration file is shows below:
+By default `snipe` will look for a `.snipe_targets.toml` file in your present working directory. An example configuration file is shown below:
 
 ```toml
 [targets.create-gist]  # Create an API request with id 'create-gist'
 name = "Create Gist"  # Name field is optional
-method = "POST"
-url = "https://api.github.com/gists"
+method = "POST"  # Make a POST request
+url = "https://api.github.com/gists"  # URL to POST to
 timeout_seconds = 10  # Timeout of 10 seconds on the request
 
 [targets.create-gist.headers]  # Headers for 'create-gist' request
 User-Agent = "snipe"
 
 [targets.create-gist.auth]  # Auth for 'create-gist' request
-scheme = "bearer"
+scheme = "bearer"  # Use bearer auth
 token = "${ENV.GITHUB_PAT}"  # Use the value stored at the GITHUB_PAT env var for the API token
 
 [targets.create-gist.payload]  # Payload for 'create-gist` request
@@ -58,7 +58,7 @@ payloads_dir = ".snipe/payloads"
 [globals.headers]  # Reusable headers. Get interpolated by `headers = { global = global_header_name }` syntax.
 user_agent = { User-Agent = "snipe" }
 
-[globals.payload.create_gist]  # Reusable payloads. Get interpolated by `payload = { global = global_payload_name }` syntax.
+[globals.payload.create-gist]  # Reusable payloads. Get interpolated by `payload = { global = global_payload_name }` syntax.
 description = "Test gist"
 public = false
 files = { "test.txt" = { content = "Testing Gist" } }
@@ -73,7 +73,7 @@ url = "${VARS.github_api_base_url}/gists"  # The URL to post to. Use the `github
 timeout_seconds = 10  # Add 10 second timeout to the request.
 headers = { global = "user_agent" }  # Use the `global.headers.user_agent` defined above.
 auth = { global = "github" }  # Use the `globals.auth.github` auth field defined above.
-payload = { global = "create_gist" }  # Use the `globals.payload.create_gist` payload field defined above.
+payload = { global = "create-gist" }  # Use the `globals.payload.create-gist` payload field defined above.
 output_cfg = { format = "pretty_json" }  # Print the result to the console with pretty-json formatting
 
 [targets.get-gists]  # Define a get-gists HTTP request.
@@ -108,7 +108,7 @@ snipe shoot get-gists
 
 # Delete gist that was just created only displaying the status code to the console
 # Note - this request will require the gist_id var (e.g. ${VARS.gist_id})
-# in the config to match the id of the gist that was crated
+# in the config to match the id of the gist that was created
 snipe shoot delete-gist
 ```
 
@@ -129,7 +129,9 @@ github = { scheme = "bearer", token = "${ENV.GITHUB_PAT}" }
 
 [targets.delete-gist]
 method = "DELETE"
-url = "${VARS.github_api_base_url}/gists/${VARS.gist_id}"  # The URL for the delete operation. Use the `github_api_base_url` and `gist_id` variables defined above.
+# The URL for the delete operation
+# Uses the `github_api_base_url` and `gist_id` variables defined above.
+url = "${VARS.github_api_base_url}/gists/${VARS.gist_id}"
 headers = { global = "user_agent" }
 auth = { global = "github" }
 output_cfg = { grab = ["status_code"] }
@@ -168,7 +170,7 @@ auth = { global = "github" }
 
 ### Payload
 
-The Payloads field defines the request payload. There are 4 ways a payload can be added to a request. The `[globals.payload]` field allows for reuse of payloads across requests. It's simply a map denoted by a top level key that indicates the id of the payload. Payloads can also be inlined. Lastly, payloads can be pointed to a `json` file as well (via a global or inline payload). That file will be read and its contents used for the payload. Examples shown below:
+The Payload field defines the request payload. There are 4 ways a payload can be added to a request. The `[globals.payload]` field allows for reuse of payloads across requests. It's simply a map denoted by a top level key that indicates the id of the payload. Payloads can also be inlined. Lastly, payloads can be pointed to a `json` file as well (via a global or inline payload). That file will be read and its contents used for the payload. Examples shown below:
 
 ```toml
 [vars]
@@ -180,13 +182,13 @@ user_agent = { User-Agent = "snipe" }
 [globals.auth]
 github = { scheme = "bearer", token = "${ENV.GITHUB_PAT}" }
 
-[globals.payload.create_gist]  # Inline payload for reuse
+[globals.payload.create-gist]  # Inline payload for reuse
 description = "Test gist"
 public = false
 files = { "test.txt" = { content = "Testing Gist" } }
 
-[globals.payload.create_gist_file]  # Payload housed in a json file for reuse
-file = "create_gist.json"
+[globals.payload.create-gist-file]  # Payload housed in a json file for reuse
+file = "create-gist.json"
 
 # Use a global payload value
 [targets.create-gist-global]
@@ -196,7 +198,7 @@ url = "${VARS.github_api_base_url}/gists"
 timeout_seconds = 10
 headers = { global = "user_agent" }
 auth = { global = "github" }
-payload = { global = "create_gist" }  # Use the `globals.payload.create_gist` configuration defined above.
+payload = { global = "create-gist" }  # Use the `globals.payload.create-gist` configuration defined above.
 output_cfg = { format = "pretty_json" }
 
 # Inline the payload value
@@ -226,7 +228,7 @@ url = "${VARS.github_api_base_url}/gists"
 timeout_seconds = 10
 headers = { global = "user_agent" }
 auth = { global = "github" }
-payload = { file = "create_gist.json" }  # Use the payload defined in create_gist.json relative to the current present working directory
+payload = { file = "create-gist.json" }  # Use the payload defined in create-gist.json relative to the current present working directory
 output_cfg = { format = "pretty_json" }
 
 # Use a global payload that points to a json file
@@ -237,9 +239,9 @@ url = "${VARS.github_api_base_url}/gists"
 timeout_seconds = 10
 headers = { global = "user_agent" }
 auth = { global = "github" }
-# Use the `globals.payload.create_gist_file` payload which points to a json file containing the payload to use
+# Use the `globals.payload.create-gist-file` payload which points to a json file containing the payload to use
 # Again, payload is relative to the current present working directory
-payload = { global = "create_gist_file" }
+payload = { global = "create-gist-file" }
 output_cfg = { format = "pretty_json" }
 ```
 
@@ -257,6 +259,7 @@ user_agent = { User-Agent = "snipe" }
 [globals.auth]  # Global auth for re-use
 # Bearer auth - what GitHub actually uses
 github = { scheme = "bearer", token = "${ENV.GITHUB_PAT}" }
+
 # Note GitHub uses bearer auth. This auth will fail if actually used. Showing for example purposes.
 github_basic = { scheme = "basic", username = "github_username", password = "${ENV.GITHUB_PASSWORD}" }
 
@@ -299,11 +302,12 @@ auth = { global = "github_basic" }  # Use the [global.auth.github_basic] value
 
 ### The `outpug_cfg` field
 
-The `output_cfg` field controls how the response output will be presented/formatted. Note - the CLI allows for overriding any value in the `output_cfg` field. The idea is response formatting settings can be saved in the `output_cfg` field but can be overriden quickly via the CLI for fast iteration. Basically, long term response settings -> `output_cfg` and short term development response settings -> CLI. The values layer between the `output_cfg` and the CLI. So any fields in the config but not overriden in the CLI will be used. A fully defined `output_cfg` is shown below. Some settings invalid with one another or must be present when others are present. Those combinations are called out below.
+The `output_cfg` field controls how the response output will be presented/formatted. Note - the CLI allows for overriding any value in the `output_cfg` field. The idea is response formatting settings can be saved in the `output_cfg` field but can be overriden quickly via the CLI for fast iteration. Basically, long term response settings -> `output_cfg` and short term development response settings -> CLI. The values layer between the `output_cfg` and the CLI. So any fields in the config but not overriden in the CLI will be used. A fully defined `output_cfg` is shown below. Some settings are invalid with one another or must be present when others are present. Those combinations are called out below.
 
 ```toml
-# Assume other configurations for the `create_gist` target already present
-[targets.create_gist.output_cfg]
+# Assume other configurations for the `create-gist` target already present
+
+[targets.create-gist.output_cfg]
 # How the response should be formatted
 # Possible values are "http", "json", "pretty_json", "binary"
 # Defaults to "http"
@@ -318,7 +322,7 @@ pretty = false
 # What components to grab from the response
 # Options are "status_code", "headers", "body", "full" (status_code, headers, and body), and int_status_code (status code as u16 integer)
 # If "full" or "int_status_code" are specified no other options can be specified
-# Any combination of "status_code", "headers", "body" is valid
+# Any combination of "status_code", "headers", or "body" is valid
 # If `format = "binary"` is specified only the response body can be grabbed
 # Defaults to "body"
 grab = [
@@ -344,35 +348,36 @@ Below are examples of invalid `output_cfg` settings. ***NOTE - ALL THESE CONFIGU
 
 ```toml
 # Assume other configurations for all targets already present
-[targets.create_gist.pretty_with_http]
+
+[targets.create-gist.pretty_with_http]
 # Cannot specify pretty output with http formatting
 fomrat = "http"
 pretty = true
 
-[targets.create_gist.pretty_with_http_default]
+[targets.create-gist.pretty_with_http_default]
 # Cannot specify pretty output with http formatting
 # `format = "http"` is the default that will be used if omitted
 pretty = true
 
-[targets.create_gist.pretty_with_binary]
+[targets.create-gist.pretty_with_binary]
 # Cannot specify pretty output with http formatting
 fomrat = "binary"
 pretty = true
 
-[targets.create_gist.full_with_other_response_components]
+[targets.create-gist.full_with_other_response_components]
 # grab = ["full"] must be specified by itself
 grab = ["full", "body"]
 
-[targets.create_gist.int_status_code_with_other_response_components]
+[targets.create-gist.int_status_code_with_other_response_components]
 # grab = ["int_status_code"] must be specified by itself
 grab = ["int_status_code", "body"]
 
-[targets.create_gist.binary_without_only_body]
+[targets.create-gist.binary_without_only_body]
 # If specifying `format = "binary"` must specify to grab only the response body
 format = "binary"
 grab = ["status_code"]
 
-[targets.create_gist.binary_without_output_file]
+[targets.create-gist.binary_without_output_file]
 # If specifying `format = "binary"` must specify an output file
 # Cannot print a binary response to the console
 format = "binary"
@@ -380,11 +385,11 @@ format = "binary"
 
 ### Other Fields
 
-There other fields that must be present are described below. They're pretty self-explanatory but necessary and worth calling out.
+The other fields that must be present are described below. They're pretty self-explanatory but necessary and worth calling out.
 - `name`: The name of the target. Only used for logging. If omitted the `id` of the target will be used.
 - `url`: The url the request should hit.
 - `method`: One of `GET`, `POST`, `PUT`, `PATCH`, and `DELETE`. Caps agnostic (e.g. `get` and `GET` and `GeT` all work).
-- `timeout_seconds`: Optional timeout (seconds) for the request. Useful so request doesn't hang. By default `snipe` will wait forever for a request.
+- `timeout_seconds`: Optional timeout (seconds) for the request. Useful so request doesn't hang. By default `snipe` will wait forever for a response.
 
 Examples of the above fields shown below:
 
@@ -400,7 +405,7 @@ auth = { scheme = "bearer", token = "${ENV.GITHUB_PAT}" }
 
 ## CLI
 
-The `snipe` CLI can be used to override any of the `output_cfg` settings described in the `output_cfg` section above. As stated previously, the idea behine the CLI interface is for rapid development iteration. Maybe you always want `pretty_json` output but want to tweak the field you grab - in this case just tweak the grab setting via the CLI and house all the other settings in the config.
+The `snipe` CLI can be used to override any of the `output_cfg` settings described above. As stated previously, the idea behine the CLI interface is for rapid development iteration.
 
 ### Grabbing Specific Response Components
 
@@ -422,7 +427,7 @@ snipe shoot request-id-from-cfg --status-code --full  # ERROR! => --full cannot 
 snipe shoot request-id-from-cfg --status-code --int-status-code  # ERROR! => --int-status-code cannot be passed with any other flags
 ```
 
-If no formatting args are passed after the desired target, the response body is grabbed. For example the following will return only the response body (Assuming the `output_cfg.grab` settings has not been configured for the given target):
+If no formatting args are passed after the desired target, the response body is grabbed. For example the following will return only the response body:
 
 ```sh
 # Returns only response body
@@ -512,6 +517,14 @@ If the response body is binary, `snipe` can handle this situation using the `--f
 snipe shoot request-id-from-cfg --format binary --output-file some_file.zip
 ```
 
+### Dry Run
+
+Snipe allows for dry runs. The request defined by combination of the target config (from the configuration file) and they CLI args will be built and validated but not sent. Example:
+
+```sh
+snipe shoot request-id-from-cfg --format pretty-json --dry-run
+```
+
 ### Changing the Path to the Configuration File
 
 Use the the `--config` (`-c`) argument to change the path of the configuration file. As stated above by default `snipe` will look for a `.snipe_targets.toml` file in your present working directory. An example of using a different config looks something like the following:
@@ -524,7 +537,7 @@ If the config cannot be found, snipe will fall back to attempting to read the `S
 
 ```sh
 snipe --cfg-env SNIPE_CONFIG shoot request-id-from-cfg  # If can't find the config at ./.snipe_targets.toml use the value at the environment variable SNIPE_CONFIG
-snipe --config ~/.config/snipe/snipe_targets.toml --cfg-env SNIPE_CONFIG shoot request-id-from-cfg  # If can't find the config at ~/.config/snipe/snipe_targets.toml use the value at the environment variable SNIPE_CONFIG
+snipe --config ~/.config/snipe/snipe_targets.toml --cfg-env CFG_VAR shoot request-id-from-cfg  # If can't find the config at ~/.config/snipe/snipe_targets.toml use the value at the environment variable CFG_VAR
 snipe --cfg-env skip shoot request-id-from-cfg  # Skip an environment variable to identify the config
 ```
 
@@ -555,7 +568,7 @@ payloads_dir = ".snipe/payloads"
 [globals.headers]
 user_agent = { User-Agent = "snipe" }
 
-[globals.payload.create_gist]
+[globals.payload.create-gist]
 description = "Test gist"
 public = false
 files = { "test.txt" = { content = "Testing Gist" } }
@@ -570,7 +583,7 @@ url = "${VARS.github_api_base_url}/gists"
 timeout_seconds = 10
 headers = { global = "user_agent" }
 auth = { global = "github" }
-payload = { global = "create_gist" }
+payload = { global = "create-gist" }
 output_cfg = { format = "pretty_json" }
 
 [targets.get-gists]
@@ -592,15 +605,15 @@ output_cfg = { grab = ["status_code"] }
 Next we'll create a gist using the default settings for this target to view the result in the console as pretty json:
 
 ```sh
-# Create gist - view in console as pretty json
-snipe shoot create_gist
+# Create gist - view in console as pretty json as specified in the config file
+snipe shoot create-gist
 ```
 
 After creating the gist we'll inspect all the gists we have in pretty json and print them to the output file `gists.json` by using a CLI arg (e.g. the output file is not specified in the `targets.create-gist.output_cfg` settings):
 
 ```sh
 # View all gists as pretty json and output them to gists.json
-snipe shoot get-gists -o gists.json
+snipe shoot get-gists --output-file gists.json
 ```
 
 Lastly we'll grab the id of our newly created gist, update the `vars.gist_id` variable, and override the grab setting to grab only the int status code:
@@ -608,7 +621,7 @@ Lastly we'll grab the id of our newly created gist, update the `vars.gist_id` va
 ```toml
 # Snipe configuration file
 [vars]
-gist_id = "d0e3f2a4bb68195e4644310a94b2a2e8"  # Update the gist id to what was returned from create_gist
+gist_id = "d0e3f2a4bb68195e4644310a94b2a2e8"  # Update the gist id to what was returned from create-gist
 ```
 
 ```sh
