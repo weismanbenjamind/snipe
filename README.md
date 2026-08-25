@@ -20,7 +20,7 @@ User-Agent = "snipe"
 scheme = "bearer"  # Use bearer auth
 token = "${ENV.GITHUB_PAT}"  # Use the value stored at the GITHUB_PAT env var for the API token
 
-[targets.create-gist.payload]  # Payload for 'create-gist` request
+[targets.create-gist.payload]  # Payload for 'create-gist' request
 description = "Test gist"
 public = false
 files = {
@@ -45,7 +45,7 @@ snipe shoot create-gist
 
 ## Config System
 
-The idea behind `snipe` is to configure HTTP requests in config files rather than inlining them in the shell. Snipe does offer some shell inlining capabilities to override config settings. Those capabilities will be disscussed later.
+The idea behind `snipe` is to configure HTTP requests in config files rather than inlining them in the shell. Snipe does offer some shell inlining capabilities to override config settings. Those capabilities will be discussed later.
 
 An example of a `snipe` configuration file with much functionality on display is shown below.
 
@@ -92,7 +92,7 @@ auth = { global = "github" }  # Use the `globals.auth.github` auth field defined
 output_cfg = { grab = ["status_code"] }  # Only display status code to the console for the delete operation.
 ```
 
-Once the above requests are defined the can simply be called in the following manner:
+Once the above requests are defined they can simply be called in the following manner:
 
 ```sh
 # Assuming the above config file is in a .snipe_targets.toml file in your present working directory...
@@ -114,7 +114,7 @@ snipe shoot delete-gist
 
 ### The `[vars]` Field
 
-The `[vars]` field in the config defines reusable ***string*** variables. Anything placed this field will be interpolated by snipe via the `${VARS.var_name}` syntax. An example is show below:
+The `[vars]` field in the config defines reusable ***string*** variables. Anything placed in this field will be interpolated by snipe via the `${VARS.var_name}` syntax. An example is shown below:
 
 ```toml
 [vars]  # Reusable STRING variables. Get interpolated via `${VARS.variable_name}` syntax.
@@ -232,7 +232,7 @@ payload = { file = "create-gist.json" }  # Use the payload defined in create-gis
 output_cfg = { format = "pretty_json" }
 
 # Use a global payload that points to a json file
-[targets.create-gist-inline-file]
+[targets.create-gist-global-file]
 name = "Github Gist"
 method = "POST"
 url = "${VARS.github_api_base_url}/gists"
@@ -292,7 +292,7 @@ auth = { scheme = "basic", username = "github_username", password = "${ENV.GITHU
 # Basic auth global example
 # Note GitHub uses bearer auth
 # This request will fail if actually attempted to be used
-[targets.get-gists-inline-basic]
+[targets.get-gists-global-basic]
 method = "GET"
 url = "${VARS.github_api_base_url}/gists"
 timeout_seconds = 10
@@ -300,9 +300,9 @@ headers = { global = "user_agent" }
 auth = { global = "github_basic" }  # Use the [global.auth.github_basic] value
 ```
 
-### The `outpug_cfg` field
+### The `output_cfg` field
 
-The `output_cfg` field controls how the response output will be presented/formatted. Note - the CLI allows for overriding any value in the `output_cfg` field. The idea is response formatting settings can be saved in the `output_cfg` field but can be overriden quickly via the CLI for fast iteration. Basically, long term response settings -> `output_cfg` and short term development response settings -> CLI. The values layer between the `output_cfg` and the CLI. So any fields in the config but not overriden in the CLI will be used. A fully defined `output_cfg` is shown below. Some settings are invalid with one another or must be present when others are present. Those combinations are called out below.
+The `output_cfg` field controls how the response output will be presented/formatted. Note - the CLI allows for overriding any value in the `output_cfg` field. The idea is response formatting settings can be saved in the `output_cfg` field but can be overridden quickly via the CLI for fast iteration. Basically, long term response settings -> `output_cfg` and short term development response settings -> CLI. The values layer between the `output_cfg` and the CLI. So any fields in the config but not overridden in the CLI will be used. A fully defined `output_cfg` is shown below. Some settings are invalid with one another or must be present when others are present. Those combinations are called out below.
 
 ```toml
 # Assume other configurations for the `create-gist` target already present
@@ -330,11 +330,11 @@ grab = [
     "headers",
     "body",
     # "full",  # Must be specified by itself, Equivalent to what is specified above
-    # "int_status_code",  # Must be specifed by itself
+    # "int_status_code",  # Must be specified by itself
 ]
 
 # An optional file to output the response to
-# If omitted the response will printed to the console
+# If omitted the response will be printed to the console
 # If `format = "binary"` is specified an output file must also be specified
 output_file = "response.json"
 
@@ -351,7 +351,7 @@ Below are examples of invalid `output_cfg` settings. ***NOTE - ALL THESE CONFIGU
 
 [targets.create-gist.pretty_with_http]
 # Cannot specify pretty output with http formatting
-fomrat = "http"
+format = "http"
 pretty = true
 
 [targets.create-gist.pretty_with_http_default]
@@ -360,8 +360,8 @@ pretty = true
 pretty = true
 
 [targets.create-gist.pretty_with_binary]
-# Cannot specify pretty output with http formatting
-fomrat = "binary"
+# Cannot specify pretty output with binary formatting
+format = "binary"
 pretty = true
 
 [targets.create-gist.full_with_other_response_components]
@@ -405,18 +405,18 @@ auth = { scheme = "bearer", token = "${ENV.GITHUB_PAT}" }
 
 ## CLI
 
-The `snipe` CLI can be used to override any of the `output_cfg` settings described above. As stated previously, the idea behine the CLI interface is for rapid development iteration.
+The `snipe` CLI can be used to override any of the `output_cfg` settings described above. As stated previously, the idea behind the CLI interface is for rapid development iteration.
 
 ### Grabbing Specific Response Components
 
-Flags can be be passed to specify which response components to grab. As stated above some combinations are invalid. Examples below.
+Flags can be passed to specify which response components to grab. As stated above some combinations are invalid. Examples below.
 
 ```sh
 # Valid args
 snipe shoot request-id-from-cfg --status-code  # Only status code (e.g. 200 OK)
 snipe shoot request-id-from-cfg --headers  # Only headers
 snipe shoot request-id-from-cfg --body  # Only body (default)
-snipe shoot request-id-from-cfg --int-status-code  # Status code integer. (e.g just 200)
+snipe shoot request-id-from-cfg --int-status-code  # Status code integer. (e.g. just 200)
 snipe shoot request-id-from-cfg --full  # Status code (e.g. 200 OK), headers, body
 snipe shoot request-id-from-cfg --status-code --headers  # Status code (e.g. 200 OK) and headers
 snipe shoot request-id-from-cfg --status-code --body  # Status code (e.g. 200 OK) and body
@@ -460,7 +460,7 @@ status_code
 headers
 ```
 
-***Note - if the the response cannot be parsed into a string the snipe will emit an error.***
+***Note - if the response cannot be parsed into a string then snipe will emit an error.***
 
 The `json` format will attempt to parse the response into a json string. If multiple response fields are requested the output is formatted something like:
 
@@ -489,7 +489,7 @@ If a single response field is requested, the key indicating the field is omitted
 }
 ```
 
-***Note - if the the response cannot be parsed into a json string snipe will emit an error.***
+***Note - if the response cannot be parsed into a json string snipe will emit an error.***
 
 Parsing to json also has a `--pretty` flag which can be used to make the output more readable. `--pretty` is not valid with `--format http` or `--format binary` and if one of these combinations is passed snipe will emit an error. If `--pretty` is passed with `--format pretty-json` no action will be taken. Examples of using `--pretty` are shown below:
 
@@ -510,7 +510,7 @@ snipe shoot request-id-from-cfg --full --pretty # ERROR! => By default snipe use
 snipe shoot request-id-from-cfg --full --format json --pretty --output-file full-response.json
 ```
 
-If the response body is binary, `snipe` can handle this situation using the `--format binary --output_file <OUTPUT_FILE>` args. The `--format binary` arg must be used with the `--output-file` flag and is only valid with the `--body` flag. An example for grabbing a zip file from a response body is shown below.
+If the response body is binary, `snipe` can handle this situation using the `--format binary --output-file <OUTPUT_FILE>` args. The `--format binary` arg must be used with the `--output-file` flag and is only valid with the `--body` flag. An example for grabbing a zip file from a response body is shown below.
 
 ```sh
 # Note --body is passed by default
@@ -519,7 +519,7 @@ snipe shoot request-id-from-cfg --format binary --output-file some_file.zip
 
 ### Dry Run
 
-Snipe allows for dry runs. The request defined by combination of the target config (from the configuration file) and they CLI args will be built and validated but not sent. Example:
+Snipe allows for dry runs. The request defined by the combination of the target config (from the configuration file) and the CLI args will be built and validated but not sent. Example:
 
 ```sh
 snipe shoot request-id-from-cfg --format pretty-json --dry-run
@@ -527,7 +527,7 @@ snipe shoot request-id-from-cfg --format pretty-json --dry-run
 
 ### Changing the Path to the Configuration File
 
-Use the the `--config` (`-c`) argument to change the path of the configuration file. As stated above by default `snipe` will look for a `.snipe_targets.toml` file in your present working directory. An example of using a different config looks something like the following:
+Use the `--config` (`-c`) argument to change the path of the configuration file. As stated above by default `snipe` will look for a `.snipe_targets.toml` file in your present working directory. An example of using a different config looks something like the following:
 
 ```sh
 snipe --config ~/.config/snipe/snipe_targets.toml shoot request-id-from-cfg
