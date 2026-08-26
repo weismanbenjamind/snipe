@@ -2,7 +2,7 @@
 
 All relevant updates will be listed in this document
 
-## Unreleased
+## 3.0.0
 
 ### Updated
 
@@ -18,7 +18,7 @@ All relevant updates will be listed in this document
 - Layered config/CLI arguments
 - Variable interpolation system for auth, headers, and payload
 - Shortcut to pretty print JSON output
-- Redaction of of potential sensitive varaiables
+- Redaction of of potential sensitive values in logs
 - Better logging
 - Better formatting for single field responses
 - Logic to ignore comments in configuration file when doing variable interpolation
