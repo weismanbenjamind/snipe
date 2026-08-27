@@ -87,7 +87,7 @@ fn build_merged_args_output_cfg_none(
 
     let validated_format = ValidatedFormat::new(
         raw_format,
-        shoot_args.pretty,
+        shoot_args.pretty, // TODO - Might have to update this if add encap to --no-pretty and --pretty
         shoot_args.output_file.as_deref(),
     )?;
 
@@ -106,8 +106,12 @@ fn build_merged_args_output_cfg_some(
     shoot_args: ShootArgs,
     cfg: &OutputCfg,
 ) -> Result<MergedArgs, ArgsValidationError> {
-    let pretty = merge_cli_flag(shoot_args.pretty, cfg.pretty);
-    let output_file = merge_output_file(shoot_args.output_file, cfg.output_file.as_deref());
+    let pretty = merge_pretty(shoot_args.pretty, cfg.pretty, shoot_args.no_pretty);
+    let output_file = merge_output_file(
+        shoot_args.output_file,
+        cfg.output_file.as_deref(),
+        shoot_args.skip_output_file,
+    );
     let validated_format = merge_format(
         shoot_args.format,
         cfg.format,
@@ -115,7 +119,7 @@ fn build_merged_args_output_cfg_some(
         output_file.as_deref(),
     )?;
     let validated_grab = merge_grab(shoot_args.grab, cfg.grab.as_ref(), validated_format)?;
-    let dry_run = merge_cli_flag(shoot_args.dry_run, cfg.dry_run);
+    let dry_run = merge_dry_run(shoot_args.dry_run, cfg.dry_run);
 
     Ok(MergedArgs {
         validated_grab,
@@ -126,9 +130,21 @@ fn build_merged_args_output_cfg_some(
     })
 }
 
-// Args will default to false unless passed; then it's true.
-// This behavior is because --arg is a flag
-fn merge_cli_flag(from_args: bool, from_cfg: Option<bool>) -> bool {
+fn merge_pretty(from_args: bool, from_cfg: Option<bool>, no_pretty: bool) -> bool {
+    match (from_args, from_cfg) {
+        (true, None) | (true, Some(_)) => true,
+        (false, Some(cfg_val)) => match no_pretty {
+            // If --no-pretty is passed don't pretty print and skip what's in the config. Otherwise use config value.
+            true => false,
+            false => cfg_val,
+        },
+        (false, None) => false,
+    }
+}
+
+// --dry-run will default to false unless passed; then it's true.
+// This behavior is because --dry-run is a flag
+fn merge_dry_run(from_args: bool, from_cfg: Option<bool>) -> bool {
     match (from_args, from_cfg) {
         (true, None) | (true, Some(_)) => true,
         (false, Some(cfg_val)) => cfg_val,
@@ -136,10 +152,18 @@ fn merge_cli_flag(from_args: bool, from_cfg: Option<bool>) -> bool {
     }
 }
 
-fn merge_output_file(from_args: Option<PathBuf>, from_cfg: Option<&Path>) -> Option<PathBuf> {
+fn merge_output_file(
+    from_args: Option<PathBuf>,
+    from_cfg: Option<&Path>,
+    skip_output_file: bool,
+) -> Option<PathBuf> {
     match (from_args, from_cfg) {
         (Some(path), None) | (Some(path), Some(_)) => Some(path),
-        (None, Some(path)) => Some(PathBuf::from(path)),
+        (None, Some(path)) => match skip_output_file {
+            // If --skip-output-file is passed don't write to output file and skip what's in the config. Otherwise use config value.
+            true => None,
+            false => Some(PathBuf::from(path)),
+        },
         (None, None) => None,
     }
 }
