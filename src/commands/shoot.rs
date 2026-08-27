@@ -87,8 +87,8 @@ fn build_merged_args_output_cfg_none(
 
     let validated_format = ValidatedFormat::new(
         raw_format,
-        shoot_args.pretty, // TODO - Might have to update this if add encap to --no-pretty and --pretty
-        shoot_args.output_file.as_deref(),
+        shoot_args.pretty_args.pretty(),
+        shoot_args.output_file_args.output_file(),
     )?;
 
     let validated_grab = ValidatedGrab::new(raw_grab, validated_format)?;
@@ -96,8 +96,8 @@ fn build_merged_args_output_cfg_none(
     Ok(MergedArgs {
         validated_grab,
         validated_format,
-        pretty: shoot_args.pretty,
-        output_file: shoot_args.output_file,
+        pretty: shoot_args.pretty_args.pretty(),
+        output_file: shoot_args.output_file_args.into_output_file(),
         dry_run: shoot_args.dry_run,
     })
 }
@@ -106,11 +106,17 @@ fn build_merged_args_output_cfg_some(
     shoot_args: ShootArgs,
     cfg: &OutputCfg,
 ) -> Result<MergedArgs, ArgsValidationError> {
-    let pretty = merge_pretty(shoot_args.pretty, cfg.pretty, shoot_args.no_pretty);
+    let pretty = merge_pretty(
+        shoot_args.pretty_args.pretty(),
+        cfg.pretty,
+        shoot_args.pretty_args.no_pretty(),
+    );
+
+    let (output_file_from_args, skip_output_file) = shoot_args.output_file_args.into_parts();
     let output_file = merge_output_file(
-        shoot_args.output_file,
+        output_file_from_args,
         cfg.output_file.as_deref(),
-        shoot_args.skip_output_file,
+        skip_output_file,
     );
     let validated_format = merge_format(
         shoot_args.format,

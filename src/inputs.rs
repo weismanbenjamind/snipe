@@ -1,6 +1,8 @@
 mod cli;
 mod format;
 mod grab;
+mod output_file;
+mod pretty;
 mod shoot;
 
 pub(crate) use cli::Command;
