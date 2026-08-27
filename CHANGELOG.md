@@ -4,6 +4,10 @@ All relevant updates will be listed in this document
 
 ## Unreleased
 
+### Added
+
+- Ability to skip configured `output_file` and `pretty` settings in the config file via the CLI
+
 ## 3.0.0
 
 ### Updated
