@@ -525,6 +525,32 @@ Snipe allows for dry runs. The request defined by the combination of the target 
 snipe shoot request-id-from-cfg --format pretty-json --dry-run
 ```
 
+### Skipping Output File Writes and Pretty Printing
+
+The CLI allows for overriding output file and pretty print settings coming from the config file for a given target. For example, if a target's config setting contains something like the following:
+
+```toml
+[targets.request-with-output-file-and-pretty]
+# ... Assume all other necessary config information supplied ...
+output_cfg = { format = "json", pretty = true, output_file = "response_payload.json" }
+```
+
+Just printing to the console (e.g. no file write) can be done via:
+
+```sh
+snipe shoot request-with-output-file-and-pretty --skip-output-file
+```
+
+Omitting pretty printing can be done via
+```sh
+snipe shoot request-with-output-file-and-pretty --no-pretty
+```
+
+Just printing to the console (e.g. no file write) and omitting pretty printing can be done via
+```sh
+snipe shoot request-with-output-file-and-pretty --skip-output-file --no-pretty
+```
+
 ### Changing the Path to the Configuration File
 
 Use the `--config` (`-c`) argument to change the path of the configuration file. As stated above by default `snipe` will look for a `.snipe_targets.toml` file in your present working directory. An example of using a different config looks something like the following:

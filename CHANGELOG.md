@@ -2,7 +2,7 @@
 
 All relevant updates will be listed in this document
 
-## Unreleased
+## 3.1.0
 
 ### Added
 
