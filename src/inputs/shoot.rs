@@ -1,7 +1,7 @@
 use crate::inputs::format::RawFormat;
 use crate::inputs::grab::RawGrab;
-use crate::inputs::output_file::RawOutputFileArgs;
-use crate::inputs::pretty::RawPrettyArgs;
+use crate::inputs::output_file::OutputFileArgs;
+use crate::inputs::pretty::PrettyArgs;
 use clap::Args;
 
 #[derive(Args, Debug, Clone)]
@@ -17,10 +17,10 @@ pub(crate) struct ShootArgs {
     pub(crate) format: Option<RawFormat>,
 
     #[command(flatten)]
-    pub(crate) pretty_args: RawPrettyArgs,
+    pub(crate) pretty_args: PrettyArgs,
 
     #[command(flatten)]
-    pub(crate) output_file_args: RawOutputFileArgs,
+    pub(crate) output_file_args: OutputFileArgs,
 
     #[arg(
         short,

@@ -1,9 +1,12 @@
 use clap::Args;
 
 // * Note - Do not want public fields here. Only way in is via the CLI. Means input validation occured.
+// * If ever update this struct to be built from something other than the CLI the ::new() or builder
+// * should validate that pretty and no_pretty are not passed at the same time
+// * Clap handles this invariant for now and encapsulation ensures the only way to build this struct is via Clap
 #[derive(Clone, Copy, Debug, Args)]
 #[group(required = false)]
-pub(crate) struct RawPrettyArgs {
+pub(crate) struct PrettyArgs {
     #[arg(
         short,
         long,
@@ -22,7 +25,7 @@ pub(crate) struct RawPrettyArgs {
     no_pretty: bool,
 }
 
-impl RawPrettyArgs {
+impl PrettyArgs {
     pub(crate) fn pretty(&self) -> bool {
         self.pretty
     }
