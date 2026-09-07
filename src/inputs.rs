@@ -1,6 +1,7 @@
 mod cli;
 mod format;
 mod grab;
+mod init;
 mod output_file;
 mod pretty;
 mod shoot;

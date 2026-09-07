@@ -1,3 +1,4 @@
+use crate::inputs::init::InitArgs;
 use crate::inputs::shoot::ShootArgs;
 use clap::{ArgAction, Parser, Subcommand};
 use std::path::PathBuf;
@@ -9,6 +10,7 @@ use std::path::PathBuf;
     version
 )]
 pub struct RawSnipeCLIArgs {
+    // TODO - This arg should be specific to list and shoot
     #[arg(
         short,
         long,
@@ -20,6 +22,7 @@ pub struct RawSnipeCLIArgs {
     #[command(subcommand)]
     command: Command,
 
+    // TODO - This arg should be specific to list and shoot
     #[arg(
         short = 'e',
         long,
@@ -65,4 +68,5 @@ pub(crate) enum Command {
     /// List all potential API requests to make
     List,
     Shoot(ShootArgs),
+    Init(InitArgs),
 }
