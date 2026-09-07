@@ -1,5 +1,6 @@
 use crate::errors::RunError;
 
+mod init;
 mod list;
 mod shoot;
 

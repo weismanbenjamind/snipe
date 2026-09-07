@@ -25,7 +25,7 @@ pub(crate) struct InitArgs {
         short,
         long,
         default_value = "payloads",
-        help = "Subdirectory within --dir (-d) option to house request payloads. "
+        help = "Subdirectory within --dir (-d) option to house request payloads"
     )]
     pub(crate) payloads: PathBuf,
 
