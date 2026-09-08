@@ -1,8 +1,9 @@
 #![allow(dead_code)] // TODO - remove allow statement
 use crate::inputs::InitArgs;
 use bon::Builder;
+use log::warn;
 use serde::Serialize;
-use std::fmt::Write;
+use std::marker::PhantomData;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 
@@ -130,46 +131,97 @@ fn init_snipe_cfg(cfg: &Path, payloads_dir: &Path, responses_dir: &Path) -> Resu
 fn update_gitignore(parent: Option<&Path>, snipe_dir: &Path, cfg: &Path) -> Result<(), InitError> {
     let gitignore_path = parent.unwrap_or_else(|| Path::new(".")).join(".gitignore");
 
-    // TODO - this if block should be a function
-    // TODO - If two conditions below are not satisfied may want to warn
-    if gitignore_path.exists() && gitignore_path.is_file() {
-        let mut contents =
-            std::fs::read_to_string(&gitignore_path).map_err(|e| InitError::FileRead {
-                path: gitignore_path.clone(), // TODO - remove clone
-                source: e,
-            })?;
-
-        // TODO - Create a function to make lines
-        let snipe_dir_line = format!("\n{}\n", snipe_dir.display());
-        let cfg_line = format!("\n{}\n", cfg.display());
-
-        if !contents.ends_with("\n") {
-            contents.push('\n')
-        }
-
-        let mut updated_gitignore = false;
-
-        // Writing to a string cannot fail
-        // use `let _ =` notation
-        // TODO - Two if statements below could be a function
-        if !contents.contains(&snipe_dir_line) {
-            let _ = write!(contents, "{snipe_dir_line}");
-            updated_gitignore = true;
-        }
-
-        if !contents.contains(&cfg_line) {
-            let _ = write!(contents, "{cfg_line}");
-            updated_gitignore = true;
-        }
-
-        if updated_gitignore {
-            std::fs::write(&gitignore_path, contents).map_err(|e| InitError::Write {
-                description: ".gitignore",
-                path: gitignore_path,
-                source: e,
-            })?;
-        }
+    match (gitignore_path.exists(), gitignore_path.is_file()) {
+        (true, true) => write_gitignore_update(&gitignore_path, snipe_dir, cfg)?,
+        (false, true) | (false, false) => warn!(
+            ".gitignore at path {} does not exist. Skipping update.",
+            gitignore_path.display()
+        ),
+        (true, false) => warn!(
+            ".gitignore at path {} is a directory. Skipping update.",
+            gitignore_path.display()
+        ),
     }
 
     Ok(())
+}
+
+fn write_gitignore_update(
+    gitignore_path: &Path,
+    snipe_dir: &Path,
+    cfg: &Path,
+) -> Result<(), InitError> {
+    let mut gitignore = GitIgnore::from_file(gitignore_path)?.initialize();
+
+    let snipe_dir_line = build_gitignore_line(snipe_dir);
+    let cfg_line = build_gitignore_line(cfg);
+
+    gitignore.try_write_line(&snipe_dir_line);
+    gitignore.try_write_line(&cfg_line);
+
+    if gitignore.updated {
+        gitignore.to_file(gitignore_path)?;
+    }
+
+    Ok(())
+}
+
+// TODO - This should be it's own module and should have encapsulated setters
+struct Uninitialized;
+struct Initialized;
+
+struct GitIgnore<State> {
+    contents: String,
+    updated: bool,
+    _state: PhantomData<State>,
+}
+
+impl GitIgnore<Uninitialized> {
+    fn from_file(path: &Path) -> Result<GitIgnore<Uninitialized>, InitError> {
+        let contents = std::fs::read_to_string(path).map_err(|e| InitError::FileRead {
+            path: path.into(),
+            source: e,
+        })?;
+
+        Ok(GitIgnore::<Uninitialized> {
+            contents,
+            updated: false,
+            _state: PhantomData,
+        })
+    }
+
+    fn initialize(mut self) -> GitIgnore<Initialized> {
+        if !self.contents.ends_with("\n") {
+            self.contents.push('\n');
+        }
+
+        GitIgnore::<Initialized> {
+            contents: self.contents,
+            updated: self.updated,
+            _state: PhantomData,
+        }
+    }
+}
+
+impl GitIgnore<Initialized> {
+    fn try_write_line(&mut self, line: &str) {
+        if !self.contents.contains(line) {
+            self.contents.push_str(line);
+            self.updated = true
+        }
+    }
+
+    fn to_file(&self, path: &Path) -> Result<(), InitError> {
+        std::fs::write(path, &self.contents).map_err(|e| InitError::Write {
+            description: ".gitignore",
+            path: path.into(),
+            source: e,
+        })?;
+
+        Ok(())
+    }
+}
+
+fn build_gitignore_line(path: &Path) -> String {
+    format!("\n{}\n", path.display())
 }
