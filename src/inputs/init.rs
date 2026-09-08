@@ -44,4 +44,12 @@ pub(crate) struct InitArgs {
         help = "If adding snipe releated files and directories to the repos .gitignore should be skipped"
     )]
     pub(crate) skip_gitignore: bool,
+
+    #[arg(
+        short,
+        long,
+        default_value = None,
+        help = "Parent directory to which all operations should occur. Defaults to the present working directory"
+    )]
+    pub(crate) parent_dir: Option<PathBuf>,
 }
