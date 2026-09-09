@@ -15,7 +15,7 @@ pub(crate) struct RawListArgs {
     pub(crate) cfg: PathBuf,
 
     #[arg(
-        short,
+        short = 'e',
         long,
         default_value = "SNIPE_TARGETS",
         help = "Environment variable whose value will be used to look for cfg the file if the path pointed to by the --cfg (-c) argument does not exist. Pass 'skip' to disable searching for this env var"

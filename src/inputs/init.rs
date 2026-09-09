@@ -46,7 +46,7 @@ pub(crate) struct InitArgs {
     pub(crate) skip_gitignore: bool,
 
     #[arg(
-        short,
+        short = 'a',
         long,
         default_value = None,
         help = "Parent directory to which all operations should occur. Defaults to the present working directory"
