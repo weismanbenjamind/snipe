@@ -229,10 +229,6 @@ mod gitignore {
             Ok(())
         }
 
-        pub(super) fn contents(&self) -> &str {
-            &self.contents
-        }
-
         pub(super) fn updated(&self) -> bool {
             self.updated
         }
