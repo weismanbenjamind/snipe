@@ -4,6 +4,7 @@ mod init;
 mod list;
 mod shoot;
 
+pub use init::InitError;
 pub(crate) use list::run_list_targets_cmd;
 pub(crate) use shoot::run_shoot_cmd;
 

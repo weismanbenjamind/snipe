@@ -1,4 +1,5 @@
 #![allow(dead_code)] // TODO - remove allow statement
+use super::{SnipeResult, SuccessMsg};
 use crate::inputs::InitArgs;
 use bon::Builder;
 use gitignore::GitIgnore;
@@ -8,7 +9,7 @@ use std::path::{Path, PathBuf};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
-enum InitError {
+pub enum InitError {
     #[error("Failed to create {description} at path {path}. Error: {source}")]
     DirCreation {
         description: &'static str,
@@ -21,7 +22,6 @@ enum InitError {
     #[error("Failed to serialize config template. Error: {0}")]
     CfgSerialization(#[from] toml::ser::Error),
 
-    // TODO - Make builer function for this enum case
     #[error("Failed to write {description} to path {path}. Error: {source}")]
     Write {
         description: &'static str,
@@ -53,6 +53,14 @@ impl InitError {
             source,
         }
     }
+
+    fn build_write(description: &'static str, path: PathBuf, source: std::io::Error) -> Self {
+        Self::Write {
+            description,
+            path,
+            source,
+        }
+    }
 }
 
 #[derive(Builder, Clone, Copy, Debug, Serialize)]
@@ -68,7 +76,8 @@ impl<'a> Template<'a> {
 }
 
 // TODO - This should return the result struct for a run operation
-fn run_init(args: InitArgs) -> Result<String, InitError> {
+// TODO - check if targets file exists and add a --force or -f arg
+fn run_init(args: InitArgs) -> SnipeResult {
     let snipe_dir = match &args.parent_dir {
         Some(parent) => parent.join(&args.dir),
         None => args.dir,
@@ -87,7 +96,7 @@ fn run_init(args: InitArgs) -> Result<String, InitError> {
         update_gitignore(args.parent_dir.as_deref(), &snipe_dir, &args.cfg)?;
     }
 
-    Ok("Successfully initialized snipe".to_string())
+    Ok(SuccessMsg("Successfully initialized snipe".to_string()))
 }
 
 fn init_snipe_dir(dir: &Path) -> Result<(), InitError> {
@@ -122,11 +131,8 @@ fn init_snipe_cfg(cfg: &Path, payloads_dir: &Path, responses_dir: &Path) -> Resu
         .build()
         .into_toml_string()?;
 
-    std::fs::write(cfg, contents).map_err(|e| InitError::Write {
-        description: "template config file",
-        path: cfg.into(),
-        source: e,
-    })
+    std::fs::write(cfg, contents)
+        .map_err(|e| InitError::build_write("template config file", cfg.into(), e))
 }
 
 fn update_gitignore(parent: Option<&Path>, snipe_dir: &Path, cfg: &Path) -> Result<(), InitError> {
@@ -154,8 +160,8 @@ fn write_gitignore_update(
 ) -> Result<(), InitError> {
     let mut gitignore = GitIgnore::from_file(gitignore_path)?.initialize();
 
-    let snipe_dir_line = build_gitignore_line(snipe_dir);
-    let cfg_line = build_gitignore_line(cfg);
+    let snipe_dir_line = path_to_string(snipe_dir);
+    let cfg_line = path_to_string(cfg);
 
     gitignore.try_write_line(&snipe_dir_line);
     gitignore.try_write_line(&cfg_line);
@@ -167,8 +173,8 @@ fn write_gitignore_update(
     Ok(())
 }
 
-fn build_gitignore_line(path: &Path) -> String {
-    format!("\n{}\n", path.display())
+fn path_to_string(path: &Path) -> String {
+    format!("{}", path.display())
 }
 
 mod gitignore {
@@ -213,18 +219,16 @@ mod gitignore {
 
     impl GitIgnore<Initialized> {
         pub(super) fn try_write_line(&mut self, line: &str) {
-            if !self.contents.contains(line) {
-                self.contents.push_str(line);
+            let line = format!("\n{}\n", line.trim());
+            if !self.contents.contains(&line) {
+                self.contents.push_str(&line);
                 self.updated = true
             }
         }
 
         pub(super) fn to_file(&self, path: &Path) -> Result<(), InitError> {
-            std::fs::write(path, &self.contents).map_err(|e| InitError::Write {
-                description: ".gitignore",
-                path: path.into(),
-                source: e,
-            })?;
+            std::fs::write(path, &self.contents)
+                .map_err(|e| InitError::build_write(".gitignore", path.into(), e))?;
 
             Ok(())
         }

@@ -1,3 +1,4 @@
+use crate::commands::InitError;
 use crate::containers::TargetError;
 use std::{error::Error as StdErr, path::PathBuf};
 use thiserror::Error;
@@ -9,6 +10,9 @@ pub enum RunError {
 
     #[error("{0}")]
     ArgsValidation(#[from] ArgsValidationError),
+
+    #[error("{0}")]
+    Init(#[from] InitError),
 }
 
 impl From<&str> for RunError {
