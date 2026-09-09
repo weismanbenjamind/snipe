@@ -5,5 +5,6 @@ TODO
 .old/*
 .env
 
-.snipe
+# snipe
+/.snipe
 .snipe_targets.toml

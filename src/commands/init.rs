@@ -62,6 +62,7 @@ impl InitError {
     }
 }
 
+// TODO - include workable sample config - maybe even with a sample payload
 #[derive(Clone, Copy, Debug, Serialize)]
 struct Template<'a> {
     vars: Vars<'a>,
@@ -177,8 +178,8 @@ fn write_gitignore_update(
 ) -> Result<(), InitError> {
     let mut gitignore = GitIgnore::from_file(gitignore_path)?.initialize();
 
-    let snipe_dir_line = path_to_string(snipe_dir);
-    let cfg_line = path_to_string(cfg);
+    let snipe_dir_line = path_to_string(snipe_dir, true);
+    let cfg_line = path_to_string(cfg, false);
 
     gitignore.try_write_line(&snipe_dir_line);
     gitignore.try_write_line(&cfg_line);
@@ -190,8 +191,11 @@ fn write_gitignore_update(
     Ok(())
 }
 
-fn path_to_string(path: &Path) -> String {
-    format!("{}", path.display())
+fn path_to_string(path: &Path, is_dir: bool) -> String {
+    match is_dir {
+        true => format!("/{}", path.display()),
+        false => format!("{}", path.display()),
+    }
 }
 
 mod gitignore {
@@ -227,6 +231,8 @@ mod gitignore {
             } else if self.contents.ends_with("\n") && !self.contents.ends_with("\n\n") {
                 self.contents.push('\n');
             }
+
+            self.contents.push_str("# snipe\n");
 
             GitIgnore::<Initialized> {
                 contents: self.contents,
