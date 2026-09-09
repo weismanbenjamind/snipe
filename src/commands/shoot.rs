@@ -1,3 +1,4 @@
+use crate::cfg_resolver::CfgResolver;
 use crate::client::Client;
 use crate::commands::{SnipeResult, SuccessMsg};
 use crate::containers::Targets;
@@ -18,8 +19,13 @@ pub(crate) struct MergedArgs {
     dry_run: bool,
 }
 
-pub(crate) async fn run_shoot_cmd(shoot_args: ShootArgs, targets: Targets) -> SnipeResult {
+pub(crate) async fn run_shoot_cmd(shoot_args: ShootArgs) -> SnipeResult {
     info!("Running shoot command.");
+
+    let cfg_path = CfgResolver::new(&shoot_args.cfg, shoot_args.cfg_env.as_deref())
+        .resolve_cfg_path_from_env()?;
+
+    let targets = Targets::from_toml_file(&cfg_path)?;
 
     let target = targets
         .get_target(&shoot_args.target)

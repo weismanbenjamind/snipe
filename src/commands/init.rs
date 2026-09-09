@@ -1,4 +1,3 @@
-#![allow(dead_code)] // TODO - remove allow statement
 use super::{SnipeResult, SuccessMsg};
 use crate::inputs::InitArgs;
 use bon::Builder;
@@ -75,7 +74,7 @@ impl<'a> Template<'a> {
     }
 }
 
-fn run_init(args: InitArgs) -> SnipeResult {
+pub(crate) fn run_init_cmd(args: InitArgs) -> SnipeResult {
     if args.cfg.exists() && !args.force {
         return Ok(SuccessMsg(format!(
             "Snipe config file already exists at {}. Pass --force (-f) to overwite this file.",

@@ -1,7 +1,5 @@
-use crate::inputs::init::InitArgs;
-use crate::inputs::shoot::ShootArgs;
+use crate::inputs::{InitArgs, ListArgs, RawListArgs, RawShootArgs, ShootArgs};
 use clap::{ArgAction, Parser, Subcommand};
-use std::path::PathBuf;
 
 #[derive(Parser, Debug, Clone)]
 #[command(
@@ -10,63 +8,46 @@ use std::path::PathBuf;
     version
 )]
 pub struct RawSnipeCLIArgs {
-    // TODO - This arg should be specific to list and shoot
-    #[arg(
-        short,
-        long,
-        default_value = ".snipe_targets.toml",
-        help = "Path to config for target HTTP requests"
-    )]
-    cfg: PathBuf,
-
     #[command(subcommand)]
-    command: Command,
-
-    // TODO - This arg should be specific to list and shoot
-    #[arg(
-        short = 'e',
-        long,
-        default_value = "SNIPE_TARGETS",
-        help = "Environment variable whose value will be used to look for cfg the file if the path pointed to by the --cfg (-c) argument does not exist. Pass 'skip' to disable searching for this env var"
-    )]
-    cfg_env: String,
+    command: RawCommand,
 
     #[arg(short, long, action = ArgAction::Count, help = "Verbosity. Use -v for info. Use -vv for debug. Anything including and beyond -vv is set to debug. Defaults to warn.")]
     verbose: u8,
 }
 
 pub struct SnipeCLIArgs {
-    pub(crate) cfg: PathBuf,
     pub(crate) command: Command,
-    pub(crate) cfg_env: Option<String>,
     pub(crate) verbose: u8,
-}
-
-impl SnipeCLIArgs {
-    fn resolve_cfg_env(cfg_env: String) -> Option<String> {
-        match cfg_env.to_lowercase().as_str() {
-            "skip" => None,
-            _ => Some(cfg_env.to_string()),
-        }
-    }
 }
 
 impl From<RawSnipeCLIArgs> for SnipeCLIArgs {
     fn from(value: RawSnipeCLIArgs) -> Self {
         Self {
-            cfg: value.cfg,
-            command: value.command,
-            cfg_env: Self::resolve_cfg_env(value.cfg_env),
+            command: value.command.into(),
             verbose: value.verbose,
         }
     }
 }
 
-// Note - comments below are actually used of for CLI documentation
 #[derive(Clone, Debug, Subcommand)]
+enum RawCommand {
+    List(RawListArgs),
+    Shoot(RawShootArgs),
+    Init(InitArgs),
+}
+
 pub(crate) enum Command {
-    /// List all potential API requests to make
-    List,
+    List(ListArgs),
     Shoot(ShootArgs),
     Init(InitArgs),
+}
+
+impl From<RawCommand> for Command {
+    fn from(value: RawCommand) -> Self {
+        match value {
+            RawCommand::List(args) => Self::List(args.into()),
+            RawCommand::Shoot(args) => Self::Shoot(args.into()),
+            RawCommand::Init(args) => Self::Init(args),
+        }
+    }
 }

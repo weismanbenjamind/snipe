@@ -1,13 +1,21 @@
 use log::info;
 
 use super::{SnipeResult, SuccessMsg};
+use crate::cfg_resolver::CfgResolver;
 use crate::containers::Targets;
 use crate::errors::RunError;
+use crate::inputs::ListArgs;
 use std::error::Error;
 use std::fmt::Write;
 
-pub(crate) fn run_list_targets_cmd(targets: Targets) -> SnipeResult {
+pub(crate) fn run_list_targets_cmd(list_args: ListArgs) -> SnipeResult {
     info!("Generating target list.");
+
+    let cfg_path = CfgResolver::new(&list_args.cfg, list_args.cfg_env.as_deref())
+        .resolve_cfg_path_from_env()?;
+
+    let targets = Targets::from_toml_file(&cfg_path)?;
+
     let mut target_names: Vec<&String> = targets.as_map().keys().collect();
     target_names.sort();
 

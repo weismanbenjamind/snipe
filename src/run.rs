@@ -1,6 +1,4 @@
-use crate::cfg_resolver::CfgResolver;
-use crate::commands::{SnipeResult, SuccessMsg, run_list_targets_cmd, run_shoot_cmd};
-use crate::containers::Targets;
+use crate::commands::{SnipeResult, run_init_cmd, run_list_targets_cmd, run_shoot_cmd};
 use crate::errors::RunError;
 use crate::inputs::{Command, SnipeCLIArgs};
 use std::env;
@@ -15,15 +13,10 @@ const DEBUG: &str = "debug";
 pub async fn run_cli(snipe_cli_args: SnipeCLIArgs) -> SnipeResult {
     set_vebosity(snipe_cli_args.verbose)?;
 
-    let cfg_path = CfgResolver::new(&snipe_cli_args.cfg, snipe_cli_args.cfg_env.as_deref())
-        .resolve_cfg_path_from_env()?;
-
-    let targets = Targets::from_toml_file(&cfg_path)?;
-
     match snipe_cli_args.command {
-        Command::List => run_list_targets_cmd(targets),
-        Command::Shoot(shoot_args) => run_shoot_cmd(shoot_args, targets).await,
-        Command::Init(_) => SnipeResult::Ok(SuccessMsg("Init coming soon!".to_string())),
+        Command::List(list_args) => run_list_targets_cmd(list_args),
+        Command::Shoot(shoot_args) => run_shoot_cmd(shoot_args).await,
+        Command::Init(init_args) => run_init_cmd(init_args),
     }
 }
 
