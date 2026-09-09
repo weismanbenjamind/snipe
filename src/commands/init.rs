@@ -232,9 +232,7 @@ mod gitignore {
 
         pub(super) fn to_file(&self, path: &Path) -> Result<(), InitError> {
             std::fs::write(path, &self.contents)
-                .map_err(|e| InitError::build_write(".gitignore", path.into(), e))?;
-
-            Ok(())
+                .map_err(|e| InitError::build_write(".gitignore", path.into(), e))
         }
 
         pub(super) fn updated(&self) -> bool {
