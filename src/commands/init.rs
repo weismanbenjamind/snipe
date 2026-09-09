@@ -62,16 +62,27 @@ impl InitError {
     }
 }
 
-#[derive(Builder, Clone, Copy, Debug, Serialize)]
+#[derive(Clone, Copy, Debug, Serialize)]
 struct Template<'a> {
-    payloads_dir: &'a Path,
-    responses_dir: &'a Path,
+    vars: Vars<'a>,
+}
+
+impl<'a> From<Vars<'a>> for Template<'a> {
+    fn from(value: Vars<'a>) -> Self {
+        Self { vars: value }
+    }
 }
 
 impl<'a> Template<'a> {
     fn into_toml_string(self) -> Result<String, InitError> {
         toml::to_string_pretty(&self).map_err(InitError::from)
     }
+}
+
+#[derive(Builder, Clone, Copy, Debug, Serialize)]
+struct Vars<'a> {
+    payloads_dir: &'a Path,
+    responses_dir: &'a Path,
 }
 
 pub(crate) fn run_init_cmd(args: InitArgs) -> SnipeResult {
@@ -129,13 +140,15 @@ fn init_snipe_cfg(cfg: &Path, payloads_dir: &Path, responses_dir: &Path) -> Resu
             .map_err(|e| InitError::build_dir_creation("parent dirs to config", parent.into(), e))?
     }
 
-    let contents = Template::builder()
+    let template: Template = Vars::builder()
         .payloads_dir(payloads_dir)
         .responses_dir(responses_dir)
         .build()
-        .into_toml_string()?;
+        .into();
 
-    std::fs::write(cfg, contents)
+    let contents = template.into_toml_string()?;
+
+    std::fs::write(cfg, &contents)
         .map_err(|e| InitError::build_write("template config file", cfg.into(), e))
 }
 
@@ -210,6 +223,8 @@ mod gitignore {
 
         pub(super) fn initialize(mut self) -> GitIgnore<Initialized> {
             if !self.contents.ends_with("\n") {
+                self.contents.push_str("\n\n");
+            } else if self.contents.ends_with("\n") && !self.contents.ends_with("\n\n") {
                 self.contents.push('\n');
             }
 
@@ -223,7 +238,7 @@ mod gitignore {
 
     impl GitIgnore<Initialized> {
         pub(super) fn try_write_line(&mut self, line: &str) {
-            let line = format!("\n{}\n", line.trim());
+            let line = format!("{}\n", line.trim());
             if !self.contents.contains(&line) {
                 self.contents.push_str(&line);
                 self.updated = true

@@ -8,7 +8,7 @@ pub(crate) struct InitArgs {
     #[arg(
         short,
         long,
-        default_value = ".snipe_targets",
+        default_value = ".snipe_targets.toml",
         help = "Path to config to create for target HTTP requests"
     )]
     pub(crate) cfg: PathBuf,

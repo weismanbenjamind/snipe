@@ -2,9 +2,8 @@
 TODO
 .vscode
 .zed
-.snipe_targets*
-snipe_targets*
-snipe
 .old/*
 .env
-.snipe/
+
+.snipe
+.snipe_targets.toml
