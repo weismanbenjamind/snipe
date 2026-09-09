@@ -1,9 +1,9 @@
 #![allow(dead_code)] // TODO - remove allow statement
 use crate::inputs::InitArgs;
 use bon::Builder;
+use gitignore::GitIgnore;
 use log::warn;
 use serde::Serialize;
-use std::marker::PhantomData;
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 
@@ -67,6 +67,7 @@ impl<'a> Template<'a> {
     }
 }
 
+// TODO - This should return the result struct for a run operation
 fn run_init(args: InitArgs) -> Result<String, InitError> {
     let snipe_dir = match &args.parent_dir {
         Some(parent) => parent.join(&args.dir),
@@ -159,69 +160,81 @@ fn write_gitignore_update(
     gitignore.try_write_line(&snipe_dir_line);
     gitignore.try_write_line(&cfg_line);
 
-    if gitignore.updated {
+    if gitignore.updated() {
         gitignore.to_file(gitignore_path)?;
     }
 
     Ok(())
 }
 
-// TODO - This should be it's own module and should have encapsulated setters
-struct Uninitialized;
-struct Initialized;
-
-struct GitIgnore<State> {
-    contents: String,
-    updated: bool,
-    _state: PhantomData<State>,
-}
-
-impl GitIgnore<Uninitialized> {
-    fn from_file(path: &Path) -> Result<GitIgnore<Uninitialized>, InitError> {
-        let contents = std::fs::read_to_string(path).map_err(|e| InitError::FileRead {
-            path: path.into(),
-            source: e,
-        })?;
-
-        Ok(GitIgnore::<Uninitialized> {
-            contents,
-            updated: false,
-            _state: PhantomData,
-        })
-    }
-
-    fn initialize(mut self) -> GitIgnore<Initialized> {
-        if !self.contents.ends_with("\n") {
-            self.contents.push('\n');
-        }
-
-        GitIgnore::<Initialized> {
-            contents: self.contents,
-            updated: self.updated,
-            _state: PhantomData,
-        }
-    }
-}
-
-impl GitIgnore<Initialized> {
-    fn try_write_line(&mut self, line: &str) {
-        if !self.contents.contains(line) {
-            self.contents.push_str(line);
-            self.updated = true
-        }
-    }
-
-    fn to_file(&self, path: &Path) -> Result<(), InitError> {
-        std::fs::write(path, &self.contents).map_err(|e| InitError::Write {
-            description: ".gitignore",
-            path: path.into(),
-            source: e,
-        })?;
-
-        Ok(())
-    }
-}
-
 fn build_gitignore_line(path: &Path) -> String {
     format!("\n{}\n", path.display())
+}
+
+mod gitignore {
+    use super::InitError;
+    use std::marker::PhantomData;
+    use std::path::Path;
+    pub(super) struct Uninitialized;
+    pub(super) struct Initialized;
+
+    pub(super) struct GitIgnore<State> {
+        contents: String,
+        updated: bool,
+        _state: PhantomData<State>,
+    }
+
+    impl GitIgnore<Uninitialized> {
+        pub(super) fn from_file(path: &Path) -> Result<GitIgnore<Uninitialized>, InitError> {
+            let contents = std::fs::read_to_string(path).map_err(|e| InitError::FileRead {
+                path: path.into(),
+                source: e,
+            })?;
+
+            Ok(GitIgnore::<Uninitialized> {
+                contents,
+                updated: false,
+                _state: PhantomData::<Uninitialized>,
+            })
+        }
+
+        pub(super) fn initialize(mut self) -> GitIgnore<Initialized> {
+            if !self.contents.ends_with("\n") {
+                self.contents.push('\n');
+            }
+
+            GitIgnore::<Initialized> {
+                contents: self.contents,
+                updated: self.updated,
+                _state: PhantomData::<Initialized>,
+            }
+        }
+    }
+
+    impl GitIgnore<Initialized> {
+        pub(super) fn try_write_line(&mut self, line: &str) {
+            if !self.contents.contains(line) {
+                self.contents.push_str(line);
+                self.updated = true
+            }
+        }
+
+        pub(super) fn to_file(&self, path: &Path) -> Result<(), InitError> {
+            std::fs::write(path, &self.contents).map_err(|e| InitError::Write {
+                description: ".gitignore",
+                path: path.into(),
+                source: e,
+            })?;
+
+            Ok(())
+        }
+
+        pub(super) fn contents(&self) -> &str {
+            &self.contents
+        }
+
+        pub(super) fn updated(&self) -> bool {
+            self.updated
+        }
+    }
 }
