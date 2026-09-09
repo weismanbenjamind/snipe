@@ -75,9 +75,14 @@ impl<'a> Template<'a> {
     }
 }
 
-// TODO - This should return the result struct for a run operation
-// TODO - check if targets file exists and add a --force or -f arg
 fn run_init(args: InitArgs) -> SnipeResult {
+    if args.cfg.exists() && !args.force {
+        return Ok(SuccessMsg(format!(
+            "Snipe config file already exists at {}. Pass --force (-f) to overwite this file.",
+            args.cfg.display(),
+        )));
+    }
+
     let snipe_dir = match &args.parent_dir {
         Some(parent) => parent.join(&args.dir),
         None => args.dir,

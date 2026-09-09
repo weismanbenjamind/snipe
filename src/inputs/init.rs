@@ -52,4 +52,12 @@ pub(crate) struct InitArgs {
         help = "Parent directory to which all operations should occur. Defaults to the present working directory"
     )]
     pub(crate) parent_dir: Option<PathBuf>,
+
+    #[arg(
+        short,
+        long,
+        default_value_t = false,
+        help = "If should force initialization if the snipe config file specified by --cfg (-c) already exists"
+    )]
+    pub(crate) force: bool,
 }
