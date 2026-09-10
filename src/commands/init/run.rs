@@ -1,29 +1,12 @@
 use super::GitIgnore;
 use super::InitError;
+use super::examples::{write_example_payload, write_example_snipe_cfg};
 use crate::commands::{SnipeResult, SuccessMsg};
 use crate::inputs::InitArgs;
 use bon::Builder;
 use log::warn;
 use serde::Serialize;
 use std::path::Path;
-
-// TODO - include workable sample config - maybe even with a sample payload
-#[derive(Clone, Copy, Debug, Serialize)]
-struct Template<'a> {
-    vars: Vars<'a>,
-}
-
-impl<'a> From<Vars<'a>> for Template<'a> {
-    fn from(value: Vars<'a>) -> Self {
-        Self { vars: value }
-    }
-}
-
-impl<'a> Template<'a> {
-    fn into_toml_string(self) -> Result<String, InitError> {
-        toml::to_string_pretty(&self).map_err(InitError::from)
-    }
-}
 
 #[derive(Builder, Clone, Copy, Debug, Serialize)]
 struct Vars<'a> {
@@ -66,7 +49,8 @@ fn init_snipe_dir(dir: &Path) -> Result<(), InitError> {
 }
 
 fn init_request_paylaods_dir(payloads_dir: &Path) -> Result<(), InitError> {
-    init_subdir(payloads_dir, "request payloads directory")
+    init_subdir(payloads_dir, "request payloads directory")?;
+    write_example_payload(payloads_dir)
 }
 
 fn init_responses_dir(responses_dir: &Path) -> Result<(), InitError> {
@@ -85,17 +69,7 @@ fn init_snipe_cfg(cfg: &Path, payloads_dir: &Path, responses_dir: &Path) -> Resu
         std::fs::create_dir_all(parent)
             .map_err(|e| InitError::build_dir_creation("parent dirs to config", parent.into(), e))?
     }
-
-    let template: Template = Vars::builder()
-        .payloads_dir(payloads_dir)
-        .responses_dir(responses_dir)
-        .build()
-        .into();
-
-    let contents = template.into_toml_string()?;
-
-    std::fs::write(cfg, &contents)
-        .map_err(|e| InitError::build_write("template config file", cfg.into(), e))
+    write_example_snipe_cfg(cfg, payloads_dir, responses_dir)
 }
 
 fn update_gitignore(parent: Option<&Path>, snipe_dir: &Path, cfg: &Path) -> Result<(), InitError> {

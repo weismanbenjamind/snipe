@@ -1,13 +1,16 @@
+# Reusable string variables
 [vars]
-payloads_dir = ".snipe/payloads"
-responses_dir = ".snipe/responses"
+payloads_dir = "${{PAYLOADS}}"
+responses_dir = "${{RESPONSES}}"
 url = "https://httpbin.org/anything"
 application_json = "application/json"
 
+# Reusable headers field
 [globals.headers.example]
 Content-Type = "${VARS.application_json}"
 Accept = "${VARS.application_json}"
 
+# Reusable auth field
 [globals.auth.example]
 scheme = "bearer"
 token = "123456"
@@ -15,17 +18,19 @@ token = "123456"
 # Reads payload from a file
 # Writes response to file
 # Shows how to use variable replacement mechanisms
+# Run with `snipe shoot example-filesystem`
 [targets.example-filesystem]
 method = "PUT"
 url = "${VARS.url}"
 auth = { global = "example" }
 headers = { global = "example" }
-payload = { file = "${VARS.payloads_dir}/example_payload.json" }
-output_cfg = { format = "pretty_json", output_file = "${VARS.responses_dir}/example-filesystem-response.json" }
+payload = { file = "${VARS.payloads_dir}/${{PAYLOAD_FILE}}" }
+output_cfg = { format = "pretty_json", output_file = "${VARS.responses_dir}/example.json" }
 
 # Payload is configured inline below (not read from file)
 # Outputs response to console (not written to file)
-# No variable replacement mechanisms used. Everything is inlined.
+# No variable replacement mechanisms used; Everything is inlined
+# Run with `snipe shoot example-inline`
 [targets.example-inline]
 method = "GET"
 url = "https://httpbin.org/anything"
