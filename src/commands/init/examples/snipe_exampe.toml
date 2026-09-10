@@ -1,0 +1,35 @@
+[vars]
+payloads_dir = ".snipe/payloads"
+responses_dir = ".snipe/responses"
+url = "https://httpbin.org/anything"
+application_json = "application/json"
+
+[globals.headers.example]
+Content-Type = "${VARS.application_json}"
+Accept = "${VARS.application_json}"
+
+[globals.auth.example]
+scheme = "bearer"
+token = "123456"
+
+# Reads payload from a file
+# Writes response to file
+# Shows how to use variable replacement mechanisms
+[targets.example-filesystem]
+method = "PUT"
+url = "${VARS.url}"
+auth = { global = "example" }
+headers = { global = "example" }
+payload = { file = "${VARS.payloads_dir}/example_payload.json" }
+output_cfg = { format = "pretty_json", output_file = "${VARS.responses_dir}/example-filesystem-response.json" }
+
+# Payload is configured inline below (not read from file)
+# Outputs response to console (not written to file)
+# No variable replacement mechanisms used. Everything is inlined.
+[targets.example-inline]
+method = "GET"
+url = "https://httpbin.org/anything"
+auth = { scheme = "basic", username = "a_username", password = "a_password" }
+headers = { Content-Type = "application/json", Accept = "application/json" }
+payload = { example = { payload = "inline"} }
+output_cfg = { format = "json", pretty = true }
