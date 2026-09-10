@@ -1,5 +1,6 @@
-use crate::inputs::{InitArgs, ListArgs, RawListArgs, RawShootArgs, ShootArgs};
 use clap::{ArgAction, Parser, Subcommand};
+
+use crate::inputs::{InitArgs, ListArgs, RawListArgs, RawShootArgs, ShootArgs};
 
 #[derive(Parser, Debug, Clone)]
 #[command(

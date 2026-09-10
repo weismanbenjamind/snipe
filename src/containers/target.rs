@@ -1,11 +1,15 @@
-use crate::containers::globals::{
-    GlobalReplaceable, GlobalReplaceableCfg, GlobalReplaceableError, GlobalReplaceableLocal,
-    Globals,
-};
-use crate::containers::{Auth, Headers, Method, OutputCfg, Payload};
-use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
+
+use crate::containers::{
+    Auth, Headers, Method, OutputCfg, Payload,
+    globals::{
+        GlobalReplaceable, GlobalReplaceableCfg, GlobalReplaceableError, GlobalReplaceableLocal,
+        Globals,
+    },
+};
 
 #[derive(Clone, Debug, Error)]
 pub(crate) enum TargetError {

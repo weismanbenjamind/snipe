@@ -1,9 +1,12 @@
 use std::collections::HashSet;
 
-use crate::containers::output::GrabCfg;
-use crate::errors::ArgsValidationError;
-use crate::inputs::{RawFormat, ValidatedFormat};
 use clap::Args;
+
+use crate::{
+    containers::output::GrabCfg,
+    errors::ArgsValidationError,
+    inputs::{RawFormat, ValidatedFormat},
+};
 
 // * Note - do not want to fields public for RawGrab
 // Depend on clap validation to ensure proper combos

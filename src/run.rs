@@ -1,9 +1,12 @@
-use crate::commands::{SnipeResult, run_init_cmd, run_list_targets_cmd, run_shoot_cmd};
-use crate::errors::RunError;
-use crate::inputs::{Command, SnipeCLIArgs};
 use std::env;
-use tracing_subscriber::EnvFilter;
-use tracing_subscriber::fmt as tracing_subscriber_fmt;
+
+use tracing_subscriber::{EnvFilter, fmt as tracing_subscriber_fmt};
+
+use crate::{
+    commands::{SnipeResult, run_init_cmd, run_list_targets_cmd, run_shoot_cmd},
+    errors::RunError,
+    inputs::{Command, SnipeCLIArgs},
+};
 
 const RUST_LOG: &str = "RUST_LOG";
 const WARN: &str = "warn";

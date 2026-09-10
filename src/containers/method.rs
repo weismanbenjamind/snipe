@@ -1,5 +1,6 @@
-use crate::errors::TargetsError;
 use serde::{Deserialize, Serialize};
+
+use crate::errors::TargetsError;
 
 #[derive(Debug, Deserialize, Clone, Copy, Serialize)]
 #[serde(try_from = "String")]

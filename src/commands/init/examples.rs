@@ -1,5 +1,6 @@
-use log::warn;
 use std::path::Path;
+
+use log::warn;
 
 use crate::commands::InitError;
 

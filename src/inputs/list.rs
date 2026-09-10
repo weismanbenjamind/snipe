@@ -1,7 +1,8 @@
-use super::cfg_env::resolve_cfg_env;
 use std::path::PathBuf;
 
 use clap::Args;
+
+use super::cfg_env::resolve_cfg_env;
 
 #[derive(Clone, Debug, Args)]
 #[command(about = "List all potential API requests to make")]

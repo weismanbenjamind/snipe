@@ -1,10 +1,11 @@
+use std::{
+    collections::HashMap,
+    fmt::{Error as FmtError, Write},
+};
+
 use reqwest::StatusCode;
 use serde::Serialize;
-use serde_json::Error as SerdeJsonError;
-use serde_json::Value;
-use std::collections::HashMap;
-use std::fmt::Error as FmtError;
-use std::fmt::Write;
+use serde_json::{Error as SerdeJsonError, Value};
 
 #[derive(Clone, Debug, Serialize)]
 pub(super) struct JsonFormat<'a> {

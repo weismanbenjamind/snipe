@@ -1,14 +1,16 @@
-use crate::commands::SuccessMsg;
-use crate::errors::{FilesystemError, ResponseFormatterError, ResponseWriterError};
-use crate::inputs::{RawFormat, ValidatedFormat, ValidatedGrab};
-use crate::response::ResponseFormatter;
+use std::{fs, io::Write, path::Path};
+
 use bytes::Bytes;
 use futures_util::StreamExt;
 use log::{debug, info};
 use reqwest::Response;
-use std::fs;
-use std::io::Write;
-use std::path::Path;
+
+use crate::{
+    commands::SuccessMsg,
+    errors::{FilesystemError, ResponseFormatterError, ResponseWriterError},
+    inputs::{RawFormat, ValidatedFormat, ValidatedGrab},
+    response::ResponseFormatter,
+};
 
 #[derive(Debug)]
 pub(crate) struct ResponseWriter {

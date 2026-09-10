@@ -1,7 +1,9 @@
-use crate::inputs::RawFormat;
-use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
+
+use crate::inputs::RawFormat;
 
 #[derive(Clone, Debug, Error)]
 pub(crate) enum OutputError {

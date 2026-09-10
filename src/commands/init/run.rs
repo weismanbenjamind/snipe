@@ -1,10 +1,15 @@
-use super::GitIgnore;
-use super::InitError;
-use super::examples::{write_example_payload, write_example_snipe_cfg};
-use crate::commands::{SnipeResult, SuccessMsg};
-use crate::inputs::InitArgs;
-use log::warn;
 use std::path::Path;
+
+use log::warn;
+
+use super::{
+    GitIgnore, InitError,
+    examples::{write_example_payload, write_example_snipe_cfg},
+};
+use crate::{
+    commands::{SnipeResult, SuccessMsg},
+    inputs::InitArgs,
+};
 
 pub(crate) fn run_init_cmd(args: InitArgs) -> SnipeResult {
     if args.cfg.exists() && !args.force {

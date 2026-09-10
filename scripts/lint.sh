@@ -3,7 +3,7 @@
 exit_code=0
 
 echo Checking format
-cargo fmt --check
+cargo +nightly fmt --check
 last=$?
 if [ $last -ne 0 ]; then
     exit_code=$last

@@ -1,6 +1,6 @@
+use std::{marker::PhantomData, path::Path};
+
 use super::InitError;
-use std::marker::PhantomData;
-use std::path::Path;
 pub(super) struct Uninitialized;
 pub(super) struct Initialized;
 

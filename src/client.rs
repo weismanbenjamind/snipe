@@ -1,12 +1,15 @@
-use reqwest::Client as Client_;
-use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
-use reqwest::{RequestBuilder, Response};
+use std::{str::FromStr, time::Duration};
 
-use crate::containers::{Auth, Headers, Method, Payload, Target};
-use crate::errors::ClientError;
 use log::{debug, info, warn};
-use std::str::FromStr;
-use std::time::Duration;
+use reqwest::{
+    Client as Client_, RequestBuilder, Response,
+    header::{HeaderMap, HeaderName, HeaderValue},
+};
+
+use crate::{
+    containers::{Auth, Headers, Method, Payload, Target},
+    errors::ClientError,
+};
 
 pub(crate) struct Client {
     _client: Client_,

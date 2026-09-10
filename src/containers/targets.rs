@@ -1,13 +1,17 @@
-use crate::containers::Vars;
-use crate::containers::globals::{Globals, GlobalsCfg};
-use crate::containers::target::{GlobalReplaceableTarget, Target, TargetError};
-use crate::errors::TargetsError;
-use crate::var_replacement::resolve_vars;
+use std::{collections::HashMap, ffi::OsStr, fs::read_to_string, path::Path};
+
 use log::{debug, info};
 use serde::{Deserialize, Serialize};
-use std::fs::read_to_string;
-use std::path::Path;
-use std::{collections::HashMap, ffi::OsStr};
+
+use crate::{
+    containers::{
+        Vars,
+        globals::{Globals, GlobalsCfg},
+        target::{GlobalReplaceableTarget, Target, TargetError},
+    },
+    errors::TargetsError,
+    var_replacement::resolve_vars,
+};
 
 #[derive(Debug, Deserialize, Clone, Serialize)]
 pub(crate) struct Targets {

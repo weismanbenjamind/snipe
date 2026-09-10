@@ -1,7 +1,9 @@
-use crate::errors::ArgsValidationError;
+use std::path::Path;
+
 use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+
+use crate::errors::ArgsValidationError;
 
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, ValueEnum, Default)]
 #[serde(try_from = "String", rename_all = "snake_case")]

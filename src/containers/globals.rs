@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
-use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use thiserror::Error;
 
 use crate::containers::{Auth, Headers, Payload};

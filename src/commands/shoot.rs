@@ -1,14 +1,19 @@
-use crate::cfg_resolver::CfgResolver;
-use crate::client::Client;
-use crate::commands::{SnipeResult, SuccessMsg};
-use crate::containers::Targets;
-use crate::containers::output::{GrabCfg, OutputCfg};
-use crate::errors::{ArgsValidationError, RunError};
-use crate::inputs::{RawFormat, RawGrab, ShootArgs, ValidatedFormat, ValidatedGrab};
-use crate::response::ResponseWriter;
+use std::path::{Path, PathBuf};
+
 use log::{debug, info};
-use std::path::Path;
-use std::path::PathBuf;
+
+use crate::{
+    cfg_resolver::CfgResolver,
+    client::Client,
+    commands::{SnipeResult, SuccessMsg},
+    containers::{
+        Targets,
+        output::{GrabCfg, OutputCfg},
+    },
+    errors::{ArgsValidationError, RunError},
+    inputs::{RawFormat, RawGrab, ShootArgs, ValidatedFormat, ValidatedGrab},
+    response::ResponseWriter,
+};
 
 #[derive(Clone, Debug)]
 pub(crate) struct MergedArgs {

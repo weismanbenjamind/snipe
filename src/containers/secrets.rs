@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
-use toml::Value as TomlValue;
-use toml::map::Map as TomlMap;
+use toml::{Value as TomlValue, map::Map as TomlMap};
 
 const REDACTED_DELIMITER: &str = "*****";
 

@@ -1,7 +1,8 @@
-use crate::commands::InitError;
-use crate::containers::TargetError;
 use std::{error::Error as StdErr, path::PathBuf};
+
 use thiserror::Error;
+
+use crate::{commands::InitError, containers::TargetError};
 
 #[derive(Debug, Error)]
 pub enum RunError {

@@ -1,8 +1,8 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 
-use crate::containers::SecretString;
-use crate::containers::globals::GlobalReplaceableLocal;
-use std::collections::HashMap;
+use crate::containers::{SecretString, globals::GlobalReplaceableLocal};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub(crate) struct Headers(HashMap<String, SecretString>);

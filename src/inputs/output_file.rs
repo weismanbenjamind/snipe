@@ -1,5 +1,6 @@
-use clap::Args;
 use std::path::{Path, PathBuf};
+
+use clap::Args;
 
 // * Note - Do not want public fields here. Only way in is via the CLI. Means input validation occured.
 // * If ever update this struct to be built from something other than the CLI the ::new() or builder

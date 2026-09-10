@@ -1,12 +1,16 @@
-use crate::containers::globals::GlobalReplaceableLocal;
-use crate::containers::secrets::SecretTomlValue;
-use crate::errors::TargetsError;
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+};
+
 use log::debug;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
-use toml::Value as TomlValue;
-use toml::map::Map as TomlMap;
+use toml::{Value as TomlValue, map::Map as TomlMap};
+
+use crate::{
+    containers::{globals::GlobalReplaceableLocal, secrets::SecretTomlValue},
+    errors::TargetsError,
+};
 
 const FILE_KEY: &str = "file";
 const PARAMS_KEY: &str = "params";

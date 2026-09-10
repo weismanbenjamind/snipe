@@ -1,7 +1,9 @@
-use crate::containers::SecretString;
-use crate::containers::globals::GlobalReplaceableLocal;
-use crate::errors::TargetsError;
 use serde::{Deserialize, Serialize};
+
+use crate::{
+    containers::{SecretString, globals::GlobalReplaceableLocal},
+    errors::TargetsError,
+};
 
 #[derive(Debug, Deserialize, Clone)]
 struct RawAuth {

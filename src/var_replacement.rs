@@ -1,9 +1,9 @@
-use crate::containers::Vars;
-use crate::errors::VarReplaceError;
+use std::{collections::HashSet, env};
+
 use log::debug;
 use regex::{Captures, Regex};
-use std::collections::HashSet;
-use std::env;
+
+use crate::{containers::Vars, errors::VarReplaceError};
 
 // Raw string to not treat \ as escape characters
 // \$ to match literal '$'

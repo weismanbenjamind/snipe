@@ -1,7 +1,10 @@
-use clap::Parser;
-use snipe::args::{RawSnipeCLIArgs, SnipeCLIArgs};
-use snipe::run_cli;
 use std::process::ExitCode;
+
+use clap::Parser;
+use snipe::{
+    args::{RawSnipeCLIArgs, SnipeCLIArgs},
+    run_cli,
+};
 
 #[tokio::main]
 async fn main() -> ExitCode {

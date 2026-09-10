@@ -1,9 +1,15 @@
-use crate::errors::ResponseFormatterError;
-use crate::response::formats::{HTTPFormat, JsonFormat};
-use log::{info, warn};
-use reqwest::header::{HeaderMap, HeaderValue};
-use reqwest::{Response, StatusCode};
 use std::collections::HashMap;
+
+use log::{info, warn};
+use reqwest::{
+    Response, StatusCode,
+    header::{HeaderMap, HeaderValue},
+};
+
+use crate::{
+    errors::ResponseFormatterError,
+    response::formats::{HTTPFormat, JsonFormat},
+};
 
 #[derive(Clone, Debug)]
 pub(super) struct ResponseFormatter {

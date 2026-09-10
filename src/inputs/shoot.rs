@@ -1,10 +1,11 @@
-use super::cfg_env::resolve_cfg_env;
-use crate::inputs::format::RawFormat;
-use crate::inputs::grab::RawGrab;
-use crate::inputs::output_file::OutputFileArgs;
-use crate::inputs::pretty::PrettyArgs;
-use clap::Args;
 use std::path::PathBuf;
+
+use clap::Args;
+
+use super::cfg_env::resolve_cfg_env;
+use crate::inputs::{
+    format::RawFormat, grab::RawGrab, output_file::OutputFileArgs, pretty::PrettyArgs,
+};
 
 #[derive(Args, Debug, Clone)]
 #[command(about = "Make a specific API request")]

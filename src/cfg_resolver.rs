@@ -1,8 +1,11 @@
-use crate::errors::CfgResolverError;
+use std::{
+    env,
+    path::{Path, PathBuf},
+};
+
 use log::{debug, info};
 
-use std::env;
-use std::path::{Path, PathBuf};
+use crate::errors::CfgResolverError;
 
 const HOME_DELMITER: &str = "~";
 

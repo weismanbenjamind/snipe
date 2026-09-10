@@ -1,12 +1,9 @@
+use std::{error::Error, fmt::Write};
+
 use log::info;
 
 use super::{SnipeResult, SuccessMsg};
-use crate::cfg_resolver::CfgResolver;
-use crate::containers::Targets;
-use crate::errors::RunError;
-use crate::inputs::ListArgs;
-use std::error::Error;
-use std::fmt::Write;
+use crate::{cfg_resolver::CfgResolver, containers::Targets, errors::RunError, inputs::ListArgs};
 
 pub(crate) fn run_list_targets_cmd(list_args: ListArgs) -> SnipeResult {
     info!("Generating target list.");
