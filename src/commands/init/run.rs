@@ -8,10 +8,11 @@ use std::path::Path;
 
 pub(crate) fn run_init_cmd(args: InitArgs) -> SnipeResult {
     if args.cfg.exists() && !args.force {
-        return Ok(SuccessMsg(format!(
+        let msg = format!(
             "Snipe config file already exists at {}. Pass --force (-f) to overwite this file.",
             args.cfg.display(),
-        )));
+        );
+        return Ok(SuccessMsg(msg));
     }
 
     let snipe_dir = match &args.parent_dir {
@@ -32,7 +33,7 @@ pub(crate) fn run_init_cmd(args: InitArgs) -> SnipeResult {
         update_gitignore(args.parent_dir.as_deref(), &snipe_dir, &args.cfg)?;
     }
 
-    Ok(SuccessMsg("Successfully initialized snipe".to_string()))
+    Ok(SuccessMsg("Successfully initialized snipe.".to_string()))
 }
 
 fn init_snipe_dir(dir: &Path) -> Result<(), InitError> {
