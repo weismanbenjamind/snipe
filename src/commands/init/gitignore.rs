@@ -43,9 +43,11 @@ impl GitIgnore<Uninitialized> {
 
 impl GitIgnore<Initialized> {
     pub(super) fn try_write_line(&mut self, line: &str) {
-        let line = format!("{}\n", line.trim());
-        if !self.contents.contains(&line) {
-            self.contents.push_str(&line);
+        let trimmed = line.trim();
+        let maybe_present_line = format!("\n{trimmed}\n");
+        if !self.contents.contains(&maybe_present_line) {
+            self.contents.push_str(trimmed);
+            self.contents.push('\n');
             self.updated = true
         }
     }

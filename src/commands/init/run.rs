@@ -3,16 +3,8 @@ use super::InitError;
 use super::examples::{write_example_payload, write_example_snipe_cfg};
 use crate::commands::{SnipeResult, SuccessMsg};
 use crate::inputs::InitArgs;
-use bon::Builder;
 use log::warn;
-use serde::Serialize;
 use std::path::Path;
-
-#[derive(Builder, Clone, Copy, Debug, Serialize)]
-struct Vars<'a> {
-    payloads_dir: &'a Path,
-    responses_dir: &'a Path,
-}
 
 pub(crate) fn run_init_cmd(args: InitArgs) -> SnipeResult {
     if args.cfg.exists() && !args.force {
