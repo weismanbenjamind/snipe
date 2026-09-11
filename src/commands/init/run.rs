@@ -3,8 +3,9 @@ use std::path::Path;
 use log::warn;
 
 use super::{
-    GitIgnore, InitError,
+    InitError,
     examples::{write_example_payload, write_example_snipe_cfg},
+    gitignore::GitIgnore,
 };
 use crate::{
     commands::{SnipeResult, SuccessMsg},
