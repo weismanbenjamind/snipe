@@ -1,0 +1,90 @@
+- [x] Raw `init` initializes correctly
+    - `.snipe/` does not exist
+    - `.snipe_targets.toml` does not exist
+    - `.gitignore` does not contain target updates
+- [x] Raw `init` prompts for `--force`
+    - `.snipe/` does not exist
+    - `.snipe_targets.toml` does exist
+    - `.gitignore` does not contain target updates
+- [x] Raw `init` with `--force` overrides current `.snipe_targets.toml`
+    - `.snipe/` does not exist
+    - `.snipe_targets.toml` does exist with different contents that will be written after the force
+    - `.gitignore` does not contain target updates
+- [x] Raw `init` where `.snipe/` exists but sub directories do not
+    - `.snipe/` does exist (subdirs do not)
+    - `.snipe_targets.toml` does not exist
+    - `.gitignore` does not contain target updates
+- [x] Raw `init` where `.snipe/payloads` exists but `requests` directory does not
+    - `.snipe/payloads` does exist (`requests` does not)
+    - `.snipe_targets.toml` does not exist
+    - `.gitignore` does not contain target updates
+- [x] Raw `init` where `.snipe/payloads/example.json` exists but `requests` directory does not
+    - `.snipe/payloads/example.json` does exist (`requests` does not)
+    - `.snipe_targets.toml` does not exist
+    - `.gitignore` does not contain target updates
+- [x] Raw `init` where `.snipe/responses` exists but `payloads` directory does not
+    - `.snipe/responses` does exist (`payloads` does not)
+    - `.snipe_targets.toml` does not exist
+    - `.gitignore` does not contain target updates
+- [x] Raw `init` where `.snipe/payloads` and `.snipe/responses` exists
+    - `.snipe_targets.toml` does not exist
+    - `.gitignore` does not contain target updates
+- [x] Raw `init` where `.snipe/payloads/example.json` and `.snipe/responses` exists
+    - `.snipe_targets.toml` does not exist
+    - `.gitignore` does not contain target updates
+- [x] Raw `init` where `.gitignore` does not end in a newline
+    - `.snipe/` does not exist
+    - `.snipe_targets.toml` does not exist
+    - `.gitignore` does not contain target updates
+- [x] Raw `init` where `.gitignore` ends in a single newline
+    - `.snipe/` does not exist
+    - `.snipe_targets.toml` does not exist
+    - `.gitignore` does not contain target updates
+- [ ] Raw `init` where `.gitignore` ends in 2 newlines
+    - `.snipe/` does not exist
+    - `.snipe_targets.toml` does not exist
+    - `.gitignore` does not contain target updates
+- [ ] Raw `init` where `.gitignore` ends in 5 newlines
+    - `.snipe/` does not exist
+    - `.snipe_targets.toml` does not exist
+    - `.gitignore` does not contain target updates
+- [ ] Raw `init` where `.gitignore` contains 1 target line
+    - `.snipe/` does not exist
+    - `.snipe_targets.toml` does not exist
+    - `.gitignore` contains one update
+- [ ] Raw `init` where `.gitignore` contains both target lines
+    - `.snipe/` does not exist
+    - `.snipe_targets.toml` does not exist
+    - `.gitignore` contains both updates
+- [ ] Raw `init`where `.gitignore` does not any updates and the path passed to the cfg contains a leading newline
+    - `.snipe/` does not exist
+    - `.snipe_targets.toml` does not exist
+    - `.gitignore` does not contain target updates
+- [ ] Raw `init`where `.gitignore` does not any updates and the path passed to the cfg contains a trailing newline
+    - `.snipe/` does not exist
+    - `.snipe_targets.toml` does not exist
+    - `.gitignore` does not contain target updates
+- [ ] Raw `init`where `.gitignore` does not any updates and the path passed to the cfg contains a leading and trailing newline
+    - `.snipe/` does not exist
+    - `.snipe_targets.toml` does not exist
+    - `.gitignore` does not contain target updates
+- [ ] Raw `init` where .gitignore contains a target line to be added but that line is a substring of a different line
+    - `.snipe/` does not exist
+    - `.snipe_targets.toml` does not exist
+    - `.gitignore` does not contain target updates
+- [ ] Raw `init` where .gitignore does not exist
+    - `.snipe/` does not exist
+    - `.snipe_targets.toml` does not exist
+    - `.gitignore` does not exist
+- [ ] Raw `init` where .gitignore is a directory
+    - `.snipe/` does not exist
+    - `.snipe_targets.toml` does not exist
+    - `.gitignore` is a directory
+- [ ] `init` where `--cfg` flag changes the name of the config produced
+- [ ] `init` where `--dir` changes the name of the snipe directory
+- [ ] `init` where `--payloads` changes the name of the payloads subdir
+- [ ] `init` where `--responses` change the name of the responses subdir
+- [ ] `init` where `--skip-gitignore` skips the `.gitignore` update
+- [ ] `init` where `--parent-dir` changes the directory where the initialization occurs
+- [ ] `init` where `--cfg`, `--dir`, `--payloads`, `--responses`, `--parent-dir` are all used simotaneously
+    - `.gitignore` should exist without any target lines

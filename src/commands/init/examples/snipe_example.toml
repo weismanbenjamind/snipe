@@ -36,5 +36,5 @@ method = "GET"
 url = "https://httpbin.org/anything"
 auth = { scheme = "basic", username = "a_username", password = "a_password" }
 headers = { Content-Type = "application/json", Accept = "application/json" }
-payload = { example = { payload = "inline"} }
+payload = { example = { payload = "inline" } }
 output_cfg = { format = "json", pretty = true }
