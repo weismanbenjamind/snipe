@@ -62,9 +62,6 @@ fn init_subdir(subdir: &Path, description: &'static str) -> Result<(), InitError
 
 // None on a .parent() means we're in absolute root or relative root
 // In this case the path in question is a file - no need to create directories
-// TODO - .snipe_targets.toml needs to write request/response directory variables relative to toml file
-// * This function needs the name of .snipe dir so .snipe_dir/payloads can be written to the .snipe_targets file
-// * This function needs the name of .snipe dir so .snipe_dir/responses can be written to the .snipe_targets file
 fn init_snipe_cfg(
     cfg: &Path,
     snipe_dir_root: &Path,
