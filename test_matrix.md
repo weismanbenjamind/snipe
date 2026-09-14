@@ -114,7 +114,7 @@
 - [x] `init` where `--dir` changes the name of the snipe directory
 - [x] `init` where `--payloads` changes the name of the payloads subdir
 - [x] `init` where `--responses` change the name of the responses subdir
-- [ ] `init` where `--skip-gitignore` skips the `.gitignore` update
+- [x] `init` where `--skip-gitignore` skips the `.gitignore` update
 - [x] `init` where `--parent-dir` changes the directory where the initialization occurs
 - [x] `init` where `--cfg`, `--dir`, `--payloads`, `--responses`, `--parent-dir` are all used simotaneously
     - `--parent-dir` should not exist
