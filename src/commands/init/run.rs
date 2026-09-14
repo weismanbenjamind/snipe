@@ -13,30 +13,29 @@ use crate::{
 };
 
 pub(crate) fn run_init_cmd(args: InitArgs) -> SnipeResult {
-    if args.cfg.exists() && !args.force {
+    let (cfg, snipe_dir) = match &args.parent_dir {
+        Some(parent) => (&parent.join(&args.cfg), &parent.join(&args.dir)),
+        None => (&args.cfg, &args.dir),
+    };
+
+    if cfg.exists() && !args.force {
         let msg = format!(
             "Snipe config file already exists at {}. Pass --force (-f) to overwite this file.",
-            args.cfg.display(),
+            cfg.display(),
         );
         return Ok(SuccessMsg(msg));
     }
 
-    let snipe_dir = match &args.parent_dir {
-        Some(parent) => parent.join(&args.dir),
-        None => args.dir,
-    };
-
-    init_snipe_dir(&snipe_dir)?;
-
     let payloads_dir = snipe_dir.join(&args.payloads);
     let responses_dir = snipe_dir.join(&args.responses);
 
+    init_snipe_dir(snipe_dir)?;
     init_request_paylaods_dir(&payloads_dir)?;
     init_responses_dir(&responses_dir)?;
-    init_snipe_cfg(&args.cfg, &payloads_dir, &responses_dir)?;
+    init_snipe_cfg(cfg, &args.dir, &args.payloads, &args.responses)?;
 
     if !args.skip_gitignore {
-        update_gitignore(args.parent_dir.as_deref(), &snipe_dir, &args.cfg)?;
+        update_gitignore(args.parent_dir.as_deref(), snipe_dir, cfg)?;
     }
 
     Ok(SuccessMsg("Successfully initialized snipe.".to_string()))
@@ -63,12 +62,24 @@ fn init_subdir(subdir: &Path, description: &'static str) -> Result<(), InitError
 
 // None on a .parent() means we're in absolute root or relative root
 // In this case the path in question is a file - no need to create directories
-fn init_snipe_cfg(cfg: &Path, payloads_dir: &Path, responses_dir: &Path) -> Result<(), InitError> {
+// TODO - .snipe_targets.toml needs to write request/response directory variables relative to toml file
+// * This function needs the name of .snipe dir so .snipe_dir/payloads can be written to the .snipe_targets file
+// * This function needs the name of .snipe dir so .snipe_dir/responses can be written to the .snipe_targets file
+fn init_snipe_cfg(
+    cfg: &Path,
+    snipe_dir_root: &Path,
+    payloads_dir: &Path,
+    responses_dir: &Path,
+) -> Result<(), InitError> {
     if let Some(parent) = cfg.parent() {
         std::fs::create_dir_all(parent)
             .map_err(|e| InitError::build_dir_creation("parent dirs to config", parent.into(), e))?
     }
-    write_example_snipe_cfg(cfg, payloads_dir, responses_dir)
+
+    let payloads_relative_dir = snipe_dir_root.join(payloads_dir);
+    let responses_relative_dir = snipe_dir_root.join(responses_dir);
+
+    write_example_snipe_cfg(cfg, &payloads_relative_dir, &responses_relative_dir)
 }
 
 fn update_gitignore(parent: Option<&Path>, snipe_dir: &Path, cfg: &Path) -> Result<(), InitError> {

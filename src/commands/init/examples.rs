@@ -28,18 +28,18 @@ pub(super) fn write_example_payload(payloads_dir: &Path) -> Result<(), InitError
 
 pub(super) fn write_example_snipe_cfg(
     cfg: &Path,
-    payloads_dir: &Path,
-    responses_dir: &Path,
+    payloads_relative_dir: &Path,
+    responses_relative_dir: &Path,
 ) -> Result<(), InitError> {
-    let contents = build_example_snipe_cfg(payloads_dir, responses_dir);
+    let contents = build_example_snipe_cfg(payloads_relative_dir, responses_relative_dir);
 
     std::fs::write(cfg, &contents)
         .map_err(|e| InitError::build_write("template config file", cfg.into(), e))
 }
 
-fn build_example_snipe_cfg(payloads_dir: &Path, responses_dir: &Path) -> String {
-    let payloads_dir = path_to_string(payloads_dir);
-    let responses_dir = path_to_string(responses_dir);
+fn build_example_snipe_cfg(payloads_relative_dir: &Path, responses_relative_dir: &Path) -> String {
+    let payloads_dir = path_to_string(payloads_relative_dir);
+    let responses_dir = path_to_string(responses_relative_dir);
 
     ReplaceableString::new(SNIPE_CFG_TEMPLATE)
         .replace(PAYLOADS_DELIMITER, &payloads_dir, "payloads directory")

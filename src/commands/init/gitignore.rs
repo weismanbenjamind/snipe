@@ -25,13 +25,22 @@ impl GitIgnore<Uninitialized> {
     }
 
     pub(super) fn initialize(mut self) -> GitIgnore<Initialized> {
-        if !self.contents.ends_with("\n") {
+        let mut write_snipe_comment = true;
+
+        if self.contents.ends_with("\n# snipe\n") {
+            write_snipe_comment = false;
+        } else if self.contents.ends_with("\n# snipe") {
+            self.contents.push('\n');
+            write_snipe_comment = false;
+        } else if !self.contents.ends_with("\n") {
             self.contents.push_str("\n\n");
         } else if self.contents.ends_with("\n") && !self.contents.ends_with("\n\n") {
             self.contents.push('\n');
         }
 
-        self.contents.push_str("# snipe\n");
+        if write_snipe_comment {
+            self.contents.push_str("# snipe\n");
+        }
 
         GitIgnore::<Initialized> {
             contents: self.contents,
