@@ -1,3 +1,5 @@
+# Test cases
+
 - [x] Raw `init` initializes correctly
     - `.snipe/` does not exist
     - `.snipe_targets.toml` does not exist
@@ -87,6 +89,15 @@
     - `.snipe/` does not exist
     - `.snipe_targets.toml` does not exist
     - `.gitignore` does not contain target updates
+- [ ] Raw `init`where `.gitignore` is empty
+    - `.snipe/` does not exist
+    - `.snipe_targets.toml` does not exist
+- [ ] Raw `init`where `.gitignore` contains only a single newline
+    - `.snipe/` does not exist
+    - `.snipe_targets.toml` does not exist
+- [ ] Raw `init`where `.gitignore` contains only two newlines
+    - `.snipe/` does not exist
+    - `.snipe_targets.toml` does not exist
 - [x] Raw `init` where .gitignore contains a target line to be added but that line is a substring of a different line
     - `.snipe/` does not exist
     - `.snipe_targets.toml` does not exist
@@ -102,12 +113,21 @@
 - [x] `init` where `--cfg` flag changes the name of the config produced
 - [x] `init` where `--dir` changes the name of the snipe directory
 - [x] `init` where `--payloads` changes the name of the payloads subdir
-- [ ] `init` where `--responses` change the name of the responses subdir
+- [x] `init` where `--responses` change the name of the responses subdir
 - [ ] `init` where `--skip-gitignore` skips the `.gitignore` update
 - [x] `init` where `--parent-dir` changes the directory where the initialization occurs
-- [ ] `init` where `--cfg`, `--dir`, `--payloads`, `--responses`, `--parent-dir` are all used simotaneously
+- [x] `init` where `--cfg`, `--dir`, `--payloads`, `--responses`, `--parent-dir` are all used simotaneously
     - `--parent-dir` should not exist
     - `.gitignore` should exist without any target lines
-- [ ] `init` where `--cfg`, `--dir`, `--payloads`, `--responses`, `--parent-dir` are all used simotaneously
+- [x] `init` where `--cfg`, `--dir`, `--payloads`, `--responses`, `--parent-dir` are all used simotaneously
     - `--parent-dir` should exist
     - `.gitignore` should exist without any target lines
+
+# Updates needed
+
+- When .gitignore is empty or only contains a newline - do not write initial newline - should just say
+```toml
+# snipe
+.snipe_targets.toml
+/.snipe
+```

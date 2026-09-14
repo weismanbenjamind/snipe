@@ -1,9 +1,9 @@
 repos:
   - repo: local
     hooks:
-      - id: format
-        name: Format
-        entry: ./scripts/format.sh
+      - id: format_nightly
+        name: Format Nightly
+        entry: ./scripts/format_nightly.sh
         language: script
         pass_filenames: false
 
