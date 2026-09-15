@@ -27,7 +27,9 @@ impl GitIgnore<Uninitialized> {
     pub(super) fn initialize(mut self) -> GitIgnore<Initialized> {
         let mut write_snipe_comment = true;
 
-        if self.contents.ends_with("\n# snipe\n") {
+        if self.contents.trim().is_empty() {
+            self.contents = String::new();
+        } else if self.contents.ends_with("\n# snipe\n") {
             write_snipe_comment = false;
         } else if self.contents.ends_with("\n# snipe") {
             self.contents.push('\n');
@@ -52,7 +54,7 @@ impl GitIgnore<Uninitialized> {
 
 impl GitIgnore<Initialized> {
     pub(super) fn try_write_line(&mut self, line: &str) {
-        let trimmed = line.trim();
+        let trimmed = line.trim_end_matches("\n").trim_start_matches("\n");
         let maybe_present_line = format!("\n{trimmed}\n");
         if !self.contents.contains(&maybe_present_line) {
             self.contents.push_str(trimmed);
