@@ -12,12 +12,12 @@ use crate::{
     inputs::InitArgs,
 };
 
-enum RootDirs<'a> {
+enum ResolvedPaths<'a> {
     HasParent { cfg: PathBuf, snipe_dir: PathBuf },
     NoParent { cfg: &'a Path, snipe_dir: &'a Path },
 }
 
-impl<'a> RootDirs<'a> {
+impl<'a> ResolvedPaths<'a> {
     fn from_parent_opt(cfg: &'a Path, dir: &'a Path, parent: Option<&Path>) -> Self {
         match parent {
             Some(p) => Self::HasParent {
@@ -31,36 +31,50 @@ impl<'a> RootDirs<'a> {
         }
     }
 
-    fn paths(&self) -> (&Path, &Path) {
+    fn cfg(&self) -> &Path {
         match self {
-            Self::HasParent { cfg, snipe_dir } => (cfg, snipe_dir),
-            Self::NoParent { cfg, snipe_dir } => (cfg, snipe_dir),
+            Self::HasParent { cfg, .. } => cfg,
+            Self::NoParent { cfg, .. } => cfg,
+        }
+    }
+
+    fn snipe_dir(&self) -> &Path {
+        match self {
+            Self::HasParent { snipe_dir, .. } => snipe_dir,
+            Self::NoParent { snipe_dir, .. } => snipe_dir,
         }
     }
 }
 
 pub(crate) fn run_init_cmd(args: InitArgs) -> SnipeResult {
-    let root_dirs = RootDirs::from_parent_opt(args.cfg(), args.dir(), args.parent_dir());
-    let (cfg, snipe_dir) = root_dirs.paths();
+    let resolved_paths =
+        ResolvedPaths::from_parent_opt(args.cfg(), args.snipe_dir(), args.parent_dir());
+    let resolved_cfg = resolved_paths.cfg();
+    let resolved_snipe_dir = resolved_paths.snipe_dir();
 
-    if cfg.exists() && !args.force() {
+    if resolved_cfg.exists() && !args.force() {
         let msg = format!(
             "Snipe config file already exists at {}. Pass --force (-f) to overwite this file.",
-            cfg.display(),
+            resolved_cfg.display(),
         );
         return Ok(SuccessMsg(msg));
     }
 
-    let payloads_dir = snipe_dir.join(args.payloads());
-    let responses_dir = snipe_dir.join(args.responses());
+    let payloads_dir = resolved_snipe_dir.join(args.payloads());
+    let responses_dir = resolved_snipe_dir.join(args.responses());
 
-    init_snipe_dir(snipe_dir)?;
+    init_snipe_dir(resolved_snipe_dir)?;
     init_request_paylaods_dir(&payloads_dir)?;
     init_responses_dir(&responses_dir)?;
-    init_snipe_cfg(cfg, args.dir(), args.payloads(), args.responses())?;
+    init_snipe_cfg(
+        resolved_cfg,
+        args.snipe_dir(),
+        args.payloads(),
+        args.responses(),
+    )?;
 
     if !args.skip_gitignore() {
-        update_gitignore(args.parent_dir(), snipe_dir, cfg)?;
+        update_gitignore(args.parent_dir(), resolved_snipe_dir, resolved_cfg)?;
     }
 
     Ok(SuccessMsg("Successfully initialized snipe.".to_string()))

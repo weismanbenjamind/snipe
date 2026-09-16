@@ -15,12 +15,12 @@ pub(super) struct RawInitArgs {
     pub(crate) cfg: PathBuf,
 
     #[arg(
-        short,
+        short = 'd',
         long,
         default_value = ".snipe",
         help = "Directory for snipe related inputs, outputs, and configurations"
     )]
-    pub(crate) dir: PathBuf,
+    pub(crate) snipe_dir: PathBuf,
 
     #[arg(
         short,
@@ -81,7 +81,7 @@ pub enum InitArgsError {
 #[derive(Clone, Debug)]
 pub(crate) struct InitArgs {
     cfg: PathBuf,
-    dir: PathBuf,
+    snipe_dir: PathBuf,
     payloads: PathBuf,
     responses: PathBuf,
     skip_gitignore: bool,
@@ -94,8 +94,8 @@ impl InitArgs {
         &self.cfg
     }
 
-    pub(crate) fn dir(&self) -> &Path {
-        &self.dir
+    pub(crate) fn snipe_dir(&self) -> &Path {
+        &self.snipe_dir
     }
 
     pub(crate) fn payloads(&self) -> &Path {
@@ -124,7 +124,7 @@ impl TryFrom<RawInitArgs> for InitArgs {
     fn try_from(value: RawInitArgs) -> Result<Self, InitArgsError> {
         if value.parent_dir.as_deref().is_some_and(|p| p.is_absolute()) {
             validate_non_absolute_path(&value.cfg, "--cfg", "-c")?;
-            validate_non_absolute_path(&value.dir, "--dir", "-d")?;
+            validate_non_absolute_path(&value.snipe_dir, "--snipe-dir", "-d")?;
             validate_non_absolute_path(&value.payloads, "--payloads", "-p")?;
             validate_non_absolute_path(&value.responses, "--responses", "-r")?;
         }
@@ -134,7 +134,7 @@ impl TryFrom<RawInitArgs> for InitArgs {
 
         Ok(Self {
             cfg: value.cfg,
-            dir: value.dir,
+            snipe_dir: value.snipe_dir,
             payloads: value.payloads,
             responses: value.responses,
             skip_gitignore: value.skip_gitignore,
