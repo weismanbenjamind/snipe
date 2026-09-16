@@ -65,16 +65,23 @@ pub(super) struct RawInitArgs {
 
 #[derive(Clone, Debug, Error)]
 pub enum InitArgsError {
-    #[error("Cannot specify abosulte path for --parent-dir (-a) and {long_arg} ({short_arg})")]
+    #[error(
+        "Cannot specify abosulte path for --parent-dir (-a) and {long_arg} ({short_arg}). Found --parent-dir={parent_dir} and {long_arg}={arg_path}"
+    )]
     AbosolutePathWithParent {
         long_arg: &'static str,
         short_arg: &'static str,
+        parent_dir: PathBuf,
+        arg_path: PathBuf,
     },
 
-    #[error("{long_arg} ({short_arg}) must be a relative path")]
+    #[error(
+        "{long_arg} ({short_arg}) must be a relative path. Expected to be a path relative to the --snipe-dir (-d) option. Found {path}"
+    )]
     NonRelativePath {
         long_arg: &'static str,
         short_arg: &'static str,
+        path: PathBuf,
     },
 }
 
@@ -122,11 +129,14 @@ impl InitArgs {
 impl TryFrom<RawInitArgs> for InitArgs {
     type Error = InitArgsError;
     fn try_from(value: RawInitArgs) -> Result<Self, InitArgsError> {
-        if value.parent_dir.as_deref().is_some_and(|p| p.is_absolute()) {
-            validate_non_absolute_path(&value.cfg, "--cfg", "-c")?;
-            validate_non_absolute_path(&value.snipe_dir, "--snipe-dir", "-d")?;
-            validate_non_absolute_path(&value.payloads, "--payloads", "-p")?;
-            validate_non_absolute_path(&value.responses, "--responses", "-r")?;
+        if let Some(parent_dir) = (value.parent_dir.as_deref())
+            && parent_dir.is_absolute()
+        {
+            let validator = ParentDirValidator::new(parent_dir);
+            validator.validate_non_absolute_path(&value.cfg, "--cfg", "-c")?;
+            validator.validate_non_absolute_path(&value.snipe_dir, "--snipe-dir", "-d")?;
+            validator.validate_non_absolute_path(&value.payloads, "--payloads", "-p")?;
+            validator.validate_non_absolute_path(&value.responses, "--responses", "-r")?;
         }
 
         validate_path_subdir(&value.payloads, "--payloads", "-p")?;
@@ -144,19 +154,32 @@ impl TryFrom<RawInitArgs> for InitArgs {
     }
 }
 
-fn validate_non_absolute_path(
-    path: &Path,
-    long_arg: &'static str,
-    short_arg: &'static str,
-) -> Result<(), InitArgsError> {
-    if path.is_absolute() {
-        return Err(InitArgsError::AbosolutePathWithParent {
-            long_arg,
-            short_arg,
-        });
+struct ParentDirValidator<'a> {
+    parent_dir: &'a Path,
+}
+
+impl<'a> ParentDirValidator<'a> {
+    fn new(parent_dir: &'a Path) -> Self {
+        Self { parent_dir }
     }
 
-    Ok(())
+    fn validate_non_absolute_path(
+        &self,
+        path: &Path,
+        long_arg: &'static str,
+        short_arg: &'static str,
+    ) -> Result<(), InitArgsError> {
+        if path.is_absolute() {
+            return Err(InitArgsError::AbosolutePathWithParent {
+                long_arg,
+                short_arg,
+                parent_dir: self.parent_dir.into(),
+                arg_path: path.into(),
+            });
+        }
+
+        Ok(())
+    }
 }
 
 fn validate_path_subdir(
@@ -168,6 +191,7 @@ fn validate_path_subdir(
         return Err(InitArgsError::NonRelativePath {
             long_arg,
             short_arg,
+            path: path.into(),
         });
     }
 
