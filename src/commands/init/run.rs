@@ -1,6 +1,5 @@
 use std::path::{Path, PathBuf};
 
-use bon::Builder;
 use log::warn;
 
 use super::{
@@ -13,34 +12,36 @@ use crate::{
     inputs::InitArgs,
 };
 
-#[derive(Clone, Debug, Builder)]
-struct RootDir<'a> {
-    value: Option<PathBuf>,
-    default: &'a Path,
+enum RootDirs<'a> {
+    HasParent { cfg: PathBuf, snipe_dir: PathBuf },
+    NoParent { cfg: &'a Path, snipe_dir: &'a Path },
 }
 
-impl<'a> RootDir<'a> {
-    fn from_parent_opt(dir: &'a Path, parent: Option<&Path>) -> RootDir<'a> {
-        Self::builder()
-            .maybe_value(parent.map(|p| p.join(dir)))
-            .default(dir)
-            .build()
+impl<'a> RootDirs<'a> {
+    fn from_parent_opt(cfg: &'a Path, dir: &'a Path, parent: Option<&Path>) -> Self {
+        match parent {
+            Some(p) => Self::HasParent {
+                cfg: p.join(cfg),
+                snipe_dir: p.join(dir),
+            },
+            None => Self::NoParent {
+                cfg,
+                snipe_dir: dir,
+            },
+        }
     }
-}
 
-impl<'a> AsRef<Path> for RootDir<'a> {
-    fn as_ref(&self) -> &Path {
-        self.value.as_deref().unwrap_or(self.default)
+    fn paths(&self) -> (&Path, &Path) {
+        match self {
+            Self::HasParent { cfg, snipe_dir } => (cfg, snipe_dir),
+            Self::NoParent { cfg, snipe_dir } => (cfg, snipe_dir),
+        }
     }
 }
 
 pub(crate) fn run_init_cmd(args: InitArgs) -> SnipeResult {
-    let maybe_parent_dir = args.parent_dir();
-    let cfg = RootDir::from_parent_opt(args.cfg(), maybe_parent_dir);
-    let snipe_dir = RootDir::from_parent_opt(args.dir(), maybe_parent_dir);
-
-    let cfg: &Path = cfg.as_ref();
-    let snipe_dir: &Path = snipe_dir.as_ref();
+    let root_dirs = RootDirs::from_parent_opt(args.cfg(), args.dir(), args.parent_dir());
+    let (cfg, snipe_dir) = root_dirs.paths();
 
     if cfg.exists() && !args.force() {
         let msg = format!(
