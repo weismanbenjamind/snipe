@@ -1,6 +1,14 @@
 use clap::{ArgAction, Parser, Subcommand};
+use thiserror::Error;
 
-use crate::inputs::{InitArgs, ListArgs, RawListArgs, RawShootArgs, ShootArgs};
+use super::init::InitArgsError;
+use crate::inputs::{InitArgs, ListArgs, RawInitArgs, RawListArgs, RawShootArgs, ShootArgs};
+
+#[derive(Debug, Clone, Error)]
+pub enum CLIError {
+    #[error("{0}")]
+    InitArgsConversion(#[from] InitArgsError),
+}
 
 #[derive(Parser, Debug, Clone)]
 #[command(
@@ -16,17 +24,18 @@ pub struct RawSnipeCLIArgs {
     verbose: u8,
 }
 
-pub struct SnipeCLIArgs {
+pub(crate) struct SnipeCLIArgs {
     pub(crate) command: Command,
     pub(crate) verbose: u8,
 }
 
-impl From<RawSnipeCLIArgs> for SnipeCLIArgs {
-    fn from(value: RawSnipeCLIArgs) -> Self {
-        Self {
-            command: value.command.into(),
+impl TryFrom<RawSnipeCLIArgs> for SnipeCLIArgs {
+    type Error = CLIError;
+    fn try_from(value: RawSnipeCLIArgs) -> Result<Self, Self::Error> {
+        Ok(Self {
+            command: value.command.try_into()?,
             verbose: value.verbose,
-        }
+        })
     }
 }
 
@@ -34,7 +43,7 @@ impl From<RawSnipeCLIArgs> for SnipeCLIArgs {
 enum RawCommand {
     List(RawListArgs),
     Shoot(RawShootArgs),
-    Init(InitArgs),
+    Init(RawInitArgs),
 }
 
 pub(crate) enum Command {
@@ -43,12 +52,15 @@ pub(crate) enum Command {
     Init(InitArgs),
 }
 
-impl From<RawCommand> for Command {
-    fn from(value: RawCommand) -> Self {
-        match value {
+impl TryFrom<RawCommand> for Command {
+    type Error = CLIError;
+    fn try_from(value: RawCommand) -> Result<Self, Self::Error> {
+        let cmd = match value {
             RawCommand::List(args) => Self::List(args.into()),
             RawCommand::Shoot(args) => Self::Shoot(args.into()),
-            RawCommand::Init(args) => Self::Init(args),
-        }
+            RawCommand::Init(args) => Self::Init(args.try_into()?),
+        };
+
+        Ok(cmd)
     }
 }

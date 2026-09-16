@@ -1,10 +1,11 @@
 use std::path::{Path, PathBuf};
 
 use clap::Args;
+use thiserror::Error;
 
 #[derive(Args, Debug, Clone)]
 #[command(about = "Initialize a repo for use with snipe")]
-pub(crate) struct InitArgs {
+pub(super) struct RawInitArgs {
     #[arg(
         short,
         long,
@@ -62,8 +63,23 @@ pub(crate) struct InitArgs {
     pub(crate) force: bool,
 }
 
+#[derive(Clone, Debug, Error)]
+pub enum InitArgsError {
+    #[error("Cannot specify abosulte path for --parent-dir (-a) and {long_arg} ({short_arg})")]
+    AbosolutePathWithParent {
+        long_arg: &'static str,
+        short_arg: &'static str,
+    },
+
+    #[error("{long_arg} ({short_arg}) must be a relative path")]
+    NonRelativePath {
+        long_arg: &'static str,
+        short_arg: &'static str,
+    },
+}
+
 #[derive(Clone, Debug)]
-struct _ValidatedInitArgs {
+pub(crate) struct InitArgs {
     cfg: PathBuf,
     dir: PathBuf,
     payloads: PathBuf,
@@ -73,21 +89,50 @@ struct _ValidatedInitArgs {
     force: bool,
 }
 
-impl From<InitArgs> for _ValidatedInitArgs {
-    fn from(value: InitArgs) -> Self {
+impl InitArgs {
+    pub(crate) fn cfg(&self) -> &Path {
+        &self.cfg
+    }
+
+    pub(crate) fn dir(&self) -> &Path {
+        &self.dir
+    }
+
+    pub(crate) fn payloads(&self) -> &Path {
+        &self.payloads
+    }
+
+    pub(crate) fn responses(&self) -> &Path {
+        &self.responses
+    }
+
+    pub(crate) fn skip_gitignore(&self) -> bool {
+        self.skip_gitignore
+    }
+
+    pub(crate) fn parent_dir(&self) -> Option<&Path> {
+        self.parent_dir.as_deref()
+    }
+
+    pub(crate) fn force(&self) -> bool {
+        self.force
+    }
+}
+
+impl TryFrom<RawInitArgs> for InitArgs {
+    type Error = InitArgsError;
+    fn try_from(value: RawInitArgs) -> Result<Self, InitArgsError> {
         if value.parent_dir.as_deref().is_some_and(|p| p.is_absolute()) {
-            _validate_args_for_absolute_parent(
-                &value.cfg,
-                &value.dir,
-                &value.payloads,
-                &value.responses,
-            );
+            validate_non_absolute_path(&value.cfg, "--cfg", "-c")?;
+            validate_non_absolute_path(&value.dir, "--dir", "-d")?;
+            validate_non_absolute_path(&value.payloads, "--payloads", "-p")?;
+            validate_non_absolute_path(&value.responses, "--responses", "-r")?;
         }
 
-        _validate_path_subdir(&value.payloads, "--payloads", "-p");
-        _validate_path_subdir(&value.responses, "--responses", "-r");
+        validate_path_subdir(&value.payloads, "--payloads", "-p")?;
+        validate_path_subdir(&value.responses, "--responses", "-r")?;
 
-        Self {
+        Ok(Self {
             cfg: value.cfg,
             dir: value.dir,
             payloads: value.payloads,
@@ -95,31 +140,36 @@ impl From<InitArgs> for _ValidatedInitArgs {
             skip_gitignore: value.skip_gitignore,
             parent_dir: value.parent_dir,
             force: value.force,
-        }
+        })
     }
 }
 
-fn _validate_args_for_absolute_parent(cfg: &Path, dir: &Path, payloads: &Path, responses: &Path) {
-    if cfg.is_absolute() {
-        panic!("Cannot specify abosolute path for --parent-dir (-a) and --cfg (-c)")
+fn validate_non_absolute_path(
+    path: &Path,
+    long_arg: &'static str,
+    short_arg: &'static str,
+) -> Result<(), InitArgsError> {
+    if path.is_absolute() {
+        return Err(InitArgsError::AbosolutePathWithParent {
+            long_arg,
+            short_arg,
+        });
     }
 
-    if dir.is_absolute() {
-        panic!("Cannot specify absolute path for --parent-dir (-a) and --dir (-d)")
-    }
-
-    if payloads.is_absolute() {
-        panic!("Cannot specify absolute path for --parent-dir (-a) and --paylaods (-p)")
-    }
-
-    if responses.is_absolute() {
-        panic!("Cannot specify absolute path for --parent-dir (-a) and --responses (-r)")
-    }
+    Ok(())
 }
 
-fn _validate_path_subdir(path: &Path, long_arg: &str, short_arg: &str) {
+fn validate_path_subdir(
+    path: &Path,
+    long_arg: &'static str,
+    short_arg: &'static str,
+) -> Result<(), InitArgsError> {
     if !path.is_relative() {
-        let msg = format!("{long_arg} ({short_arg}) must be a relative path");
-        panic!("{msg}")
+        return Err(InitArgsError::NonRelativePath {
+            long_arg,
+            short_arg,
+        });
     }
+
+    Ok(())
 }

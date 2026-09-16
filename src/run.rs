@@ -3,6 +3,7 @@ use std::env;
 use tracing_subscriber::{EnvFilter, fmt as tracing_subscriber_fmt};
 
 use crate::{
+    RawSnipeCLIArgs,
     commands::{SnipeResult, run_init_cmd, run_list_targets_cmd, run_shoot_cmd},
     errors::RunError,
     inputs::{Command, SnipeCLIArgs},
@@ -13,7 +14,9 @@ const WARN: &str = "warn";
 const INFO: &str = "info";
 const DEBUG: &str = "debug";
 
-pub async fn run_cli(snipe_cli_args: SnipeCLIArgs) -> SnipeResult {
+pub async fn run_cli(raw_args: RawSnipeCLIArgs) -> SnipeResult {
+    let snipe_cli_args = SnipeCLIArgs::try_from(raw_args)?;
+
     set_vebosity(snipe_cli_args.verbose)?;
 
     match snipe_cli_args.command {

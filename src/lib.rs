@@ -8,8 +8,5 @@ mod response;
 mod run;
 mod var_replacement;
 
+pub use inputs::RawSnipeCLIArgs;
 pub use run::run_cli;
-
-pub mod args {
-    pub use super::inputs::{RawSnipeCLIArgs, SnipeCLIArgs};
-}

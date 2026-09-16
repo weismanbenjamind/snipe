@@ -8,10 +8,11 @@ mod output_file;
 mod pretty;
 mod shoot;
 
-pub(crate) use cli::Command;
-pub use cli::{RawSnipeCLIArgs, SnipeCLIArgs};
+pub use cli::RawSnipeCLIArgs;
+pub(crate) use cli::{CLIError, Command, SnipeCLIArgs};
 pub(crate) use format::{RawFormat, ValidatedFormat};
 pub(crate) use grab::{RawGrab, ValidatedGrab};
 pub(crate) use init::InitArgs;
+use init::RawInitArgs;
 pub(crate) use list::{ListArgs, RawListArgs};
 pub(crate) use shoot::{RawShootArgs, ShootArgs};

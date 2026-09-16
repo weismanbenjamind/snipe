@@ -1,5 +1,6 @@
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
+use bon::Builder;
 use log::warn;
 
 use super::{
@@ -12,13 +13,36 @@ use crate::{
     inputs::InitArgs,
 };
 
-pub(crate) fn run_init_cmd(args: InitArgs) -> SnipeResult {
-    let (cfg, snipe_dir) = match &args.parent_dir {
-        Some(parent) => (&parent.join(&args.cfg), &parent.join(&args.dir)),
-        None => (&args.cfg, &args.dir),
-    };
+#[derive(Clone, Debug, Builder)]
+struct RootDir<'a> {
+    value: Option<PathBuf>,
+    default: &'a Path,
+}
 
-    if cfg.exists() && !args.force {
+impl<'a> RootDir<'a> {
+    fn from_parent_opt(dir: &'a Path, parent: Option<&Path>) -> RootDir<'a> {
+        Self::builder()
+            .maybe_value(parent.map(|p| p.join(dir)))
+            .default(dir)
+            .build()
+    }
+}
+
+impl<'a> AsRef<Path> for RootDir<'a> {
+    fn as_ref(&self) -> &Path {
+        self.value.as_deref().unwrap_or(self.default)
+    }
+}
+
+pub(crate) fn run_init_cmd(args: InitArgs) -> SnipeResult {
+    let maybe_parent_dir = args.parent_dir();
+    let cfg = RootDir::from_parent_opt(args.cfg(), maybe_parent_dir);
+    let snipe_dir = RootDir::from_parent_opt(args.dir(), maybe_parent_dir);
+
+    let cfg: &Path = cfg.as_ref();
+    let snipe_dir: &Path = snipe_dir.as_ref();
+
+    if cfg.exists() && !args.force() {
         let msg = format!(
             "Snipe config file already exists at {}. Pass --force (-f) to overwite this file.",
             cfg.display(),
@@ -26,16 +50,16 @@ pub(crate) fn run_init_cmd(args: InitArgs) -> SnipeResult {
         return Ok(SuccessMsg(msg));
     }
 
-    let payloads_dir = snipe_dir.join(&args.payloads);
-    let responses_dir = snipe_dir.join(&args.responses);
+    let payloads_dir = snipe_dir.join(args.payloads());
+    let responses_dir = snipe_dir.join(args.responses());
 
     init_snipe_dir(snipe_dir)?;
     init_request_paylaods_dir(&payloads_dir)?;
     init_responses_dir(&responses_dir)?;
-    init_snipe_cfg(cfg, &args.dir, &args.payloads, &args.responses)?;
+    init_snipe_cfg(cfg, args.dir(), args.payloads(), args.responses())?;
 
-    if !args.skip_gitignore {
-        update_gitignore(args.parent_dir.as_deref(), snipe_dir, cfg)?;
+    if !args.skip_gitignore() {
+        update_gitignore(args.parent_dir(), snipe_dir, cfg)?;
     }
 
     Ok(SuccessMsg("Successfully initialized snipe.".to_string()))
