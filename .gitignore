@@ -8,5 +8,3 @@ TODO
 # snipe
 /.snipe
 .snipe_targets.toml
-
-test_matrix.md
