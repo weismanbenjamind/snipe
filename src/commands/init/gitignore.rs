@@ -29,9 +29,8 @@ impl GitIgnore<Uninitialized> {
 
         if self.contents.trim().is_empty() {
             self.contents = String::new();
-        } else if self.contents.ends_with("\n# snipe\n") {
-            write_snipe_comment = false;
-        } else if self.contents.ends_with("\n# snipe") {
+        } else if self.contents.trim_end_matches('\n').ends_with("\n# snipe") {
+            self.contents = self.contents.trim_end_matches('\n').to_string();
             self.contents.push('\n');
             write_snipe_comment = false;
         } else if !self.contents.ends_with("\n") {
