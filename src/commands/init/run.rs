@@ -47,8 +47,12 @@ impl<'a> ResolvedPaths<'a> {
 }
 
 pub(crate) fn run_init_cmd(args: InitArgs) -> SnipeResult {
+    let parent_dir = args.parent_dir();
+    let snipe_dir_relative = args.snipe_dir();
+    let cfg_relative = args.cfg();
+
     let resolved_paths =
-        ResolvedPaths::from_parent_opt(args.cfg(), args.snipe_dir(), args.parent_dir());
+        ResolvedPaths::from_parent_opt(cfg_relative, snipe_dir_relative, parent_dir);
     let resolved_cfg = resolved_paths.cfg();
     let resolved_snipe_dir = resolved_paths.snipe_dir();
 
@@ -68,13 +72,13 @@ pub(crate) fn run_init_cmd(args: InitArgs) -> SnipeResult {
     init_responses_dir(&responses_dir)?;
     init_snipe_cfg(
         resolved_cfg,
-        args.snipe_dir(),
+        snipe_dir_relative,
         args.payloads(),
         args.responses(),
     )?;
 
     if !args.skip_gitignore() {
-        update_gitignore(args.parent_dir(), resolved_snipe_dir, resolved_cfg)?;
+        update_gitignore(parent_dir, snipe_dir_relative, cfg_relative)?;
     }
 
     Ok(SuccessMsg("Successfully initialized snipe.".to_string()))
@@ -118,17 +122,22 @@ fn init_snipe_cfg(
     write_example_snipe_cfg(cfg, &payloads_relative_dir, &responses_relative_dir)
 }
 
+const GITIGNORE: &str = ".gitignore";
+
 fn update_gitignore(parent: Option<&Path>, snipe_dir: &Path, cfg: &Path) -> Result<(), InitError> {
-    let gitignore_path = parent.unwrap_or_else(|| Path::new(".")).join(".gitignore");
+    let gitignore_path = match parent {
+        Some(p) => p.join(GITIGNORE),
+        None => PathBuf::from(GITIGNORE),
+    };
 
     match (gitignore_path.exists(), gitignore_path.is_file()) {
         (true, true) => write_gitignore_update(&gitignore_path, snipe_dir, cfg)?,
         (false, true) | (false, false) => warn!(
-            ".gitignore at path {} does not exist. Skipping update.",
+            "{} does not exist. Skipping update.",
             gitignore_path.display()
         ),
         (true, false) => warn!(
-            ".gitignore at path {} is a directory. Skipping update.",
+            "{} is a directory. Skipping update.",
             gitignore_path.display()
         ),
     }
