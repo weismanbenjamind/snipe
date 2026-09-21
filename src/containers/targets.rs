@@ -47,10 +47,6 @@ impl Targets {
     pub(crate) fn get_target(&self, target: &str) -> Option<&Target> {
         self.targets.get(target)
     }
-
-    pub(crate) fn as_map(&self) -> &HashMap<String, Target> {
-        &self.targets
-    }
 }
 
 type GlobalReplaceableTargetsType = HashMap<String, GlobalReplaceableTarget>;

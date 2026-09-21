@@ -1,9 +1,35 @@
-use std::{error::Error, fmt::Write};
+use std::{
+    collections::HashMap,
+    error::Error,
+    fmt::Write,
+    path::{Path, PathBuf},
+};
 
 use log::info;
+use serde::Deserialize;
+use thiserror::Error;
 
 use super::{SnipeResult, SuccessMsg};
-use crate::{cfg_resolver::CfgResolver, containers::Targets, errors::RunError, inputs::ListArgs};
+use crate::{cfg_resolver::CfgResolver, errors::RunError, inputs::ListArgs};
+
+#[derive(Debug, Error)]
+pub enum ListError {
+    #[error("Failed to read targets file at {path}. Error: {source}")]
+    FileRead {
+        path: PathBuf,
+
+        #[source]
+        source: std::io::Error,
+    },
+
+    #[error("Failed to deserailze targets file at {path}. Error: {source}")]
+    Deserialize {
+        path: PathBuf,
+
+        #[source]
+        source: toml::de::Error,
+    },
+}
 
 pub(crate) fn run_list_targets_cmd(list_args: ListArgs) -> SnipeResult {
     info!("Generating target list.");
@@ -11,9 +37,9 @@ pub(crate) fn run_list_targets_cmd(list_args: ListArgs) -> SnipeResult {
     let cfg_path = CfgResolver::new(&list_args.cfg, list_args.cfg_env.as_deref())
         .resolve_cfg_path_from_env()?;
 
-    let targets = Targets::from_toml_file(&cfg_path)?;
+    let targets = TargetsForList::from_toml_file(&cfg_path)?;
 
-    let mut target_names: Vec<&String> = targets.as_map().keys().collect();
+    let mut target_names: Vec<&String> = targets.map.keys().collect();
     target_names.sort();
 
     let mut buf = String::new();
@@ -23,6 +49,36 @@ pub(crate) fn run_list_targets_cmd(list_args: ListArgs) -> SnipeResult {
     info!("Successfully generated target list.");
 
     Ok(SuccessMsg(buf.trim().to_string()))
+}
+
+#[derive(Debug, Clone, Deserialize)]
+struct TargetsForList {
+    #[serde(rename = "targets")]
+    map: HashMap<String, toml::Value>,
+}
+
+impl TargetsForList {
+    fn from_toml_file(path: &Path) -> Result<Self, ListError> {
+        info!("Generating Targets from file {}.", path.display());
+
+        let raw = std::fs::read(path).map_err(|source| ListError::FileRead {
+            path: path.into(),
+            source,
+        })?;
+
+        let targets =
+            toml::from_slice::<TargetsForList>(&raw).map_err(|source| ListError::Deserialize {
+                path: path.into(),
+                source,
+            })?;
+
+        info!(
+            "Succesfully generated Targets from file {}.",
+            path.display()
+        );
+
+        Ok(targets)
+    }
 }
 
 #[inline]
