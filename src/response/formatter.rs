@@ -109,7 +109,7 @@ async fn build_body(response: Response) -> Result<String, ResponseFormatterError
             Ok(str_.to_string())
         }
         Err(e) => {
-            info!("Failed to build response body with error: {e}.");
+            info!("Failed to build response body with error: {e}");
             Err(ResponseFormatterError::new_response_field_to_string(
                 "body", e,
             ))

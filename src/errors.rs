@@ -64,7 +64,7 @@ pub(crate) enum VarReplaceError {
 
 #[derive(Debug, Error)]
 pub(crate) enum TargetsError {
-    #[error("Failed to deserialize targets file. Error: {0}.")]
+    #[error("Failed to deserialize targets file. Error: {0}")]
     Dersialization(String),
 
     #[error("Must specify 'file' or manually specify request params in request payload body.")]
@@ -94,13 +94,13 @@ impl From<toml::de::Error> for TargetsError {
 
 #[derive(Debug, Error)]
 pub(crate) enum ClientError {
-    #[error("Failed to build client. Error: {0}.")]
+    #[error("Failed to build client. Error: {0}")]
     ClientBuild(String),
 
-    #[error("Failed to build request. Error: {0}.")]
+    #[error("Failed to build request. Error: {0}")]
     RequestBuild(String),
 
-    #[error("Failed to send request. Error: {0}.")]
+    #[error("Failed to send request. Error: {0}")]
     SendRequestFailure(String),
 
     #[error("Failed to request body as {path} into bytes. Error {source}.")]
@@ -114,7 +114,7 @@ pub(crate) enum ClientError {
 
 #[derive(Debug, Error)]
 pub(crate) enum ResponseFormatterError {
-    #[error("Failed to build response metadata. Error: {0}.")]
+    #[error("Failed to build response metadata. Error: {0}")]
     Build(String),
 
     #[error("Failed to convert response data to string. Error {0}.")]
@@ -183,10 +183,10 @@ pub(crate) enum CfgResolverError {
 
 #[derive(Debug, Error)]
 pub(crate) enum FilesystemError {
-    #[error("Failed to create path to output path {0}. Error: {1}.")]
+    #[error("Failed to create path to output path {0}. Error: {1}")]
     PathCreation(String, String),
 
-    #[error("Failed to create file {0}. Error: {1}.")]
+    #[error("Failed to create file {0}. Error: {1}")]
     FileCreation(String, String),
 }
 
@@ -195,13 +195,13 @@ pub(crate) enum ResponseWriterError {
     #[error("{0}")]
     Base(String),
 
-    #[error("Bad response with status code {0}. {1}.")]
+    #[error("Bad response with status code {0}. {1}")]
     BadResponse(u16, String),
 
-    #[error("Failed to write binary. Error: {0}.")]
+    #[error("Failed to write binary. Error: {0}")]
     BinaryWrite(String),
 
-    #[error("Failed to write response to file {0}. Error: {1}.")]
+    #[error("Failed to write response to file {0}. Error: {1}")]
     TextWrite(String, String),
 }
 
