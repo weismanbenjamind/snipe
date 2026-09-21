@@ -44,6 +44,10 @@ jobs:
         id: install-rust
         run: rustup update ${{ inputs.rust-version || 'stable'}}
 
+      - name: Install Nightly Format
+        id: install-nightly-format
+        run: rustup component add --toolchain nightly-aarch64-apple-darwin rustfmt
+
       - name: Lint
         id: lint
         run: ./scripts/lint.sh
