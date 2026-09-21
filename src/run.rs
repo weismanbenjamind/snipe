@@ -60,5 +60,5 @@ fn init_tracing_subscriber(log_level: &str) -> Result<(), RunError> {
         .without_time()
         .with_target(false) // Don't display module warning came from
         .try_init()
-        .map_err(|e| RunError::Failure(format!("Failed to set verbosity. Error: {e}.")))
+        .map_err(|e| RunError::Failure(format!("Failed to set verbosity. Error: {e}")))
 }
