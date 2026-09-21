@@ -4,6 +4,14 @@ All relevant updates will be listed in this document
 
 ## Unreleased
 
+## Added
+
+- `init` command
+
+## Fixed
+
+- Issue where `list` command needed environment variables set for injection before listing targets
+
 ## 3.1.0
 
 ### Added

@@ -2,7 +2,11 @@ use std::{error::Error as StdErr, path::PathBuf};
 
 use thiserror::Error;
 
-use crate::{commands::InitError, containers::TargetError, inputs::CLIError};
+use crate::{
+    commands::{InitError, ListError},
+    containers::TargetError,
+    inputs::CLIError,
+};
 
 #[derive(Debug, Error)]
 pub enum RunError {
@@ -17,6 +21,9 @@ pub enum RunError {
 
     #[error("{0}")]
     Cli(#[from] CLIError),
+
+    #[error("{0}")]
+    List(#[from] ListError),
 }
 
 impl From<&str> for RunError {
