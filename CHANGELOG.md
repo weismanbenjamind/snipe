@@ -2,17 +2,19 @@
 
 All relevant updates will be listed in this document
 
+## Unreleased
+
 ## 4.0.0
 
-## Added
+### Added
 
 - `init` command
 
-## Updated
+### Updated
 
 - Location of `--cfg` (`-c`) and `--cfg-env` (`-e`) options moved within the `shoot` and `list` commands respectively
 
-## Fixed
+### Fixed
 
 - Issue where `list` command needed environment variables set for injection before listing targets
 
