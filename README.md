@@ -427,7 +427,7 @@ snipe shoot request-id-from-cfg --status-code --full  # ERROR! => --full cannot 
 snipe shoot request-id-from-cfg --status-code --int-status-code  # ERROR! => --int-status-code cannot be passed with any other flags
 ```
 
-If no formatting args are passed after the desired target, the response body is grabbed. For example the following will return only the response body:
+If no formatting args are passed after the desired target and the `grab` field is not configured in the `output_cfg` field for a given target, the response body is grabbed. For example the following will return only the response body:
 
 ```sh
 # Returns only response body
@@ -553,18 +553,20 @@ snipe shoot request-with-output-file-and-pretty --skip-output-file --no-pretty
 
 ### Changing the Path to the Configuration File
 
-Use the `--config` (`-c`) argument to change the path of the configuration file. As stated above by default `snipe` will look for a `.snipe_targets.toml` file in your present working directory. An example of using a different config looks something like the following:
+Use the `--config` (`-c`) argument to change the path of the configuration file for that `shoot` and `list` commands. As stated above by default `snipe` will look for a `.snipe_targets.toml` file in your present working directory. Examples of using a different config looks something like the following:
 
 ```sh
-snipe --config ~/.config/snipe/snipe_targets.toml shoot request-id-from-cfg
+snipe list --config ~/.config/snipe/snipe_targets.toml
+snipe shoot --config ~/.config/snipe/snipe_targets.toml request-id-from-cfg
 ```
 
 If the config cannot be found, snipe will fall back to attempting to read the `SNIPE_TARGETS` environment variable which houses the path to the config. The environment variable to look for can be tweaked with the `--cfg-env` (`-e`) arg. Searching for the environment variable can be skipped entirely by passing `skip` for this argument. For example:
 
 ```sh
-snipe --cfg-env SNIPE_CONFIG shoot request-id-from-cfg  # If can't find the config at ./.snipe_targets.toml use the value at the environment variable SNIPE_CONFIG
-snipe --config ~/.config/snipe/snipe_targets.toml --cfg-env CFG_VAR shoot request-id-from-cfg  # If can't find the config at ~/.config/snipe/snipe_targets.toml use the value at the environment variable CFG_VAR
-snipe --cfg-env skip shoot request-id-from-cfg  # Skip an environment variable to identify the config
+# Note - the below commands are shown for the `shoot` command. The same pattern can be followed for the `list` command
+snipe shoot --cfg-env SNIPE_CONFIG request-id-from-cfg  # If can't find the config at ./.snipe_targets.toml use the value at the environment variable SNIPE_CONFIG
+snipe shoot --config ~/.config/snipe/snipe_targets.toml --cfg-env CFG_VAR request-id-from-cfg  # If can't find the config at ~/.config/snipe/snipe_targets.toml use the value at the environment variable CFG_VAR
+snipe shoot --cfg-env skip request-id-from-cfg  # Skip an environment variable to identify the config
 ```
 
 ### Verbosity
@@ -577,6 +579,35 @@ snipe -v shoot request-id-from-cfg  # Log level at info
 snipe -vv shoot request-id-from-cfg  # Log level at debug
 snipe -vvv shoot request-id-from-cfg  # Log level at debug
 snipe -vvvvv shoot request-id-from-cfg  # Log level at debug
+```
+
+## Initializing a Directory with Snipe
+
+To quickly spin up a directory up with snipe run `snipe init`. The command will:
+
+- Initialize a sample `.snipe_targets.toml` file with some examples for use
+- Creates a `.snipe/` directory to house all `snipe` related files and subdirectories
+- Creates a `.snipe/payloads` directory to store all payloads thay may be used for API requests
+- Creates a `.snipe/responses` directory to store all responses thay recieved from API requests
+- Creates a `.snipe/payloads/example.json` file for use with an example API request in the scaffolded `.snipe_targets.toml` file
+- Updates the `.gitignore` (if present) to ignore the `.snipe_targets.toml` file and the `.snipe/` directory
+
+If the `snipe_targets.toml` file exists when `snipe init` is run, you will be prompted to overwrite this file, if desired, with a subsequent `snipe init --force` command. If the `.snipe/payloads/example.json` file exists when `snipe init` it run it will not be overwritten. A warning will be emitted that the file exists, is not being overwritten, and that example functionality may not work as expected.
+
+Example usage below:
+
+```sh
+snipe init --help  # See all options for the init command
+snipe init  # Initialize a directory with default settings
+snipe list  # View the API requests that come with initialization
+
+# Send the API request example which uses the `.snipe/payloads/example.json` file as a payload
+# and writes the response to `.snipe/responses/example.json`
+snipe shoot example-filesystem
+
+# Send the API request which inlines all variables
+# and writes the response to the console
+snipe shoot example-inline
 ```
 
 ## Example Usage
